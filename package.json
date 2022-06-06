@@ -1,0 +1,10 @@
+{
+  "name": "get-lunch",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "live-server --entry-file=src/index.html --watch=src"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head></head>
+  <body>
+    <div id="niagara"></div>
+  </body>
+  <script>
+    const entry = {
+      description: "",
+      name: "",
+      place: "",
+      price: 0,
+      week: 0,
+      weekday: "",
+    };
+
+    /** @type {entry[]} */
+    const lunches = [];
+
+    /** @param {string} html */
+    function htmlToElement(html) {
+      const template = document.createElement("template");
+      template.innerHTML = html;
+      return template.content.firstChild;
+    }
+
+    /**
+     * @param {string} url
+     * @param {string} selector
+     * @return {Promise<Element>}
+     */
+    function getHtmlNodeFromUrl(url, selector) {
+      return fetch(url).then(async (response) => {
+        const html = await response.text();
+        return htmlToElement(`<div>${html}</div>`).querySelector(selector);
+      });
+    }
+
+    /**
+     * @param {Element} row
+     * @param {number} week
+     * @param {string} weekday
+     */
+    function addNiagaraRowToLunches(row, week, weekday) {
+      const name = row.querySelector("td:nth-of-type(1)").textContent;
+      const description = row
+        .querySelector("td:nth-of-type(2)")
+        .textContent.split("\n")[0];
+      const price = Number(
+        row.querySelector("td:nth-of-type(3)").textContent.split(":-")[0]
+      );
+
+      lunches.push({
+        description,
+        name,
+        price,
+        place: "Niagara",
+        week,
+        weekday,
+      });
+    }
+
+    getHtmlNodeFromUrl("https://restaurangniagara.se/lunch/", "div.lunch").then(
+      (lunchNode) => {
+        const week = Number(
+          lunchNode
+            .querySelector("h2")
+            .textContent.split("Vecka ")
+            .pop()
+            .split(" – VÄLKOMNA!")[0]
+        );
+
+        const weekdays = [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+        ];
+
+        for (const [index, weekday] of weekdays.entries()) {
+          const rows = lunchNode.querySelectorAll(
+            `table:nth-of-type(${index + 1}) tbody tr`
+          );
+          Array.prototype.forEach.call(rows, (row) =>
+            addNiagaraRowToLunches(row, week, weekday)
+          );
+        }
+
+        lunches
+          .filter(({ place }) => place === "Niagara")
+          .forEach((lunch) => {
+            const node = document.createElement("pre");
+            node.textContent = JSON.stringify(lunch);
+            document.querySelector("#niagara").appendChild(node);
+          });
+      }
+    );
+  </script>
+</html>
