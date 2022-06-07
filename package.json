@@ -5,6 +5,6 @@
     "start": "live-server --entry-file=src/index.html --watch=src"
   },
   "devDependencies": {
-    "live-server": "^1.2.2"
+    "live-server": "1.2.1"
   }
 }

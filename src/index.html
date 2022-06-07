@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html>
-  <head></head>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://uicdn.toast.com/grid/latest/tui-grid.css"
+    />
+    <script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
+  </head>
   <body>
-    <div id="niagara"></div>
+    <div id="grid"></div>
   </body>
   <script>
-    const entry = {
+    const lunch = {
       description: "",
       name: "",
       place: "",
@@ -14,8 +20,68 @@
       weekday: "",
     };
 
-    /** @type {entry[]} */
+    /** @type {lunch[]} */
     const lunches = [];
+
+    const defaultColumnOption = {
+      filter: "select",
+      sortable: true,
+      align: "center",
+      resizable: true,
+      width: 80,
+    };
+
+    const Grid = tui.Grid;
+    const lunchTable = new Grid({
+      el: document.getElementById("grid"),
+      columns: [
+        {
+          ...defaultColumnOption,
+          header: "Vecka",
+          name: "week",
+        },
+        {
+          ...defaultColumnOption,
+          header: "Veckodag",
+          name: "weekday",
+          width: 120,
+        },
+        {
+          ...defaultColumnOption,
+          header: "Plats",
+          name: "place",
+        },
+        {
+          ...defaultColumnOption,
+          header: "Lunch",
+          name: "name",
+        },
+        {
+          ...defaultColumnOption,
+          header: "Beskrivning",
+          name: "description",
+          filter: "text",
+          width: undefined,
+        },
+        {
+          ...defaultColumnOption,
+          header: "Pris",
+          name: "price",
+        },
+      ],
+      data: lunches,
+      usageStatistics: false,
+    });
+    Grid.applyTheme("striped");
+
+    lunchTable.filter("weekday", [
+      {
+        code: "eq",
+        value: new Intl.DateTimeFormat("sv-SE", { weekday: "long" }).format(
+          Date.now()
+        ),
+      },
+    ]);
 
     /** @param {string} html */
     function htmlToElement(html) {
@@ -70,31 +136,26 @@
             .split(" – VÄLKOMNA!")[0]
         );
 
-        const weekdays = [
-          "monday",
-          "tuesday",
-          "wednesday",
-          "thursday",
-          "friday",
-        ];
+        const weekdays = ["måndag", "tisdag", "onsdag", "torsdag", "fredag"];
 
         for (const [index, weekday] of weekdays.entries()) {
           const rows = lunchNode.querySelectorAll(
             `table:nth-of-type(${index + 1}) tbody tr`
           );
-          Array.prototype.forEach.call(rows, (row) =>
-            addNiagaraRowToLunches(row, week, weekday)
-          );
-        }
-
-        lunches
-          .filter(({ place }) => place === "Niagara")
-          .forEach((lunch) => {
-            const node = document.createElement("pre");
-            node.textContent = JSON.stringify(lunch);
-            document.querySelector("#niagara").appendChild(node);
+          [...rows].forEach((row) => {
+            addNiagaraRowToLunches(row, week, weekday);
           });
+        }
+        lunchTable.appendRows(lunches);
       }
     );
+
+    // Has CORS settings, need BE service:
+    // "https://www.ica.se/butiker/maxi/malmo/maxi-ica-stormarknad-vastra-hamnen-11981/butiken/veckans-matsedel/",
+    // "https://valfarden.nu/dagens-lunch/"
+    // "http://www.miamarias.nu/page/77/"
+    // "https://storavarvsgatan6.se/meny.html"
+    // "http://www.saltimporten.com/"
+    // "https://kolga.gastrogate.com/lunch/"
   </script>
 </html>
