@@ -1,3 +1,3 @@
 ## TODO
 
-- Create simple server doing requests, see what cors is accepted
+- Move requests from index.html to index.js
