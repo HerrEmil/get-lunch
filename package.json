@@ -5,5 +5,8 @@
   "license": "UNLICENSED",
   "scripts": {
     "start": "node src/local-test-server.js"
+  },
+  "dependencies": {
+    "jsdom": "^24.1.0"
   }
 }

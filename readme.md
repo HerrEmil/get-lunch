@@ -1,3 +1,6 @@
 ## TODO
 
-- Move requests from index.html to index.js
+- Test on actual lambda
+- Structure
+- More restaurants
+- Cache results on dynamoDB
