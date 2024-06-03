@@ -37,35 +37,35 @@
       columns: [
         {
           ...defaultColumnOption,
-          header: "Vecka",
+          header: "Week",
           name: "week",
         },
         {
           ...defaultColumnOption,
-          header: "Veckodag",
+          header: "Weekday",
           name: "weekday",
           width: 120,
         },
         {
           ...defaultColumnOption,
-          header: "Plats",
+          header: "Place",
           name: "place",
         },
         {
           ...defaultColumnOption,
-          header: "Lunch",
+          header: "Name",
           name: "name",
         },
         {
           ...defaultColumnOption,
-          header: "Beskrivning",
+          header: "Description",
           name: "description",
           filter: "text",
           width: undefined,
         },
         {
           ...defaultColumnOption,
-          header: "Pris",
+          header: "Price",
           name: "price",
         },
       ],
@@ -77,7 +77,7 @@
     lunchTable.filter("weekday", [
       {
         code: "eq",
-        value: new Intl.DateTimeFormat("sv-SE", { weekday: "long" }).format(
+        value: new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(
           Date.now()
         ),
       },
@@ -133,10 +133,10 @@
             .querySelector("h2")
             .textContent.split("Vecka ")
             .pop()
-            .split(" – VÄLKOMNA!")[0]
+            .split(" ")[0]
         );
 
-        const weekdays = ["måndag", "tisdag", "onsdag", "torsdag", "fredag"];
+        const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Fridawy"];
 
         for (const [index, weekday] of weekdays.entries()) {
           const rows = lunchNode.querySelectorAll(
