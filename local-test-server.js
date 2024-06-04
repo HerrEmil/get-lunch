@@ -1,5 +1,5 @@
 import http from "http";
-import { handler } from "./index.js";
+import { handler } from "./index.mjs";
 
 const server = http.createServer(async (_, response) => {
   const { statusCode, body } = await handler();
