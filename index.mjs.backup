@@ -35,32 +35,3 @@ export const handler = async (event, context, callback) => {
     return fetch(url).then(async (response) => {
       const html = await response.text();
       return htmlToElement(`<div>${html}</div>`).querySelector(selector);
-    });
-  }
-
-  try {
-    // Import our extraction modules
-    const { extractNiagaraLunches } = await import("./data-extractor.mjs");
-
-    // Extract lunch data using the new extraction logic
-    const extractedLunches = await extractNiagaraLunches(getHtmlNodeFromUrl);
-    lunches.push(...extractedLunches);
-  } catch (error) {
-    console.error("Error extracting lunch data:", error);
-    // Continue with empty lunches array for graceful degradation
-  }
-
-  const body = fs
-    .readFileSync(path.resolve(__dirname, "./index.html"), {
-      encoding: "utf-8",
-    })
-    .replace(
-      "const lunches = [];",
-      `const lunches = ${JSON.stringify(lunches)};`,
-    );
-
-  return {
-    statusCode: 200,
-    body,
-  };
-};

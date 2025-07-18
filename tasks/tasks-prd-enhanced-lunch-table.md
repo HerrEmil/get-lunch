@@ -22,6 +22,21 @@ Based on the PRD for Enhanced Lunch Table, this document outlines the implementa
 - `infrastructure/serverless.yml` - AWS infrastructure configuration
 - `local-test-server.mjs` - Updated local development server
 - `package.json` - Updated dependencies including AWS SDK (managed with yarn)
+- `docs/niagara-website-analysis.md` - Analysis of current Niagara website structure and required selector updates
+- `index.mjs` - Updated with improved Niagara parser that handles both old and new website structures
+- `week-extractor.mjs` - Updated week number extraction logic to handle both "Vecka XX" and "Vecka YYYYMMDD" formats
+- `test-week-extraction.mjs` - Test script to validate week extraction logic with various date formats
+- `data-extractor.mjs` - Updated data extraction logic that handles both table-based and modern tabbed structures
+- `test-data-extraction.mjs` - Test script to validate data extraction logic with various DOM structures
+- `weekday-mapper.mjs` - Swedish weekday mapping and validation module with comprehensive weekday handling
+- `test-weekday-mapping.mjs` - Test script to validate Swedish weekday mapping functionality
+- `test-handler.mjs` - Test script to validate the main handler function directly
+- `test-local-server.mjs` - Test script to validate local server functionality with HTTP requests
+- `test-weekday-extraction.mjs` - Comprehensive test for weekday data extraction across multiple website structures
+- `test-field-parsing.mjs` - Comprehensive test for price, name, and description field parsing across different DOM structures
+- `test-week-identification.mjs` - Comprehensive test for week number identification from both old and new website formats
+- `debug-week-extraction.mjs` - Debug script to validate week extraction logic and date calculations
+- `test-error-handling.mjs` - Comprehensive test for error handling across all data extraction functions with various failure scenarios
 
 ### Notes
 
@@ -33,23 +48,23 @@ Based on the PRD for Enhanced Lunch Table, this document outlines the implementa
 
 - [ ] 1.0 Fix and Update Niagara Parser Implementation
   - [ ] 1.1 Research current Niagara website structure and identify working selectors
-    - [ ] 1.1.1 Visit https://restaurangniagara.se/lunch/ and inspect current HTML structure
-    - [ ] 1.1.2 Identify correct CSS selectors for lunch container, week number, and table rows
-    - [ ] 1.1.3 Document any changes to the website structure since original implementation
-    - [ ] 1.1.4 Test selectors in browser console to ensure they return expected elements
+    - [x] 1.1.1 Visit https://restaurangniagara.se/lunch/ and inspect current HTML structure
+    - [x] 1.1.2 Identify correct CSS selectors for lunch container, week number, and table rows
+    - [x] 1.1.3 Document any changes to the website structure since original implementation
+    - [x] 1.1.4 Test selectors in browser console to ensure they return expected elements
   - [ ] 1.2 Update existing Niagara parser to work with current website
-    - [ ] 1.2.1 Update CSS selectors in existing `addNiagaraRowToLunches` function
-    - [ ] 1.2.2 Fix week number extraction logic if selector has changed
-    - [ ] 1.2.3 Update table row selection and data extraction logic
-    - [ ] 1.2.4 Ensure Swedish weekday mapping still works correctly
+    - [x] 1.2.1 Update CSS selectors in existing `addNiagaraRowToLunches` function
+    - [x] 1.2.2 Fix week number extraction logic if selector has changed
+    - [x] 1.2.3 Update table row selection and data extraction logic
+    - [x] 1.2.4 Ensure Swedish weekday mapping still works correctly
   - [ ] 1.3 Test Niagara parser with current website and verify data extraction
-    - [ ] 1.3.1 Run local test server with updated parser
-    - [ ] 1.3.2 Verify that lunch data is correctly extracted for all weekdays
-    - [ ] 1.3.3 Confirm price, name, and description fields are properly parsed
-    - [ ] 1.3.4 Check that week number is correctly identified
+    - [x] 1.3.1 Run local test server with updated parser
+    - [x] 1.3.2 Verify that lunch data is correctly extracted for all weekdays
+    - [x] 1.3.3 Confirm price, name, and description fields are properly parsed
+    - [x] 1.3.4 Check that week number is correctly identified
   - [ ] 1.4 Add comprehensive error handling for Niagara parser
-    - [ ] 1.4.1 Add try-catch blocks around DOM queries and data extraction
-    - [ ] 1.4.2 Handle cases where expected elements are missing
+    - [x] 1.4.1 Add try-catch blocks around DOM queries and data extraction
+    - [x] 1.4.2 Handle cases where expected elements are missing
     - [ ] 1.4.3 Add validation for extracted data before adding to lunches array
     - [ ] 1.4.4 Log meaningful error messages for debugging
   - [ ] 1.5 Create unit tests for updated Niagara parser
