@@ -1,0 +1,214 @@
+# Task List: Enhanced Lunch Table
+
+Based on the PRD for Enhanced Lunch Table, this document outlines the implementation tasks required to build the enhanced lunch aggregation system with caching, multi-restaurant support, and improved architecture.
+
+## Relevant Files
+
+- `src/lambdas/data-collector.mjs` - Background Lambda function for weekly data collection from restaurants
+- `src/lambdas/data-collector.test.mjs` - Unit tests for data collector Lambda
+- `src/lambdas/api-server.mjs` - Main Lambda function for serving HTML with cached data injected
+- `src/lambdas/api-server.test.mjs` - Unit tests for API server Lambda
+- `src/parsers/base-parser.mjs` - Abstract base class for restaurant parsers
+- `src/parsers/base-parser.test.mjs` - Unit tests for base parser
+- `src/parsers/niagara-parser.mjs` - Updated Niagara restaurant parser
+- `src/parsers/niagara-parser.test.mjs` - Unit tests for Niagara parser
+- `src/utils/cache-manager.mjs` - DynamoDB cache operations and management
+- `src/utils/cache-manager.test.mjs` - Unit tests for cache manager
+- `src/utils/data-validator.mjs` - Validation functions for lunch data objects
+- `src/utils/data-validator.test.mjs` - Unit tests for data validator
+- `src/utils/logger.mjs` - Logging utility with CloudWatch integration
+- `src/utils/logger.test.mjs` - Unit tests for logger
+- `index.html` - Existing frontend file (no changes needed for this initiative)
+- `infrastructure/serverless.yml` - AWS infrastructure configuration
+- `local-test-server.mjs` - Updated local development server
+- `package.json` - Updated dependencies including AWS SDK (managed with yarn)
+
+### Notes
+
+- Unit tests should be placed alongside the code files they are testing
+- Use `yarn test` to run all tests or `yarn test --testPathPattern=filename` for specific files
+- Local development server should work with mock cached data for testing
+
+## Tasks
+
+- [ ] 1.0 Fix and Update Niagara Parser Implementation
+  - [ ] 1.1 Research current Niagara website structure and identify working selectors
+    - [ ] 1.1.1 Visit https://restaurangniagara.se/lunch/ and inspect current HTML structure
+    - [ ] 1.1.2 Identify correct CSS selectors for lunch container, week number, and table rows
+    - [ ] 1.1.3 Document any changes to the website structure since original implementation
+    - [ ] 1.1.4 Test selectors in browser console to ensure they return expected elements
+  - [ ] 1.2 Update existing Niagara parser to work with current website
+    - [ ] 1.2.1 Update CSS selectors in existing `addNiagaraRowToLunches` function
+    - [ ] 1.2.2 Fix week number extraction logic if selector has changed
+    - [ ] 1.2.3 Update table row selection and data extraction logic
+    - [ ] 1.2.4 Ensure Swedish weekday mapping still works correctly
+  - [ ] 1.3 Test Niagara parser with current website and verify data extraction
+    - [ ] 1.3.1 Run local test server with updated parser
+    - [ ] 1.3.2 Verify that lunch data is correctly extracted for all weekdays
+    - [ ] 1.3.3 Confirm price, name, and description fields are properly parsed
+    - [ ] 1.3.4 Check that week number is correctly identified
+  - [ ] 1.4 Add comprehensive error handling for Niagara parser
+    - [ ] 1.4.1 Add try-catch blocks around DOM queries and data extraction
+    - [ ] 1.4.2 Handle cases where expected elements are missing
+    - [ ] 1.4.3 Add validation for extracted data before adding to lunches array
+    - [ ] 1.4.4 Log meaningful error messages for debugging
+  - [ ] 1.5 Create unit tests for updated Niagara parser
+    - [ ] 1.5.1 Create mock HTML fixtures representing current website structure
+    - [ ] 1.5.2 Test successful data extraction with valid HTML
+    - [ ] 1.5.3 Test error handling with malformed or missing HTML elements
+    - [ ] 1.5.4 Verify data validation and Swedish weekday handling
+
+- [ ] 2.0 Implement Core Infrastructure and Architecture
+  - [ ] 2.1 Set up DynamoDB table schema for lunch data caching
+    - [ ] 2.1.1 Design table schema with composite key (restaurant + week)
+    - [ ] 2.1.2 Add TTL attribute for automatic data expiration
+    - [ ] 2.1.3 Create CloudFormation/Serverless template for table creation
+    - [ ] 2.1.4 Configure appropriate read/write capacity for expected load
+  - [ ] 2.2 Create cache manager utility for DynamoDB operations
+    - [ ] 2.2.1 Implement cache write operations (put/update lunch data)
+    - [ ] 2.2.2 Implement cache read operations with error handling
+    - [ ] 2.2.3 Add cache invalidation and cleanup methods
+    - [ ] 2.2.4 Create connection management and AWS SDK configuration
+    - [ ] 2.2.5 Add retry logic for DynamoDB operations
+  - [ ] 2.3 Implement data validator with Swedish weekday validation
+    - [ ] 2.3.1 Create validation functions for price and week (must be numbers)
+    - [ ] 2.3.2 Create validation for name and description (must be strings)
+    - [ ] 2.3.3 Implement Swedish weekday validation ("måndag", "tisdag", "onsdag", "torsdag", "fredag")
+    - [ ] 2.3.4 Add comprehensive validation for complete lunch objects
+    - [ ] 2.3.5 Create error reporting for invalid data with specific field information
+  - [ ] 2.4 Create logging utility with CloudWatch integration
+    - [ ] 2.4.1 Set up structured logging with different log levels
+    - [ ] 2.4.2 Configure CloudWatch log groups and retention policies
+    - [ ] 2.4.3 Add context-aware logging (restaurant, operation, timestamp)
+    - [ ] 2.4.4 Implement error logging with stack traces for debugging
+  - [ ] 2.5 Set up AWS EventBridge for weekly scheduling
+    - [ ] 2.5.1 Create EventBridge rule for Monday 10:00 UTC trigger
+    - [ ] 2.5.2 Configure rule to target data collection Lambda
+    - [ ] 2.5.3 Set up proper IAM permissions for EventBridge to invoke Lambda
+    - [ ] 2.5.4 Add rule description and tags for resource management
+  - [ ] 2.6 Configure CloudWatch Alarms and SNS for error notifications
+    - [ ] 2.6.1 Create SNS topic for error notifications
+    - [ ] 2.6.2 Set up CloudWatch alarm for Lambda function errors
+    - [ ] 2.6.3 Configure alarm for DynamoDB operation failures
+    - [ ] 2.6.4 Add email subscription to SNS topic for alerts
+    - [ ] 2.6.5 Set appropriate alarm thresholds and evaluation periods
+
+- [ ] 3.0 Build Restaurant Parser Framework
+  - [ ] 3.1 Design and implement abstract base parser class
+    - [ ] 3.1.1 Create base parser with abstract methods (parseMenu, getName, getUrl)
+    - [ ] 3.1.2 Implement common functionality (HTTP requests, error handling)
+    - [ ] 3.1.3 Add timeout and retry logic in base class
+    - [ ] 3.1.4 Create standard constructor with restaurant configuration
+  - [ ] 3.2 Define standardized parser interface and data format
+    - [ ] 3.2.1 Define lunch object interface matching existing structure
+    - [ ] 3.2.2 Standardize parser response format (success/error with data)
+    - [ ] 3.2.3 Create configuration interface for restaurant metadata
+    - [ ] 3.2.4 Document parser implementation guidelines and examples
+  - [ ] 3.3 Migrate Niagara parser to use new framework
+    - [ ] 3.3.1 Extend base parser class for Niagara implementation
+    - [ ] 3.3.2 Move existing parsing logic into new parseMenu method
+    - [ ] 3.3.3 Update to use standardized error handling and logging
+    - [ ] 3.3.4 Test migrated parser maintains same functionality
+  - [ ] 3.4 Create parser factory for managing multiple restaurant parsers
+    - [ ] 3.4.1 Implement factory pattern to instantiate restaurant parsers
+    - [ ] 3.4.2 Create restaurant registry with name-to-parser mapping
+    - [ ] 3.4.3 Add method to get all available parsers
+    - [ ] 3.4.4 Implement parser validation and health checking
+  - [ ] 3.5 Implement error handling and circuit breaker pattern for parsers
+    - [ ] 3.5.1 Create circuit breaker to prevent repeated failed requests
+    - [ ] 3.5.2 Implement exponential backoff for retries
+    - [ ] 3.5.3 Add parser health status tracking
+    - [ ] 3.5.4 Create fallback mechanisms when parsers are unavailable
+
+- [ ] 4.0 Develop Data Collection Lambda Function
+  - [ ] 4.1 Create background Lambda for weekly data collection
+    - [ ] 4.1.1 Set up Lambda function structure with proper event handling
+    - [ ] 4.1.2 Configure Lambda timeout for long-running data collection
+    - [ ] 4.1.3 Add environment variables for configuration
+    - [ ] 4.1.4 Set up proper IAM role with DynamoDB and CloudWatch permissions
+  - [ ] 4.2 Implement restaurant data fetching with parallel processing
+    - [ ] 4.2.1 Create parallel execution of all restaurant parsers
+    - [ ] 4.2.2 Implement Promise.allSettled to handle partial failures gracefully
+    - [ ] 4.2.3 Add individual timeout handling for each restaurant parser
+    - [ ] 4.2.4 Create aggregation logic to combine results from all parsers
+  - [ ] 4.3 Add data validation and caching logic
+    - [ ] 4.3.1 Integrate data validator to check all extracted lunch objects
+    - [ ] 4.3.2 Filter out invalid data and log validation errors
+    - [ ] 4.3.3 Transform validated data for DynamoDB storage format
+    - [ ] 4.3.4 Implement batch write operations to DynamoDB cache
+    - [ ] 4.3.5 Add cache metadata (last updated timestamp, data version)
+  - [ ] 4.4 Implement manual trigger capability for testing
+    - [ ] 4.4.1 Add event source detection (EventBridge vs manual invocation)
+    - [ ] 4.4.2 Create manual trigger option that accepts specific restaurants
+    - [ ] 4.4.3 Add development mode with enhanced logging for testing
+    - [ ] 4.4.4 Implement test-specific configuration overrides
+  - [ ] 4.5 Add comprehensive error handling and logging
+    - [ ] 4.5.1 Implement structured logging for all operations
+    - [ ] 4.5.2 Add error categorization (network, parsing, validation, cache)
+    - [ ] 4.5.3 Create success/failure metrics for monitoring
+    - [ ] 4.5.4 Ensure partial success scenarios are properly handled and logged
+  - [ ] 4.6 Create unit tests for data collection Lambda
+    - [ ] 4.6.1 Mock restaurant parsers and DynamoDB operations
+    - [ ] 4.6.2 Test successful data collection scenario
+    - [ ] 4.6.3 Test partial failure scenarios (some restaurants fail)
+    - [ ] 4.6.4 Test complete failure scenarios and error handling
+    - [ ] 4.6.5 Test manual trigger functionality
+
+- [ ] 5.0 Build Fast HTML Serving Lambda Function
+  - [ ] 5.1 Create API Lambda for serving HTML with injected cached data
+    - [ ] 5.1.1 Set up Lambda function for HTTP API Gateway integration
+    - [ ] 5.1.2 Configure proper response headers for HTML content type
+    - [ ] 5.1.3 Add CORS configuration if needed for development
+    - [ ] 5.1.4 Set up environment variables for cache configuration
+  - [ ] 5.2 Implement cache retrieval with fallback mechanisms
+    - [ ] 5.2.1 Create primary cache lookup from DynamoDB
+    - [ ] 5.2.2 Implement fallback to previous week's data if current week unavailable
+    - [ ] 5.2.3 Add graceful degradation when specific restaurants are missing
+    - [ ] 5.2.4 Create empty data fallback with appropriate user messaging
+  - [ ] 5.3 Add multi-day data filtering (Monday-Friday)
+    - [ ] 5.3.1 Parse query parameters for day selection (default to today)
+    - [ ] 5.3.2 Implement Swedish weekday name mapping and validation
+    - [ ] 5.3.3 Filter cached data to show only selected day's lunches
+    - [ ] 5.3.4 Add day navigation logic for frontend integration
+  - [ ] 5.4 Maintain existing HTML injection approach from current implementation
+    - [ ] 5.4.1 Read existing index.html file into memory
+    - [ ] 5.4.2 Inject filtered lunch data using same replacement pattern
+    - [ ] 5.4.3 Ensure JSON serialization matches current format
+    - [ ] 5.4.4 Preserve existing TUI Grid configuration and filtering
+  - [ ] 5.5 Optimize for sub-second response times
+    - [ ] 5.5.1 Implement in-memory caching of HTML template
+    - [ ] 5.5.2 Optimize DynamoDB queries with proper indexing
+    - [ ] 5.5.3 Use connection pooling for DynamoDB client
+    - [ ] 5.5.4 Add performance monitoring and timing logs
+  - [ ] 5.6 Add cache status indicators in injected data
+    - [ ] 5.6.1 Include last updated timestamp in injected data
+    - [ ] 5.6.2 Add data freshness indicators for each restaurant
+    - [ ] 5.6.3 Include cache hit/miss information for debugging
+    - [ ] 5.6.4 Add version information for cache troubleshooting
+  - [ ] 5.7 Create unit tests for HTML serving Lambda
+    - [ ] 5.7.1 Mock DynamoDB cache operations
+    - [ ] 5.7.2 Test successful HTML generation with cached data
+    - [ ] 5.7.3 Test fallback scenarios with missing or stale data
+    - [ ] 5.7.4 Test day filtering functionality
+    - [ ] 5.7.5 Test performance requirements and response times
+
+- [ ] 6.0 Update Local Development Environment
+  - [ ] 6.1 Update local test server for new architecture
+    - [ ] 6.1.1 Modify local-test-server.mjs to work with cache manager
+    - [ ] 6.1.2 Add mock DynamoDB operations for local development
+    - [ ] 6.1.3 Create sample cached data for testing
+    - [ ] 6.1.4 Add development mode switches for testing different scenarios
+  - [ ] 6.2 Update package.json and dependencies
+    - [ ] 6.2.1 Add AWS SDK v3 for DynamoDB operations
+    - [ ] 6.2.2 Add testing dependencies (Jest, testing utilities)
+    - [ ] 6.2.3 Update scripts for yarn-based workflow
+    - [ ] 6.2.4 Add development and deployment scripts
+  - [ ] 6.3 Create infrastructure configuration
+    - [ ] 6.3.1 Set up Serverless Framework configuration
+    - [ ] 6.3.2 Define Lambda functions, DynamoDB table, and EventBridge rules
+    - [ ] 6.3.3 Configure IAM roles and permissions
+    - [ ] 6.3.4 Add environment-specific configurations (dev/prod)
+
+## Implementation Complete
+
+All tasks have been broken down into detailed, actionable sub-tasks suitable for a junior developer to implement. Each sub-task includes specific technical requirements and clear deliverables based on the PRD specifications.
