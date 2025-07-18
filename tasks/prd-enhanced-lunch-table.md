@@ -107,24 +107,26 @@ The primary problem this enhancement solves is the poor user experience caused b
 5. **Developer Productivity**: Enable addition of new restaurants within 1 hour of development time
 6. **Weekly Coverage**: Successfully collect and display lunch data for all weekdays (Monday-Friday)
 
-## Implementation Notes
+## Implementation Priority
 
-Based on clarifications provided:
+1. **Phase 1 - Foundation**: Update the existing Niagara implementation to work with the current website structure and ensure it's in a working state again.
 
-1. **Restaurant List**: The system will support 8 restaurants including Niagara (already implemented) plus 7 additional restaurants: ICA Maxi, Välfärden, Mia Maria's, Stora Varvsgatan 6, Saltimporten, Kolga, Ubåtshallen, and Eatery Västra Hamnen.
+2. **Phase 2 - Architecture**: Implement the caching infrastructure and two-Lambda architecture with the working Niagara parser.
 
-2. **Data Collection Schedule**: Weekly data collection will run every Monday at 10:00 UTC to capture fresh lunch menus for the week.
+3. **Phase 3 - Expansion**: Add the remaining 7 restaurants in any order - no specific prioritization is required for the additional restaurants.
 
-3. **Weekend Handling**: No weekend data will be collected or displayed as restaurants do not offer daily lunches on weekends.
+## Technical Implementation Details
 
-4. **Manual Refresh**: A manual trigger for on-demand data refresh will be implemented for testing and emergency updates.
+Based on final clarifications:
 
-5. **Cost Considerations**: AWS costs are not a primary concern and the architecture should prioritize functionality over cost optimization.
+1. **Error Notification**: Failed data collection jobs should trigger alerts using AWS standard implementation (CloudWatch Alarms with SNS notifications). Keep it simple and cost-effective.
 
-6. **Deployment Strategy**: This will be deployed as a completely new system with no existing deployment to consider.
+2. **Data Validation**: All lunch objects must be validated to ensure:
+   - `price` and `week` are numbers
+   - `name` and `description` are strings
+   - `weekday` is a string that matches valid Swedish weekday names ("måndag", "tisdag", "onsdag", "torsdag", "fredag")
+   - Invalid data should be logged and excluded from the results
 
-## Remaining Open Questions
+## Implementation Complete
 
-1. **Parser Priority**: Which restaurants should be prioritized for implementation after Niagara?
-2. **Error Notification**: Should there be any alerting mechanism for failed data collection jobs?
-3. **Data Validation**: What level of data validation should be implemented for parsed restaurant data?
+This PRD is now complete with all requirements, constraints, and implementation details specified. Ready for development to begin.
