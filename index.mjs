@@ -49,7 +49,7 @@ export const handler = async (event, context, callback) => {
       .querySelector("td:nth-of-type(2)")
       .textContent.split("\n")[0];
     const price = Number(
-      row.querySelector("td:nth-of-type(3)").textContent.split(":-")[0]
+      row.querySelector("td:nth-of-type(3)").textContent.split(":-")[0],
     );
 
     lunches.push({
@@ -64,21 +64,21 @@ export const handler = async (event, context, callback) => {
 
   await getHtmlNodeFromUrl(
     "https://restaurangniagara.se/lunch/",
-    "div.lunch"
+    "div.lunch",
   ).then((lunchNode) => {
     const week = Number(
       lunchNode
         .querySelector("h2")
         .textContent.split("Vecka ")
         .pop()
-        .split(" ")[0]
+        .split(" ")[0],
     );
 
     const weekdays = ["måndag", "tisdag", "onsdag", "torsdag", "fredag"];
 
     for (const [index, weekday] of weekdays.entries()) {
       const rows = lunchNode.querySelectorAll(
-        `table:nth-of-type(${index + 1}) tbody tr`
+        `table:nth-of-type(${index + 1}) tbody tr`,
       );
       [...rows].forEach((row) => {
         addNiagaraRowToLunches(row, week, weekday);
@@ -92,7 +92,7 @@ export const handler = async (event, context, callback) => {
     })
     .replace(
       "const lunches = [];",
-      `const lunches = ${JSON.stringify(lunches)};`
+      `const lunches = ${JSON.stringify(lunches)};`,
     );
 
   return {

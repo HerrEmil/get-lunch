@@ -1,86 +1,86 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-  <head>
-    <link
-      rel="stylesheet"
-      href="https://uicdn.toast.com/grid/latest/tui-grid.css"
-    />
-    <script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
-  </head>
-  <body>
-    <div id="grid"></div>
-  </body>
-  <script>
-    const lunches = [];
+    <head>
+        <link
+            rel="stylesheet"
+            href="https://uicdn.toast.com/grid/latest/tui-grid.css"
+        />
+        <script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
+    </head>
+    <body>
+        <div id="grid"></div>
+    </body>
+    <script>
+        const lunches = [];
 
-    const defaultColumnOption = {
-      filter: "select",
-      sortable: true,
-      align: "center",
-      resizable: true,
-      width: 80,
-    };
+        const defaultColumnOption = {
+            filter: "select",
+            sortable: true,
+            align: "center",
+            resizable: true,
+            width: 80,
+        };
 
-    const Grid = tui.Grid;
-    const lunchTable = new Grid({
-      el: document.getElementById("grid"),
-      columns: [
-        {
-          ...defaultColumnOption,
-          header: "Vecka",
-          name: "week",
-        },
-        {
-          ...defaultColumnOption,
-          header: "Dag",
-          name: "weekday",
-          width: 120,
-        },
-        {
-          ...defaultColumnOption,
-          header: "Plats",
-          name: "place",
-        },
-        {
-          ...defaultColumnOption,
-          header: "Lunch",
-          name: "name",
-        },
-        {
-          ...defaultColumnOption,
-          header: "Beskrivning",
-          name: "description",
-          filter: "text",
-          width: undefined,
-        },
-        {
-          ...defaultColumnOption,
-          header: "Pris",
-          name: "price",
-        },
-      ],
-      data: lunches,
-      usageStatistics: false,
-    });
-    Grid.applyTheme("striped");
+        const Grid = tui.Grid;
+        const lunchTable = new Grid({
+            el: document.getElementById("grid"),
+            columns: [
+                {
+                    ...defaultColumnOption,
+                    header: "Vecka",
+                    name: "week",
+                },
+                {
+                    ...defaultColumnOption,
+                    header: "Dag",
+                    name: "weekday",
+                    width: 120,
+                },
+                {
+                    ...defaultColumnOption,
+                    header: "Plats",
+                    name: "place",
+                },
+                {
+                    ...defaultColumnOption,
+                    header: "Lunch",
+                    name: "name",
+                },
+                {
+                    ...defaultColumnOption,
+                    header: "Beskrivning",
+                    name: "description",
+                    filter: "text",
+                    width: undefined,
+                },
+                {
+                    ...defaultColumnOption,
+                    header: "Pris",
+                    name: "price",
+                },
+            ],
+            data: lunches,
+            usageStatistics: false,
+        });
+        Grid.applyTheme("striped");
 
-    lunchTable.filter("weekday", [
-      {
-        code: "eq",
-        value: new Intl.DateTimeFormat("sv-SE", { weekday: "long" }).format(
-          Date.now()
-        ),
-      },
-    ]);
+        lunchTable.filter("weekday", [
+            {
+                code: "eq",
+                value: new Intl.DateTimeFormat("sv-SE", {
+                    weekday: "long",
+                }).format(Date.now()),
+            },
+        ]);
 
-    // Has CORS settings, need BE service:
-    // "https://www.ica.se/butiker/maxi/malmo/maxi-ica-stormarknad-vastra-hamnen-11981/butiken/veckans-matsedel/",
-    // "https://valfarden.nu/dagens-lunch/"
-    // "http://www.miamarias.nu/page/77/"
-    // "https://storavarvsgatan6.se/meny.html"
-    // "http://www.saltimporten.com/"
-    // "https://kolga.gastrogate.com/lunch/"
-    // https://www.ubatshallen.se/
-    // https://eatery.se/vastra-hamnen/lunchmeny
-  </script>
+        // Has CORS settings, need BE service:
+        // "https://www.ica.se/butiker/maxi/malmo/maxi-ica-stormarknad-vastra-hamnen-11981/butiken/veckans-matsedel/",
+        // "https://valfarden.nu/dagens-lunch/"
+        // "http://www.miamarias.nu/page/77/"
+        // "https://storavarvsgatan6.se/meny.html"
+        // "http://www.saltimporten.com/"
+        // "https://kolga.gastrogate.com/lunch/"
+        // https://www.ubatshallen.se/
+        // https://eatery.se/vastra-hamnen/lunchmeny
+    </script>
 </html>
