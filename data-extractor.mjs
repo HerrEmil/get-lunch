@@ -6,9 +6,14 @@ import {
 } from "./weekday-mapper.mjs";
 import {
   validateLunches,
+  validateLunch,
   validateRestaurantStatus,
   logValidationResults,
 } from "./data-validator.mjs";
+import {
+  createWeekdayLogger,
+  createRestaurantLogger,
+} from "./debug-logger.mjs";
 
 /**
  * Updated data extraction logic for Niagara restaurant
@@ -23,37 +28,38 @@ import {
  * @returns {object|null} - Lunch object or null if invalid
  */
 export function extractLunchFromElement(element, week, weekday) {
+  const logger = createWeekdayLogger("Niagara", weekday, {
+    operation: "extractLunchFromElement",
+    week: week,
+  });
+
+  logger.startTimer("extractLunchFromElement");
+
   try {
     if (!element) {
-      console.warn("No element provided to extractLunchFromElement");
+      logger.warn("No element provided to extractLunchFromElement");
       return null;
     }
 
     // Check if element has expected properties
     if (!element.tagName) {
-      console.warn(
+      logger.warn(
         "Element missing tagName property - may not be a DOM element",
-      );
-      console.warn(
-        `Element type: ${typeof element}, constructor: ${element?.constructor?.name}`,
+        {
+          elementType: typeof element,
+          constructor: element?.constructor?.name,
+        },
       );
       return null;
     }
 
     // Check if element has any content
     if (!element.textContent || element.textContent.trim().length === 0) {
-      console.warn(
-        `Element for ${weekday} has no text content (tagName: ${element.tagName})`,
-      );
-
-      // Check if element has child elements but no text
-      if (element.children && element.children.length > 0) {
-        console.warn(
-          `Element has ${element.children.length} child elements but no text content`,
-        );
-      } else {
-        console.warn("Element has no child elements and no text content");
-      }
+      logger.warn("Element has no text content", {
+        tagName: element.tagName,
+        hasChildren: element.children && element.children.length > 0,
+        childrenCount: element.children ? element.children.length : 0,
+      });
       return null;
     }
 
@@ -64,27 +70,17 @@ export function extractLunchFromElement(element, week, weekday) {
       // Check if table row has required cells
       const cells = element.querySelectorAll("td");
       if (cells.length < 3) {
-        console.warn(
-          `Table row for ${weekday} missing required cells (has ${cells.length}, needs 3)`,
+        const thCells = element.querySelectorAll("th");
+        const cellContents = Array.from(cells).map((cell) =>
+          cell.textContent?.trim(),
         );
 
-        // Enhanced debugging for table structure
-        if (cells.length === 0) {
-          console.warn(`Table row has no <td> elements at all`);
-          // Check for other cell types
-          const thCells = element.querySelectorAll("th");
-          if (thCells.length > 0) {
-            console.warn(
-              `Table row has ${thCells.length} <th> elements instead of <td>`,
-            );
-          }
-        } else {
-          console.warn(
-            `Table row cell contents: ${Array.from(cells)
-              .map((cell) => cell.textContent?.trim())
-              .join(" | ")}`,
-          );
-        }
+        logger.warn("Table row missing required cells", {
+          cellsFound: cells.length,
+          cellsRequired: 3,
+          thCellsFound: thCells.length,
+          cellContents: cellContents,
+        });
         return null;
       }
 
@@ -93,21 +89,16 @@ export function extractLunchFromElement(element, week, weekday) {
       const priceCell = element.querySelector("td:nth-of-type(3)");
 
       if (!nameCell || !descCell || !priceCell) {
-        console.warn(
-          `Table row for ${weekday} missing expected cell structure`,
-        );
-
-        // Enhanced debugging for missing cells
-        console.warn(
-          `Cell availability: name=${!!nameCell}, desc=${!!descCell}, price=${!!priceCell}`,
-        );
-
-        if (!nameCell) console.warn("Name cell (td:nth-of-type(1)) not found");
-        if (!descCell)
-          console.warn("Description cell (td:nth-of-type(2)) not found");
-        if (!priceCell)
-          console.warn("Price cell (td:nth-of-type(3)) not found");
-
+        logger.warn("Table row missing expected cell structure", {
+          nameCell: !!nameCell,
+          descCell: !!descCell,
+          priceCell: !!priceCell,
+          missingCells: [
+            !nameCell && "name",
+            !descCell && "description",
+            !priceCell && "price",
+          ].filter(Boolean),
+        });
         return null;
       }
 
@@ -144,30 +135,20 @@ export function extractLunchFromElement(element, week, weekday) {
       }
 
       if (!nameElement) {
-        console.warn(`No name element found for ${weekday} using any selector`);
-        console.warn(`Tried selectors: ${nameSelectors.join(", ")}`);
-
-        // Enhanced debugging for missing name element
-        const elementHTML = element.outerHTML?.substring(0, 200) || "N/A";
-        console.warn(`Element structure: ${elementHTML}...`);
-
-        // Check what child elements exist
-        if (element.children && element.children.length > 0) {
-          const childTags = Array.from(element.children).map((child) =>
-            child.tagName.toLowerCase(),
-          );
-          console.warn(`Child element tags: ${childTags.join(", ")}`);
-        }
-
-        // Try to extract text directly from element as last resort
         const directText = element.textContent?.trim();
-        if (directText && directText.length > 0) {
-          console.warn(
-            `Element has direct text content: "${directText.substring(0, 50)}..."`,
-          );
-          console.warn("Consider using direct text extraction as fallback");
-        }
+        const childTags = element.children
+          ? Array.from(element.children).map((child) =>
+              child.tagName.toLowerCase(),
+            )
+          : [];
 
+        logger.warn("No name element found using any selector", {
+          selectorsAttempted: nameSelectors,
+          elementStructure: element.outerHTML?.substring(0, 200) + "...",
+          childTags: childTags,
+          hasDirectText: !!(directText && directText.length > 0),
+          directTextPreview: directText?.substring(0, 50) + "...",
+        });
         return null;
       }
 
@@ -213,26 +194,92 @@ export function extractLunchFromElement(element, week, weekday) {
       price = priceMatch ? Number(priceMatch[1]) : null;
     }
 
-    // Only return if we have valid data, valid price, and valid Swedish weekday
-    if (
-      name &&
-      name.length > 0 &&
-      price !== null &&
-      price >= 0 &&
-      isValidSwedishWeekday(weekday)
-    ) {
-      return {
-        description: description || "",
-        name: name,
-        price: price,
-        place: "Niagara",
-        week,
-        weekday: normalizeSwedishWeekday(weekday),
-      };
+    // Enhanced validation with detailed logging before returning lunch object
+    const validationErrors = [];
+
+    // Validate name
+    if (!name || typeof name !== "string" || name.trim().length === 0) {
+      validationErrors.push(`Invalid name: "${name}" (type: ${typeof name})`);
     }
-    return null;
+
+    // Validate price
+    if (price === null || price === undefined) {
+      validationErrors.push("Price is null or undefined");
+    } else if (typeof price !== "number" || isNaN(price)) {
+      validationErrors.push(
+        `Invalid price type: "${price}" (type: ${typeof price})`,
+      );
+    } else if (price < 0) {
+      validationErrors.push(`Price cannot be negative: ${price}`);
+    } else if (!isFinite(price)) {
+      validationErrors.push(`Price is not finite: ${price}`);
+    }
+
+    // Validate week
+    if (!week || typeof week !== "number" || isNaN(week)) {
+      validationErrors.push(`Invalid week: "${week}" (type: ${typeof week})`);
+    } else if (week < 1 || week > 53) {
+      validationErrors.push(`Week number out of range: ${week} (must be 1-53)`);
+    }
+
+    // Validate weekday
+    if (!isValidSwedishWeekday(weekday)) {
+      validationErrors.push(`Invalid Swedish weekday: "${weekday}"`);
+    }
+
+    // Validate description (optional but if present must be string)
+    if (
+      description !== undefined &&
+      description !== null &&
+      typeof description !== "string"
+    ) {
+      validationErrors.push(
+        `Description must be string if provided: "${description}" (type: ${typeof description})`,
+      );
+    }
+
+    // Log validation errors if any
+    if (validationErrors.length > 0) {
+      logger.warn("Validation failed for lunch item", {
+        errors: validationErrors,
+        rawData: { name, price, week, weekday, description },
+      });
+      return null;
+    }
+
+    // Create validated lunch object
+    const lunch = {
+      description: (description || "").trim(),
+      name: name.trim(),
+      price: price,
+      place: "Niagara",
+      week: week,
+      weekday: normalizeSwedishWeekday(weekday),
+    };
+
+    // Final validation using the validateLunch function for consistency
+    const finalValidation = validateLunch(lunch);
+    if (!finalValidation.isValid) {
+      logger.warn("Final validation failed", {
+        errors: finalValidation.errors,
+        lunchObject: lunch,
+      });
+      return null;
+    }
+
+    logger.info("Successfully validated lunch item", {
+      name: lunch.name,
+      price: lunch.price,
+      description:
+        lunch.description?.substring(0, 50) +
+        (lunch.description?.length > 50 ? "..." : ""),
+    });
+
+    logger.endTimer("extractLunchFromElement");
+    return lunch;
   } catch (error) {
-    console.error(`Error extracting lunch data for ${weekday}:`, error);
+    logger.error("Error extracting lunch data", {}, error);
+    logger.endTimer("extractLunchFromElement");
     return null;
   }
 }
@@ -612,25 +659,32 @@ export function findWeekdayContent(container, weekday) {
  * @returns {Array<object>} - Array of lunch objects
  */
 export function extractAllLunchData(container) {
+  const logger = createRestaurantLogger("Niagara", {
+    operation: "extractAllLunchData",
+  });
+  logger.startTimer("extractAllLunchData");
+
   const lunches = [];
 
   try {
     if (!container) {
-      console.error("No container provided to extractAllLunchData");
+      logger.error("No container provided to extractAllLunchData");
       return lunches;
     }
 
     // Check if container has any content
     if (!container.textContent || container.textContent.trim().length === 0) {
-      console.warn("Container is completely empty - no lunch data to extract");
+      logger.warn("Container is completely empty - no lunch data to extract");
       return lunches;
     }
 
     // Check restaurant status for closure indicators
     const restaurantStatus = validateRestaurantStatus(container);
     if (!restaurantStatus.isOpen) {
-      console.warn("Restaurant appears to be closed:", restaurantStatus.reason);
-      console.warn("Closure indicators:", restaurantStatus.closureIndicators);
+      logger.info("Restaurant is closed", {
+        reason: restaurantStatus.reason,
+        closureIndicators: restaurantStatus.closureIndicators,
+      });
       return lunches; // Return empty array for closed restaurant
     }
 
@@ -731,14 +785,30 @@ export function extractAllLunchData(container) {
               continue;
             }
 
-            console.info(`Found ${rows.length} rows for ${weekday}`);
+            logger.info("Found table rows for weekday", {
+              weekday: weekday,
+              rowCount: rows.length,
+            });
             dataFound = true;
 
             for (const row of rows) {
               try {
                 const lunch = extractLunchFromElement(row, week, weekday);
                 if (lunch) {
-                  lunches.push(lunch);
+                  // Validate lunch object before adding to array
+                  const validation = validateLunch(lunch);
+                  if (validation.isValid) {
+                    lunches.push(lunch);
+                    console.info(
+                      `Added valid lunch item for ${weekday}: "${lunch.name}" - ${lunch.price}kr`,
+                    );
+                  } else {
+                    console.warn(
+                      `Extracted lunch for ${weekday} failed validation:`,
+                      validation.errors,
+                    );
+                    console.warn(`Invalid lunch data:`, JSON.stringify(lunch));
+                  }
                 } else {
                   console.warn(
                     `Failed to extract valid lunch data from row for ${weekday}`,
@@ -873,8 +943,21 @@ export function extractAllLunchData(container) {
               try {
                 const lunch = extractLunchFromElement(element, week, weekday);
                 if (lunch) {
-                  lunches.push(lunch);
-                  dataFound = true;
+                  // Validate lunch object before adding to array
+                  const validation = validateLunch(lunch);
+                  if (validation.isValid) {
+                    lunches.push(lunch);
+                    dataFound = true;
+                    console.info(
+                      `Added valid lunch item for ${weekday}: "${lunch.name}" - ${lunch.price}kr`,
+                    );
+                  } else {
+                    console.warn(
+                      `Extracted lunch for ${weekday} failed validation:`,
+                      validation.errors,
+                    );
+                    console.warn(`Invalid lunch data:`, JSON.stringify(lunch));
+                  }
                 } else {
                   console.warn(
                     `Failed to extract valid lunch data from modern element for ${weekday}`,
@@ -905,23 +988,118 @@ export function extractAllLunchData(container) {
     console.error("Critical error in extractAllLunchData:", error);
   }
 
-  // Validate all extracted lunches before returning
+  // Enhanced validation of all extracted lunches before returning
   if (lunches.length > 0) {
-    console.log(`Validating ${lunches.length} extracted lunch items...`);
-    const validationResult = validateLunches(lunches);
+    logger.info("Starting validation of extracted lunch items", {
+      itemCount: lunches.length,
+    });
 
-    // Log validation results for debugging
-    logValidationResults(validationResult, "Niagara");
+    // Pre-validation checks for data integrity
+    const preValidationErrors = [];
+    for (let i = 0; i < lunches.length; i++) {
+      const lunch = lunches[i];
+      if (!lunch) {
+        preValidationErrors.push(`Lunch at index ${i} is null or undefined`);
+      } else if (typeof lunch !== "object") {
+        preValidationErrors.push(
+          `Lunch at index ${i} is not an object: ${typeof lunch}`,
+        );
+      }
+    }
 
-    if (validationResult.invalidCount > 0) {
+    if (preValidationErrors.length > 0) {
+      console.warn("Pre-validation errors detected:");
+      preValidationErrors.forEach((error) => console.warn(`  - ${error}`));
+    }
+
+    // Filter out null/undefined entries before main validation
+    const validLunchObjects = lunches.filter((lunch, index) => {
+      if (!lunch || typeof lunch !== "object") {
+        console.warn(`Filtering out invalid lunch object at index ${index}`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validLunchObjects.length !== lunches.length) {
       console.warn(
-        `Filtered out ${validationResult.invalidCount} invalid lunch items`,
+        `Filtered out ${lunches.length - validLunchObjects.length} null/invalid lunch objects`,
       );
     }
 
+    if (validLunchObjects.length === 0) {
+      console.warn("No valid lunch objects remaining after filtering");
+      return [];
+    }
+
+    // Main validation using validateLunches function
+    const validationResult = validateLunches(validLunchObjects);
+
+    // Enhanced logging of validation results
+    logValidationResults(validationResult, "Niagara");
+
+    // Additional validation checks for edge cases
+    if (validationResult.validLunches.length > 0) {
+      // Check for duplicate lunch items
+      const duplicateCheck = new Map();
+      const duplicates = [];
+
+      validationResult.validLunches.forEach((lunch, index) => {
+        const key = `${lunch.weekday}-${lunch.name}-${lunch.price}`;
+        if (duplicateCheck.has(key)) {
+          duplicates.push({
+            index: index,
+            duplicate: lunch,
+            original: duplicateCheck.get(key),
+          });
+        } else {
+          duplicateCheck.set(key, { index, lunch });
+        }
+      });
+
+      if (duplicates.length > 0) {
+        console.warn(
+          `Found ${duplicates.length} potential duplicate lunch items:`,
+        );
+        duplicates.forEach((dup) => {
+          console.warn(
+            `  - Duplicate at index ${dup.index}: ${dup.duplicate.weekday} - ${dup.duplicate.name}`,
+          );
+        });
+      }
+
+      // Check for reasonable price ranges
+      const prices = validationResult.validLunches.map((lunch) => lunch.price);
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+
+      if (minPrice < 50 || maxPrice > 200) {
+        console.warn(
+          `Price range check - Min: ${minPrice}kr, Max: ${maxPrice}kr`,
+        );
+        if (minPrice < 50) {
+          console.warn("Some prices seem unusually low (< 50kr)");
+        }
+        if (maxPrice > 200) {
+          console.warn("Some prices seem unusually high (> 200kr)");
+        }
+      }
+    }
+
+    if (validationResult.invalidCount > 0) {
+      console.warn(
+        `Filtered out ${validationResult.invalidCount} invalid lunch items during validation`,
+      );
+    }
+
+    logger.logExtractionSummary(validationResult.validLunches);
+    logger.endTimer("extractAllLunchData");
+    logger.logMetrics();
     return validationResult.validLunches;
   }
 
+  logger.info("No lunch items extracted, returning empty array");
+  logger.endTimer("extractAllLunchData");
   return lunches;
 }
 
@@ -1055,41 +1233,47 @@ export async function extractNiagaraLunches(
   getHtmlNodeFromUrl,
   url = "https://restaurangniagara.se/lunch/",
 ) {
+  const logger = createRestaurantLogger("Niagara", {
+    operation: "extractNiagaraLunches",
+    url: url,
+  });
+
+  logger.startTimer("fullExtraction");
+
   try {
     if (!getHtmlNodeFromUrl) {
-      console.error(
-        "No getHtmlNodeFromUrl function provided to extractNiagaraLunches",
-      );
+      logger.error("No getHtmlNodeFromUrl function provided");
       return [];
     }
 
     if (!url || typeof url !== "string") {
-      console.error("Invalid URL provided to extractNiagaraLunches");
+      logger.error("Invalid URL provided", { url: url, urlType: typeof url });
       return [];
     }
 
-    console.log(`Starting lunch extraction from Niagara: ${url}`);
+    logger.info("Starting lunch extraction from Niagara", { url });
 
     let container;
     try {
       container = await findLunchContainer(getHtmlNodeFromUrl, url);
     } catch (containerError) {
-      console.error("Error finding lunch container:", containerError);
+      logger.error("Error finding lunch container", {}, containerError);
       return [];
     }
 
     if (!container) {
-      console.warn("Lunch container not found, returning empty results");
+      logger.warn("Lunch container not found, returning empty results");
       return [];
     }
 
     // Early restaurant status check to provide better logging
     const restaurantStatus = validateRestaurantStatus(container);
     if (!restaurantStatus.isOpen) {
-      console.info("Restaurant status check:", restaurantStatus.reason);
-      console.info(
-        "This is expected behavior when restaurant is closed for vacation or maintenance",
-      );
+      logger.info("Restaurant status check completed", {
+        status: "closed",
+        reason: restaurantStatus.reason,
+        note: "This is expected behavior when restaurant is closed for vacation or maintenance",
+      });
       return []; // Return empty array for closed restaurant - this is normal
     }
 
@@ -1097,27 +1281,32 @@ export async function extractNiagaraLunches(
     try {
       lunches = extractAllLunchData(container);
     } catch (extractionError) {
-      console.error(
-        "Error extracting lunch data from container:",
+      logger.error(
+        "Error extracting lunch data from container",
+        {},
         extractionError,
       );
       return [];
     }
 
     const resultCount = lunches ? lunches.length : 0;
-    console.log(
-      `Successfully extracted and validated ${resultCount} lunch items from Niagara`,
-    );
+    logger.info("Extraction completed", {
+      itemsExtracted: resultCount,
+      success: resultCount > 0,
+    });
 
     if (resultCount === 0) {
-      console.info(
-        "No lunch data extracted - this may be normal if restaurant is closed or has no current menu",
-      );
+      logger.info("No lunch data extracted", {
+        note: "This may be normal if restaurant is closed or has no current menu",
+      });
     }
 
+    logger.endTimer("fullExtraction");
+    logger.logMetrics();
     return lunches || [];
   } catch (error) {
-    console.error("Critical error in extractNiagaraLunches:", error);
+    logger.error("Critical error in extractNiagaraLunches", {}, error);
+    logger.endTimer("fullExtraction");
     return []; // Return empty array for graceful degradation
   }
 }

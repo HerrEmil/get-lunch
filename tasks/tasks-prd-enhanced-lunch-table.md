@@ -62,11 +62,11 @@ Based on the PRD for Enhanced Lunch Table, this document outlines the implementa
     - [x] 1.3.2 Verify that lunch data is correctly extracted for all weekdays
     - [x] 1.3.3 Confirm price, name, and description fields are properly parsed
     - [x] 1.3.4 Check that week number is correctly identified
-  - [ ] 1.4 Add comprehensive error handling for Niagara parser
+  - [x] 1.4 Add comprehensive error handling for Niagara parser
     - [x] 1.4.1 Add try-catch blocks around DOM queries and data extraction
     - [x] 1.4.2 Handle cases where expected elements are missing
-    - [ ] 1.4.3 Add validation for extracted data before adding to lunches array
-    - [ ] 1.4.4 Log meaningful error messages for debugging
+    - [x] 1.4.3 Add validation for extracted data before adding to lunches array
+    - [x] 1.4.4 Log meaningful error messages for debugging
   - [ ] 1.5 Create unit tests for updated Niagara parser
     - [ ] 1.5.1 Create mock HTML fixtures representing current website structure
     - [ ] 1.5.2 Test successful data extraction with valid HTML
