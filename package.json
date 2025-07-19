@@ -4,13 +4,24 @@
   "version": "1.0.0",
   "license": "UNLICENSED",
   "scripts": {
-    "start": "node local-test-server.js",
-    "test": "node niagara-parser.test.mjs && node test-comprehensive-validation.mjs",
+    "start": "node local-test-server.mjs",
+    "start:old": "node local-test-server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:old": "node niagara-parser.test.mjs && node test-comprehensive-validation.mjs",
+    "test:api": "vitest run src/lambdas/api-server.test.mjs",
+    "test:collector": "vitest run src/lambdas/data-collector.test.mjs",
+    "test:parsers": "vitest run src/parsers/",
+    "dev": "node local-test-server.mjs",
+    "dev:collection": "node -e \"import('./src/lambdas/data-collector.mjs').then(m => m.handler({}, {awsRequestId: 'dev-test'}))\"",
     "deploy": "cd infrastructure && serverless deploy",
     "deploy:dev": "cd infrastructure && serverless deploy --stage dev",
     "deploy:prod": "cd infrastructure && serverless deploy --stage prod",
     "logs": "cd infrastructure && serverless logs -f apiServer --tail",
-    "remove": "cd infrastructure && serverless remove"
+    "logs:collector": "cd infrastructure && serverless logs -f dataCollector --tail",
+    "remove": "cd infrastructure && serverless remove",
+    "lint": "eslint .",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch-logs": "^3.849.0",
@@ -19,6 +30,10 @@
     "jsdom": "^24.1.0"
   },
   "devDependencies": {
+    "vitest": "^1.0.0",
+    "@vitest/ui": "^1.0.0",
+    "eslint": "^8.56.0",
+    "prettier": "^3.1.0",
     "serverless": "^3.38.0",
     "serverless-dynamodb-local": "^1.0.2",
     "serverless-offline": "^13.3.0",

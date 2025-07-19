@@ -207,22 +207,22 @@ Based on the PRD for Enhanced Lunch Table, this document outlines the implementa
     - [x] 5.7.4 Test day filtering functionality
     - [x] 5.7.5 Test performance requirements and response times
 
-- [ ] 6.0 Update Local Development Environment
-  - [ ] 6.1 Update local test server for new architecture
-    - [ ] 6.1.1 Modify local-test-server.mjs to work with cache manager
-    - [ ] 6.1.2 Add mock DynamoDB operations for local development
-    - [ ] 6.1.3 Create sample cached data for testing
-    - [ ] 6.1.4 Add development mode switches for testing different scenarios
-  - [ ] 6.2 Update package.json and dependencies
-    - [ ] 6.2.1 Add AWS SDK v3 for DynamoDB operations
-    - [ ] 6.2.2 Add testing dependencies (Jest, testing utilities)
-    - [ ] 6.2.3 Update scripts for yarn-based workflow
-    - [ ] 6.2.4 Add development and deployment scripts
-  - [ ] 6.3 Create infrastructure configuration
-    - [ ] 6.3.1 Set up Serverless Framework configuration
-    - [ ] 6.3.2 Define Lambda functions, DynamoDB table, and EventBridge rules
-    - [ ] 6.3.3 Configure IAM roles and permissions
-    - [ ] 6.3.4 Add environment-specific configurations (dev/prod)
+- [x] 6.0 Update Local Development Environment
+  - [x] 6.1 Update local test server for new architecture
+    - [x] 6.1.1 Modify local-test-server.mjs to work with cache manager
+    - [x] 6.1.2 Add mock DynamoDB operations for local development
+    - [x] 6.1.3 Create sample cached data for testing
+    - [x] 6.1.4 Add development mode switches for testing different scenarios
+  - [x] 6.2 Update package.json and dependencies
+    - [x] 6.2.1 Add AWS SDK v3 for DynamoDB operations
+    - [x] 6.2.2 Add testing dependencies (Jest, testing utilities)
+    - [x] 6.2.3 Update scripts for yarn-based workflow
+    - [x] 6.2.4 Add development and deployment scripts
+  - [x] 6.3 Create infrastructure configuration
+    - [x] 6.3.1 Set up Serverless Framework configuration
+    - [x] 6.3.2 Define Lambda functions, DynamoDB table, and EventBridge rules
+    - [x] 6.3.3 Configure IAM roles and permissions
+    - [x] 6.3.4 Add environment-specific configurations (dev/prod)
 
 ## Implementation Complete
 

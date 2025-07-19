@@ -1,0 +1,369 @@
+# Development Environment Configuration
+# Extends the main serverless.yml with dev-specific settings
+
+service: ${file(./serverless.yml):service}
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: eu-west-1
+  stage: dev
+  environment:
+    LUNCH_CACHE_TABLE: ${self:custom.tableName}
+    AWS_REGION: ${self:provider.region}
+    CACHE_TTL_DAYS: 7  # Shorter TTL for development
+    STAGE: dev
+    LOG_GROUP_NAME: /aws/lambda/${self:service}-dev
+    SERVICE_NAME: ${self:service}
+    LOG_LEVEL: DEBUG  # More verbose logging for development
+    MAX_CONCURRENCY: 2  # Lower concurrency for development
+    ENABLE_WARMUP: false
+    ENABLE_XRAY: false
+
+  # Development-specific IAM permissions
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:BatchWriteItem
+            - dynamodb:UpdateItem
+            - dynamodb:DescribeTable
+          Resource:
+            - ${self:custom.tableArn}
+            - ${self:custom.tableArn}/index/*
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            - logs:DescribeLogGroups
+            - logs:DescribeLogStreams
+          Resource: "arn:aws:logs:${self:provider.region}:*:*"
+        - Effect: Allow
+          Action:
+            - events:PutRule
+            - events:DeleteRule
+            - events:PutTargets
+            - events:RemoveTargets
+          Resource: "*"
+
+custom:
+  tableName: ${self:service}-lunch-cache-dev
+  tableArn:
+    Fn::GetAtt:
+      - LunchCacheTable
+      - Arn
+
+  # Development-specific configurations
+  serverless-offline:
+    httpPort: 3000
+    lambdaPort: 3002
+    printOutput: true
+    reloadHandler: true
+    useSeparateProcesses: false
+    useChildProcesses: false
+
+  dynamodb:
+    stages:
+      - dev
+    start:
+      port: 8000
+      inMemory: true
+      migrate: true
+      seed: true
+      convertEmptyValues: true
+      noStart: false
+    seed:
+      development:
+        sources:
+          - table: ${self:custom.tableName}
+            sources: [./test-fixtures/sample-cache-data.json]
+
+  warmup:
+    enabled: false  # Disable warmup in development
+
+functions:
+  # Data Collection Lambda (development settings)
+  dataCollector:
+    handler: src/lambdas/data-collector.handler
+    timeout: 180  # Shorter timeout for development
+    memorySize: 512  # Less memory for development
+    events:
+      - schedule:
+          rate: cron(0 12 ? * MON *)  # 12:00 UTC for dev testing
+          description: "Weekly lunch data collection (DEV)"
+          enabled: true
+    environment:
+      FUNCTION_TYPE: data_collector
+      DEBUG_MODE: true
+      MOCK_EXTERNAL_CALLS: false
+
+  # HTML Serving Lambda (development settings)
+  apiServer:
+    handler: src/lambdas/api-server.handler
+    timeout: 30
+    memorySize: 256  # Less memory for development
+    events:
+      - http:
+          path: /
+          method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+      - http:
+          path: /lunch
+          method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+      - http:
+          path: /lunch/{day}
+          method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+    environment:
+      FUNCTION_TYPE: api_server
+      DEBUG_MODE: true
+      CACHE_DEBUG: true
+
+  # Development-only function for manual testing
+  devTest:
+    handler: src/lambdas/data-collector.handler
+    timeout: 300
+    memorySize: 1024
+    events:
+      - http:
+          path: /dev/collect
+          method: post
+          cors: true
+    environment:
+      FUNCTION_TYPE: data_collector
+      DEBUG_MODE: true
+      MANUAL_TRIGGER: true
+
+resources:
+  Resources:
+    # DynamoDB Table (development configuration)
+    LunchCacheTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tableName}
+        BillingMode: ON_DEMAND
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: restaurant
+            AttributeType: S
+          - AttributeName: cachedAt
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: RestaurantIndex
+            KeySchema:
+              - AttributeName: restaurant
+                KeyType: HASH
+              - AttributeName: cachedAt
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+        SSESpecification:
+          SSEEnabled: false  # Disable encryption for development
+        Tags:
+          - Key: Project
+            Value: EnhancedLunchTable
+          - Key: Environment
+            Value: dev
+          - Key: Purpose
+            Value: LunchDataCache
+          - Key: CostCenter
+            Value: Development
+
+    # Development Log Groups (shorter retention)
+    EnhancedLunchTableLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/${self:service}-dev
+        RetentionInDays: 7  # Shorter retention for development
+        Tags:
+          - Key: Project
+            Value: EnhancedLunchTable
+          - Key: Environment
+            Value: dev
+          - Key: Component
+            Value: Application
+
+    DataCollectorLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/${self:service}-dev-dataCollector
+        RetentionInDays: 7
+        Tags:
+          - Key: Project
+            Value: EnhancedLunchTable
+          - Key: Environment
+            Value: dev
+          - Key: Component
+            Value: DataCollector
+
+    ApiServerLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/${self:service}-dev-apiServer
+        RetentionInDays: 7
+        Tags:
+          - Key: Project
+            Value: EnhancedLunchTable
+          - Key: Environment
+            Value: dev
+          - Key: Component
+            Value: ApiServer
+
+    # SNS Topic for Development Notifications
+    ErrorNotificationTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ${self:service}-errors-dev
+        DisplayName: "Enhanced Lunch Table Error Notifications (DEV)"
+
+    # Relaxed CloudWatch Alarms for Development
+    DataCollectorErrorAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-data-collector-errors-dev
+        AlarmDescription: "Data Collector Lambda Function Errors (DEV)"
+        MetricName: Errors
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: 600  # Longer period for development
+        EvaluationPeriods: 2
+        Threshold: 3  # Higher threshold for development
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        Dimensions:
+          - Name: FunctionName
+            Value: ${self:service}-dev-dataCollector
+        AlarmActions:
+          - Ref: ErrorNotificationTopic
+
+    ApiServerErrorAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-api-server-errors-dev
+        AlarmDescription: "API Server Lambda Function Errors (DEV)"
+        MetricName: Errors
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: 600
+        EvaluationPeriods: 2
+        Threshold: 10  # Higher threshold for development
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        Dimensions:
+          - Name: FunctionName
+            Value: ${self:service}-dev-apiServer
+        AlarmActions:
+          - Ref: ErrorNotificationTopic
+
+  Outputs:
+    # Development-specific outputs
+    LunchCacheTableName:
+      Description: "DynamoDB table name for lunch cache (DEV)"
+      Value: ${self:custom.tableName}
+      Export:
+        Name: ${self:service}-dev-lunch-cache-table
+
+    ApiGatewayUrl:
+      Description: "API Gateway URL for lunch service (DEV)"
+      Value:
+        Fn::Join:
+          - ""
+          - - "https://"
+            - Ref: ApiGatewayRestApi
+            - ".execute-api."
+            - ${self:provider.region}
+            - ".amazonaws.com/"
+            - "dev"
+      Export:
+        Name: ${self:service}-dev-api-url
+
+    DevTestUrl:
+      Description: "Development test endpoint URL"
+      Value:
+        Fn::Join:
+          - ""
+          - - "https://"
+            - Ref: ApiGatewayRestApi
+            - ".execute-api."
+            - ${self:provider.region}
+            - ".amazonaws.com/"
+            - "dev/dev/collect"
+      Export:
+        Name: ${self:service}-dev-test-url
+
+    ErrorNotificationTopicArn:
+      Description: "SNS Topic ARN for error notifications (DEV)"
+      Value:
+        Ref: ErrorNotificationTopic
+      Export:
+        Name: ${self:service}-dev-error-topic-arn
+
+package:
+  individually: true
+  exclude:
+    - node_modules/**
+    - .git/**
+    - .gitignore
+    - README.md
+    - package-lock.json
+    - yarn.lock
+    - test/**
+    - tests/**
+    - '*.test.js'
+    - '*.test.mjs'
+    - coverage/**
+    - .nyc_output/**
+    - docs/**
+    - infrastructure/serverless-prod.yml
+  include:
+    - src/**
+    - index.html
+    - package.json
+
+plugins:
+  - serverless-offline
+  - serverless-dynamodb-local
+
+configValidationMode: warn  # More relaxed validation for development

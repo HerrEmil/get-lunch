@@ -1,0 +1,526 @@
+# Production Environment Configuration
+# Extends the main serverless.yml with production-specific settings
+
+service: ${file(./serverless.yml):service}
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: eu-west-1
+  stage: prod
+  environment:
+    LUNCH_CACHE_TABLE: ${self:custom.tableName}
+    AWS_REGION: ${self:provider.region}
+    CACHE_TTL_DAYS: 14 # Standard TTL for production
+    STAGE: prod
+    LOG_GROUP_NAME: /aws/lambda/${self:service}-prod
+    SERVICE_NAME: ${self:service}
+    LOG_LEVEL: INFO # Standard logging for production
+    MAX_CONCURRENCY: 5 # Higher concurrency for production
+    ENABLE_WARMUP: true
+    ENABLE_XRAY: true
+
+  # Production-specific settings
+  versionFunctions: true
+  reservedConcurrency: 100
+
+  # Enhanced IAM permissions for production
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:BatchWriteItem
+            - dynamodb:UpdateItem
+            - dynamodb:DescribeTable
+          Resource:
+            - ${self:custom.tableArn}
+            - ${self:custom.tableArn}/index/*
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            - logs:DescribeLogGroups
+            - logs:DescribeLogStreams
+          Resource: "arn:aws:logs:${self:provider.region}:*:*"
+        - Effect: Allow
+          Action:
+            - events:PutRule
+            - events:DeleteRule
+            - events:PutTargets
+            - events:RemoveTargets
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - sns:Publish
+          Resource:
+            - Ref: ErrorNotificationTopic
+        - Effect: Allow
+          Action:
+            - cloudwatch:PutMetricData
+          Resource: "*"
+
+  # Production tracing
+  tracing:
+    lambda: true
+    apiGateway: true
+
+custom:
+  tableName: ${self:service}-lunch-cache-prod
+  tableArn:
+    Fn::GetAtt:
+      - LunchCacheTable
+      - Arn
+
+  # Production-specific configurations
+  warmup:
+    enabled: true
+    events:
+      - schedule: rate(5 minutes)
+    timeout: 20
+    prewarm: true
+    concurrency: 2
+    cleanFolder: false
+
+  # Production API Gateway settings
+  apiGateway:
+    restApiId: !Ref ApiGatewayRestApi
+    restApiRootResourceId: !GetAtt ApiGatewayRestApi.RootResourceId
+    minimumCompressionSize: 1024
+    binaryMediaTypes:
+      - "*/*"
+
+functions:
+  # Data Collection Lambda (production settings)
+  dataCollector:
+    handler: src/lambdas/data-collector.handler
+    timeout: 300
+    memorySize: 1024
+    reservedConcurrency: 10
+    events:
+      - schedule:
+          rate: cron(0 10 ? * MON *) # Every Monday at 10:00 UTC
+          description: "Weekly lunch data collection from restaurants (PROD)"
+          enabled: true
+    environment:
+      FUNCTION_TYPE: data_collector
+      DEBUG_MODE: false
+      MOCK_EXTERNAL_CALLS: false
+    deadLetter:
+      targetArn:
+        Fn::GetAtt:
+          - DataCollectorDLQ
+          - Arn
+
+  # HTML Serving Lambda (production settings)
+  apiServer:
+    handler: src/lambdas/api-server.handler
+    timeout: 30
+    memorySize: 512
+    reservedConcurrency: 50
+    events:
+      - http:
+          path: /
+          method: get
+          cors:
+            origin: "https://lunch.yourdomain.com" # Specific domain for production
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Cache-Control
+            allowCredentials: false
+            maxAge: 300
+      - http:
+          path: /lunch
+          method: get
+          cors:
+            origin: "https://lunch.yourdomain.com"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Cache-Control
+            allowCredentials: false
+            maxAge: 300
+      - http:
+          path: /lunch/{day}
+          method: get
+          cors:
+            origin: "https://lunch.yourdomain.com"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Cache-Control
+            allowCredentials: false
+            maxAge: 300
+    environment:
+      FUNCTION_TYPE: api_server
+      DEBUG_MODE: false
+      CACHE_DEBUG: false
+    deadLetter:
+      targetArn:
+        Fn::GetAtt:
+          - ApiServerDLQ
+          - Arn
+
+  # Health check function for production monitoring
+  healthCheck:
+    handler: src/lambdas/health-check.handler
+    timeout: 30
+    memorySize: 256
+    events:
+      - schedule:
+          rate: rate(5 minutes)
+          description: "Health check for production monitoring"
+          enabled: true
+    environment:
+      FUNCTION_TYPE: health_check
+      HEALTH_CHECK_ENDPOINTS: !Sub
+        - "https://${ApiId}.execute-api.${AWS::Region}.amazonaws.com/prod/"
+        - ApiId: !Ref ApiGatewayRestApi
+
+resources:
+  Resources:
+    # DynamoDB Table (production configuration)
+    LunchCacheTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tableName}
+        BillingMode: ON_DEMAND
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: restaurant
+            AttributeType: S
+          - AttributeName: cachedAt
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: RestaurantIndex
+            KeySchema:
+              - AttributeName: restaurant
+                KeyType: HASH
+              - AttributeName: cachedAt
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+        SSESpecification:
+          SSEEnabled: true
+          SSEType: KMS
+          KMSMasterKeyId: alias/aws/dynamodb
+        BackupPolicy:
+          PointInTimeRecoveryEnabled: true
+        Tags:
+          - Key: Project
+            Value: EnhancedLunchTable
+          - Key: Environment
+            Value: prod
+          - Key: Purpose
+            Value: LunchDataCache
+          - Key: CostCenter
+            Value: Production
+          - Key: BackupRequired
+            Value: "true"
+          - Key: Compliance
+            Value: Required
+
+    # Dead Letter Queues for production error handling
+    DataCollectorDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-data-collector-dlq-prod
+        MessageRetentionPeriod: 1209600 # 14 days
+        VisibilityTimeoutSeconds: 300
+        KmsMasterKeyId: alias/aws/sqs
+        Tags:
+          - Key: Project
+            Value: EnhancedLunchTable
+          - Key: Environment
+            Value: prod
+          - Key: Component
+            Value: DataCollectorDLQ
+
+    ApiServerDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-api-server-dlq-prod
+        MessageRetentionPeriod: 1209600 # 14 days
+        VisibilityTimeoutSeconds: 60
+        KmsMasterKeyId: alias/aws/sqs
+        Tags:
+          - Key: Project
+            Value: EnhancedLunchTable
+          - Key: Environment
+            Value: prod
+          - Key: Component
+            Value: ApiServerDLQ
+
+    # Production Log Groups (longer retention)
+    EnhancedLunchTableLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/${self:service}-prod
+        RetentionInDays: 30 # Longer retention for production
+        KmsKeyId: !GetAtt LogsKMSKey.Arn
+        Tags:
+          - Key: Project
+            Value: EnhancedLunchTable
+          - Key: Environment
+            Value: prod
+          - Key: Component
+            Value: Application
+
+    DataCollectorLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/${self:service}-prod-dataCollector
+        RetentionInDays: 30
+        KmsKeyId: !GetAtt LogsKMSKey.Arn
+        Tags:
+          - Key: Project
+            Value: EnhancedLunchTable
+          - Key: Environment
+            Value: prod
+          - Key: Component
+            Value: DataCollector
+
+    ApiServerLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/${self:service}-prod-apiServer
+        RetentionInDays: 30
+        KmsKeyId: !GetAtt LogsKMSKey.Arn
+        Tags:
+          - Key: Project
+            Value: EnhancedLunchTable
+          - Key: Environment
+            Value: prod
+          - Key: Component
+            Value: ApiServer
+
+    HealthCheckLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/${self:service}-prod-healthCheck
+        RetentionInDays: 14
+        KmsKeyId: !GetAtt LogsKMSKey.Arn
+        Tags:
+          - Key: Project
+            Value: EnhancedLunchTable
+          - Key: Environment
+            Value: prod
+          - Key: Component
+            Value: HealthCheck
+
+    # KMS Key for log encryption
+    LogsKMSKey:
+      Type: AWS::KMS::Key
+      Properties:
+        Description: "KMS Key for Enhanced Lunch Table logs encryption (PROD)"
+        KeyPolicy:
+          Statement:
+            - Sid: Enable IAM User Permissions
+              Effect: Allow
+              Principal:
+                AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+              Action: "kms:*"
+              Resource: "*"
+            - Sid: Allow CloudWatch Logs
+              Effect: Allow
+              Principal:
+                Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+              Action:
+                - "kms:Encrypt"
+                - "kms:Decrypt"
+                - "kms:ReEncrypt*"
+                - "kms:GenerateDataKey*"
+                - "kms:DescribeKey"
+              Resource: "*"
+        Tags:
+          - Key: Project
+            Value: EnhancedLunchTable
+          - Key: Environment
+            Value: prod
+          - Key: Purpose
+            Value: LogEncryption
+
+    LogsKMSKeyAlias:
+      Type: AWS::KMS::Alias
+      Properties:
+        AliasName: alias/enhanced-lunch-table-logs-prod
+        TargetKeyId: !Ref LogsKMSKey
+
+    # SNS Topic for Production Notifications with encryption
+    ErrorNotificationTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ${self:service}-errors-prod
+        DisplayName: "Enhanced Lunch Table Error Notifications (PROD)"
+        KmsMasterKeyId: alias/aws/sns
+        Tags:
+          - Key: Project
+            Value: EnhancedLunchTable
+          - Key: Environment
+            Value: prod
+          - Key: Component
+            Value: ErrorNotifications
+
+    # Production CloudWatch Alarms (stricter thresholds)
+    DataCollectorErrorAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-data-collector-errors-prod
+        AlarmDescription: "Data Collector Lambda Function Errors (PROD)"
+        MetricName: Errors
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 1
+        Threshold: 1 # Low threshold for production
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        Dimensions:
+          - Name: FunctionName
+            Value: ${self:service}-prod-dataCollector
+        AlarmActions:
+          - Ref: ErrorNotificationTopic
+        TreatMissingData: notBreaching
+
+    ApiServerErrorAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-api-server-errors-prod
+        AlarmDescription: "API Server Lambda Function Errors (PROD)"
+        MetricName: Errors
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 1
+        Threshold: 5 # Low threshold for production
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        Dimensions:
+          - Name: FunctionName
+            Value: ${self:service}-prod-apiServer
+        AlarmActions:
+          - Ref: ErrorNotificationTopic
+        TreatMissingData: notBreaching
+
+    # High Latency Alarm for production
+    HighLatencyAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-high-latency-prod
+        AlarmDescription: "API Server High Latency (PROD)"
+        MetricName: Duration
+        Namespace: AWS/Lambda
+        Statistic: Average
+        Period: 300
+        EvaluationPeriods: 2
+        Threshold: 3000 # 3 seconds for production
+        ComparisonOperator: GreaterThanThreshold
+        Dimensions:
+          - Name: FunctionName
+            Value: ${self:service}-prod-apiServer
+        AlarmActions:
+          - Ref: ErrorNotificationTopic
+        TreatMissingData: notBreaching
+
+    # DynamoDB Throttling Alarm
+    DynamoDBThrottleAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-dynamodb-throttling-prod
+        AlarmDescription: "DynamoDB Read/Write Throttling (PROD)"
+        MetricName: UserErrors
+        Namespace: AWS/DynamoDB
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 2
+        Threshold: 1
+        ComparisonOperator: GreaterThanThreshold
+        Dimensions:
+          - Name: TableName
+            Value: ${self:custom.tableName}
+        AlarmActions:
+          - Ref: ErrorNotificationTopic
+        TreatMissingData: notBreaching
+
+    # Custom CloudWatch Dashboard for production monitoring
+    ProductionDashboard:
+      Type: AWS::CloudWatch::Dashboard
+      Properties:
+        DashboardName: ${self:service}-production-monitoring
+        DashboardBody: !Sub |
+          {
+            "widgets": [
+              {
+                "type": "metric",
+                "x": 0,
+                "y": 0,
+                "width": 12,
+                "height": 6,
+                "properties": {
+                  "metrics": [
+                    [ "AWS/Lambda", "Invocations", "FunctionName", "${self:service}-prod-apiServer" ],
+                    [ ".", "Errors", ".", "." ],
+                    [ ".", "Duration", ".", "." ]
+                  ],
+                  "period": 300,
+                  "stat": "Sum",
+                  "region": "${AWS::Region}",
+                  "title": "API Server Metrics"
+                }
+              },
+              {
+                "type": "metric",
+                "x": 0,
+                "y": 6,
+                "width": 12,
+                "height": 6,
+                "properties": {
+                  "metrics": [
+                    [ "AWS/Lambda", "Invocations", "FunctionName", "${self:service}-prod-dataCollector" ],
+                    [ ".",
+
+                    [ ".", "Errors", ".", "." ]
+                  ],
+                  "title": "Data Collector Metrics"
+                }
+              }
+            ]
+          }
+
+plugins:
+  - serverless-plugin-warmup
+
+configValidationMode: error
