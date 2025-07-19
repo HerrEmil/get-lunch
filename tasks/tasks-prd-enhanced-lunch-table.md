@@ -6,7 +6,7 @@ Based on the PRD for Enhanced Lunch Table, this document outlines the implementa
 
 - `src/lambdas/data-collector.mjs` - Background Lambda function for weekly data collection from restaurants
 - `src/lambdas/data-collector.test.mjs` - Unit tests for data collector Lambda
-- `src/lambdas/api-server.mjs` - Main Lambda function for serving HTML with cached data injected
+- `src/lambdas/api-server.mjs` - Main Lambda function for serving HTML with cached data injected (✅ Created)
 - `src/lambdas/api-server.test.mjs` - Unit tests for API server Lambda
 - `src/parsers/base-parser.mjs` - Abstract base class for restaurant parsers
 - `src/parsers/base-parser.test.mjs` - Unit tests for base parser
@@ -169,43 +169,43 @@ Based on the PRD for Enhanced Lunch Table, this document outlines the implementa
     - [x] 4.6.4 Test complete failure scenarios and error handling
     - [x] 4.6.5 Test manual trigger functionality
 
-- [ ] 5.0 Build Fast HTML Serving Lambda Function
-  - [ ] 5.1 Create API Lambda for serving HTML with injected cached data
-    - [ ] 5.1.1 Set up Lambda function for HTTP API Gateway integration
-    - [ ] 5.1.2 Configure proper response headers for HTML content type
-    - [ ] 5.1.3 Add CORS configuration if needed for development
-    - [ ] 5.1.4 Set up environment variables for cache configuration
-  - [ ] 5.2 Implement cache retrieval with fallback mechanisms
-    - [ ] 5.2.1 Create primary cache lookup from DynamoDB
-    - [ ] 5.2.2 Implement fallback to previous week's data if current week unavailable
-    - [ ] 5.2.3 Add graceful degradation when specific restaurants are missing
-    - [ ] 5.2.4 Create empty data fallback with appropriate user messaging
-  - [ ] 5.3 Add multi-day data filtering (Monday-Friday)
-    - [ ] 5.3.1 Parse query parameters for day selection (default to today)
-    - [ ] 5.3.2 Implement Swedish weekday name mapping and validation
-    - [ ] 5.3.3 Filter cached data to show only selected day's lunches
-    - [ ] 5.3.4 Add day navigation logic for frontend integration
-  - [ ] 5.4 Maintain existing HTML injection approach from current implementation
-    - [ ] 5.4.1 Read existing index.html file into memory
-    - [ ] 5.4.2 Inject filtered lunch data using same replacement pattern
-    - [ ] 5.4.3 Ensure JSON serialization matches current format
-    - [ ] 5.4.4 Preserve existing TUI Grid configuration and filtering
-  - [ ] 5.5 Optimize for sub-second response times
-    - [ ] 5.5.1 Implement in-memory caching of HTML template
-    - [ ] 5.5.2 Optimize DynamoDB queries with proper indexing
-    - [ ] 5.5.3 Use connection pooling for DynamoDB client
-    - [ ] 5.5.4 Add performance monitoring and timing logs
-  - [ ] 5.6 Add cache status indicators in injected data
-    - [ ] 5.6.1 Include last updated timestamp in injected data
-    - [ ] 5.6.2 Add data freshness indicators for each restaurant
-    - [ ] 5.6.3 Include cache hit/miss information for debugging
-    - [ ] 5.6.4 Add version information for cache troubleshooting
-  - [ ] 5.7 Create unit tests for HTML serving Lambda
-    - [ ] 5.7.1 Mock DynamoDB cache operations
-    - [ ] 5.7.2 Test successful HTML generation with cached data
-    - [ ] 5.7.3 Test fallback scenarios with missing or stale data
-    - [ ] 5.7.4 Test day filtering functionality
-    - [ ] 5.7.5 Test performance requirements and response times
+- [x] 5.0 Build Fast HTML Serving Lambda Function
+  - [x] 5.1 Create API Lambda for serving HTML with injected cached data
+    - [x] 5.1.1 Set up Lambda function for HTTP API Gateway integration
+    - [x] 5.1.2 Configure proper response headers for HTML content type
+    - [x] 5.1.3 Add CORS configuration if needed for development
+    - [x] 5.1.4 Set up environment variables for cache configuration
+  - [x] 5.2 Implement cache retrieval with fallback mechanisms
+    - [x] 5.2.1 Create primary cache lookup from DynamoDB
+    - [x] 5.2.2 Implement fallback to previous week's data if current week unavailable
+    - [x] 5.2.3 Add graceful degradation when specific restaurants are missing
+    - [x] 5.2.4 Create empty data fallback with appropriate user messaging
+  - [x] 5.3 Add multi-day data filtering (Monday-Friday)
+    - [x] 5.3.1 Parse query parameters for day selection (default to today)
+    - [x] 5.3.2 Implement Swedish weekday name mapping and validation
+    - [x] 5.3.3 Filter cached data to show only selected day's lunches
+    - [x] 5.3.4 Add day navigation logic for frontend integration
+  - [x] 5.4 Maintain existing HTML injection approach from current implementation
+    - [x] 5.4.1 Read existing index.html file into memory
+    - [x] 5.4.2 Inject filtered lunch data using same replacement pattern
+    - [x] 5.4.3 Ensure JSON serialization matches current format
+    - [x] 5.4.4 Preserve existing TUI Grid configuration and filtering
+  - [x] 5.5 Optimize for sub-second response times
+    - [x] 5.5.1 Implement in-memory caching of HTML template
+    - [x] 5.5.2 Optimize DynamoDB queries with proper indexing
+    - [x] 5.5.3 Use connection pooling for DynamoDB client
+    - [x] 5.5.4 Add performance monitoring and timing logs
+  - [x] 5.6 Add cache status indicators in injected data
+    - [x] 5.6.1 Include last updated timestamp in injected data
+    - [x] 5.6.2 Add data freshness indicators for each restaurant
+    - [x] 5.6.3 Include cache hit/miss information for debugging
+    - [x] 5.6.4 Add version information for cache troubleshooting
+  - [x] 5.7 Create unit tests for HTML serving Lambda
+    - [x] 5.7.1 Mock DynamoDB cache operations
+    - [x] 5.7.2 Test successful HTML generation with cached data
+    - [x] 5.7.3 Test fallback scenarios with missing or stale data
+    - [x] 5.7.4 Test day filtering functionality
+    - [x] 5.7.5 Test performance requirements and response times
 
 - [ ] 6.0 Update Local Development Environment
   - [ ] 6.1 Update local test server for new architecture
