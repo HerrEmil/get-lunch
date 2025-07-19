@@ -46,18 +46,18 @@ Based on the PRD for Enhanced Lunch Table, this document outlines the implementa
 
 ## Tasks
 
-- [ ] 1.0 Fix and Update Niagara Parser Implementation
-  - [ ] 1.1 Research current Niagara website structure and identify working selectors
+- [x] 1.0 Fix and Update Niagara Parser Implementation
+  - [x] 1.1 Research current Niagara website structure and identify working selectors
     - [x] 1.1.1 Visit https://restaurangniagara.se/lunch/ and inspect current HTML structure
     - [x] 1.1.2 Identify correct CSS selectors for lunch container, week number, and table rows
     - [x] 1.1.3 Document any changes to the website structure since original implementation
     - [x] 1.1.4 Test selectors in browser console to ensure they return expected elements
-  - [ ] 1.2 Update existing Niagara parser to work with current website
+  - [x] 1.2 Update existing Niagara parser to work with current website
     - [x] 1.2.1 Update CSS selectors in existing `addNiagaraRowToLunches` function
     - [x] 1.2.2 Fix week number extraction logic if selector has changed
     - [x] 1.2.3 Update table row selection and data extraction logic
     - [x] 1.2.4 Ensure Swedish weekday mapping still works correctly
-  - [ ] 1.3 Test Niagara parser with current website and verify data extraction
+  - [x] 1.3 Test Niagara parser with current website and verify data extraction
     - [x] 1.3.1 Run local test server with updated parser
     - [x] 1.3.2 Verify that lunch data is correctly extracted for all weekdays
     - [x] 1.3.3 Confirm price, name, and description fields are properly parsed
@@ -67,18 +67,18 @@ Based on the PRD for Enhanced Lunch Table, this document outlines the implementa
     - [x] 1.4.2 Handle cases where expected elements are missing
     - [x] 1.4.3 Add validation for extracted data before adding to lunches array
     - [x] 1.4.4 Log meaningful error messages for debugging
-  - [ ] 1.5 Create unit tests for updated Niagara parser
+  - [x] 1.5 Create unit tests for updated Niagara parser
     - [x] 1.5.1 Create mock HTML fixtures representing current website structure
     - [x] 1.5.2 Test successful data extraction with valid HTML
     - [x] 1.5.3 Test error handling with malformed or missing HTML elements
     - [x] 1.5.4 Verify data validation and Swedish weekday handling
 
 - [ ] 2.0 Implement Core Infrastructure and Architecture
-  - [ ] 2.1 Set up DynamoDB table schema for lunch data caching
-    - [ ] 2.1.1 Design table schema with composite key (restaurant + week)
-    - [ ] 2.1.2 Add TTL attribute for automatic data expiration
-    - [ ] 2.1.3 Create CloudFormation/Serverless template for table creation
-    - [ ] 2.1.4 Configure appropriate read/write capacity for expected load
+  - [x] 2.1 Set up DynamoDB table schema for lunch data caching
+    - [x] 2.1.1 Design table schema with composite key (restaurant + week)
+    - [x] 2.1.2 Add TTL attribute for automatic data expiration
+    - [x] 2.1.3 Create CloudFormation/Serverless template for table creation
+    - [x] 2.1.4 Configure appropriate read/write capacity for expected load
   - [ ] 2.2 Create cache manager utility for DynamoDB operations
     - [ ] 2.2.1 Implement cache write operations (put/update lunch data)
     - [ ] 2.2.2 Implement cache read operations with error handling

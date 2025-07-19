@@ -1,0 +1,308 @@
+service: enhanced-lunch-table
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: eu-west-1
+  stage: ${opt:stage, 'dev'}
+  environment:
+    LUNCH_CACHE_TABLE: ${self:custom.tableName}
+    AWS_REGION: ${self:provider.region}
+    CACHE_TTL_DAYS: 14
+    STAGE: ${self:provider.stage}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:BatchWriteItem
+            - dynamodb:UpdateItem
+          Resource:
+            - ${self:custom.tableArn}
+            - ${self:custom.tableArn}/index/*
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: "arn:aws:logs:${self:provider.region}:*:*"
+        - Effect: Allow
+          Action:
+            - events:PutRule
+            - events:DeleteRule
+            - events:PutTargets
+            - events:RemoveTargets
+          Resource: "*"
+
+custom:
+  tableName: ${self:service}-lunch-cache-${self:provider.stage}
+  tableArn:
+    Fn::GetAtt:
+      - LunchCacheTable
+      - Arn
+
+functions:
+  # Data Collection Lambda (weekly scheduled)
+  dataCollector:
+    handler: src/lambdas/data-collector.handler
+    timeout: 300
+    memorySize: 1024
+    events:
+      - schedule:
+          rate: cron(0 10 ? * MON *)  # Every Monday at 10:00 UTC
+          description: "Weekly lunch data collection from restaurants"
+          enabled: true
+    environment:
+      FUNCTION_TYPE: data_collector
+
+  # HTML Serving Lambda (API Gateway)
+  apiServer:
+    handler: src/lambdas/api-server.handler
+    timeout: 30
+    memorySize: 512
+    events:
+      - http:
+          path: /
+          method: get
+          cors: true
+      - http:
+          path: /lunch
+          method: get
+          cors: true
+      - http:
+          path: /lunch/{day}
+          method: get
+          cors: true
+    environment:
+      FUNCTION_TYPE: api_server
+
+resources:
+  Resources:
+    # DynamoDB Table for Lunch Cache
+    LunchCacheTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tableName}
+        BillingMode: ON_DEMAND
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: restaurant
+            AttributeType: S
+          - AttributeName: cachedAt
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: RestaurantIndex
+            KeySchema:
+              - AttributeName: restaurant
+                KeyType: HASH
+              - AttributeName: cachedAt
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+        SSESpecification:
+          SSEEnabled: true
+          SSEType: KMS
+        Tags:
+          - Key: Project
+            Value: EnhancedLunchTable
+          - Key: Environment
+            Value: ${self:provider.stage}
+          - Key: Purpose
+            Value: LunchDataCache
+
+    # SNS Topic for Error Notifications
+    ErrorNotificationTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ${self:service}-errors-${self:provider.stage}
+        DisplayName: "Enhanced Lunch Table Error Notifications"
+
+    # CloudWatch Alarm for Lambda Errors
+    DataCollectorErrorAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-data-collector-errors-${self:provider.stage}
+        AlarmDescription: "Data Collector Lambda Function Errors"
+        MetricName: Errors
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 1
+        Threshold: 1
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        Dimensions:
+          - Name: FunctionName
+            Value: ${self:service}-${self:provider.stage}-dataCollector
+        AlarmActions:
+          - Ref: ErrorNotificationTopic
+
+    # CloudWatch Alarm for API Server Errors
+    ApiServerErrorAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-api-server-errors-${self:provider.stage}
+        AlarmDescription: "API Server Lambda Function Errors"
+        MetricName: Errors
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 1
+        Threshold: 5
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        Dimensions:
+          - Name: FunctionName
+            Value: ${self:service}-${self:provider.stage}-apiServer
+        AlarmActions:
+          - Ref: ErrorNotificationTopic
+
+    # CloudWatch Alarm for DynamoDB Errors
+    DynamoDBErrorAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-dynamodb-errors-${self:provider.stage}
+        AlarmDescription: "DynamoDB User Errors"
+        MetricName: UserErrors
+        Namespace: AWS/DynamoDB
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 2
+        Threshold: 5
+        ComparisonOperator: GreaterThanThreshold
+        Dimensions:
+          - Name: TableName
+            Value: ${self:custom.tableName}
+        AlarmActions:
+          - Ref: ErrorNotificationTopic
+
+    # CloudWatch Alarm for High Latency
+    HighLatencyAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ${self:service}-high-latency-${self:provider.stage}
+        AlarmDescription: "API Server High Latency"
+        MetricName: Duration
+        Namespace: AWS/Lambda
+        Statistic: Average
+        Period: 300
+        EvaluationPeriods: 2
+        Threshold: 5000
+        ComparisonOperator: GreaterThanThreshold
+        Dimensions:
+          - Name: FunctionName
+            Value: ${self:service}-${self:provider.stage}-apiServer
+        AlarmActions:
+          - Ref: ErrorNotificationTopic
+
+  Outputs:
+    # Table Information
+    LunchCacheTableName:
+      Description: "DynamoDB table name for lunch cache"
+      Value: ${self:custom.tableName}
+      Export:
+        Name: ${self:service}-${self:provider.stage}-lunch-cache-table
+
+    LunchCacheTableArn:
+      Description: "DynamoDB table ARN for lunch cache"
+      Value: ${self:custom.tableArn}
+      Export:
+        Name: ${self:service}-${self:provider.stage}-lunch-cache-table-arn
+
+    # API Information
+    ApiGatewayUrl:
+      Description: "API Gateway URL for lunch service"
+      Value:
+        Fn::Join:
+          - ""
+          - - "https://"
+            - Ref: ApiGatewayRestApi
+            - ".execute-api."
+            - ${self:provider.region}
+            - ".amazonaws.com/"
+            - ${self:provider.stage}
+      Export:
+        Name: ${self:service}-${self:provider.stage}-api-url
+
+    # SNS Topic
+    ErrorNotificationTopicArn:
+      Description: "SNS Topic ARN for error notifications"
+      Value:
+        Ref: ErrorNotificationTopic
+      Export:
+        Name: ${self:service}-${self:provider.stage}-error-topic-arn
+
+plugins:
+  - serverless-offline
+  - serverless-dynamodb-local
+  - serverless-plugin-warmup
+
+package:
+  individually: true
+  exclude:
+    - node_modules/**
+    - .git/**
+    - .gitignore
+    - README.md
+    - package-lock.json
+    - yarn.lock
+    - test/**
+    - tests/**
+    - '*.test.js'
+    - '*.test.mjs'
+    - coverage/**
+    - .nyc_output/**
+    - docs/**
+    - infrastructure/**
+  include:
+    - src/**
+    - index.html
+    - package.json
+
+# Environment-specific configurations
+configValidationMode: error
+
+# Local development configuration
+custom:
+  serverless-offline:
+    httpPort: 3000
+    lambdaPort: 3002
+    printOutput: true
+
+  dynamodb:
+    stages:
+      - dev
+    start:
+      port: 8000
+      inMemory: true
+      migrate: true
+      seed: true
+      convertEmptyValues: true
+    seed:
+      development:
+        sources:
+          - table: ${self:custom.tableName}
+            sources: [./test-fixtures/sample-cache-data.json]
+
+  warmup:
+    enabled: true
+    events:
+      - schedule: rate(5 minutes)
+    timeout: 20
+    prewarm: true
+    concurrency: 1
+    cleanFolder: false
