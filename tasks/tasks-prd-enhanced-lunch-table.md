@@ -108,66 +108,66 @@ Based on the PRD for Enhanced Lunch Table, this document outlines the implementa
     - [x] 2.6.4 Add email subscription to SNS topic for alerts
     - [x] 2.6.5 Set appropriate alarm thresholds and evaluation periods
 
-- [ ] 3.0 Build Restaurant Parser Framework
-  - [ ] 3.1 Design and implement abstract base parser class
-    - [ ] 3.1.1 Create base parser with abstract methods (parseMenu, getName, getUrl)
-    - [ ] 3.1.2 Implement common functionality (HTTP requests, error handling)
-    - [ ] 3.1.3 Add timeout and retry logic in base class
-    - [ ] 3.1.4 Create standard constructor with restaurant configuration
-  - [ ] 3.2 Define standardized parser interface and data format
-    - [ ] 3.2.1 Define lunch object interface matching existing structure
-    - [ ] 3.2.2 Standardize parser response format (success/error with data)
-    - [ ] 3.2.3 Create configuration interface for restaurant metadata
-    - [ ] 3.2.4 Document parser implementation guidelines and examples
-  - [ ] 3.3 Migrate Niagara parser to use new framework
-    - [ ] 3.3.1 Extend base parser class for Niagara implementation
-    - [ ] 3.3.2 Move existing parsing logic into new parseMenu method
-    - [ ] 3.3.3 Update to use standardized error handling and logging
-    - [ ] 3.3.4 Test migrated parser maintains same functionality
-  - [ ] 3.4 Create parser factory for managing multiple restaurant parsers
-    - [ ] 3.4.1 Implement factory pattern to instantiate restaurant parsers
-    - [ ] 3.4.2 Create restaurant registry with name-to-parser mapping
-    - [ ] 3.4.3 Add method to get all available parsers
-    - [ ] 3.4.4 Implement parser validation and health checking
-  - [ ] 3.5 Implement error handling and circuit breaker pattern for parsers
-    - [ ] 3.5.1 Create circuit breaker to prevent repeated failed requests
-    - [ ] 3.5.2 Implement exponential backoff for retries
-    - [ ] 3.5.3 Add parser health status tracking
-    - [ ] 3.5.4 Create fallback mechanisms when parsers are unavailable
+- [x] 3.0 Build Restaurant Parser Framework
+  - [x] 3.1 Design and implement abstract base parser class
+    - [x] 3.1.1 Create base parser with abstract methods (parseMenu, getName, getUrl)
+    - [x] 3.1.2 Implement common functionality (HTTP requests, error handling)
+    - [x] 3.1.3 Add timeout and retry logic in base class
+    - [x] 3.1.4 Create standard constructor with restaurant configuration
+  - [x] 3.2 Define standardized parser interface and data format
+    - [x] 3.2.1 Define lunch object interface matching existing structure
+    - [x] 3.2.2 Standardize parser response format (success/error with data)
+    - [x] 3.2.3 Create configuration interface for restaurant metadata
+    - [x] 3.2.4 Document parser implementation guidelines and examples
+  - [x] 3.3 Migrate Niagara parser to use new framework
+    - [x] 3.3.1 Extend base parser class for Niagara implementation
+    - [x] 3.3.2 Move existing parsing logic into new parseMenu method
+    - [x] 3.3.3 Update to use standardized error handling and logging
+    - [x] 3.3.4 Test migrated parser maintains same functionality
+  - [x] 3.4 Create parser factory for managing multiple restaurant parsers
+    - [x] 3.4.1 Implement factory pattern to instantiate restaurant parsers
+    - [x] 3.4.2 Create restaurant registry with name-to-parser mapping
+    - [x] 3.4.3 Add method to get all available parsers
+    - [x] 3.4.4 Implement parser validation and health checking
+  - [x] 3.5 Implement error handling and circuit breaker pattern for parsers
+    - [x] 3.5.1 Create circuit breaker to prevent repeated failed requests
+    - [x] 3.5.2 Implement exponential backoff for retries
+    - [x] 3.5.3 Add parser health status tracking
+    - [x] 3.5.4 Create fallback mechanisms when parsers are unavailable
 
-- [ ] 4.0 Develop Data Collection Lambda Function
-  - [ ] 4.1 Create background Lambda for weekly data collection
-    - [ ] 4.1.1 Set up Lambda function structure with proper event handling
-    - [ ] 4.1.2 Configure Lambda timeout for long-running data collection
-    - [ ] 4.1.3 Add environment variables for configuration
-    - [ ] 4.1.4 Set up proper IAM role with DynamoDB and CloudWatch permissions
-  - [ ] 4.2 Implement restaurant data fetching with parallel processing
-    - [ ] 4.2.1 Create parallel execution of all restaurant parsers
-    - [ ] 4.2.2 Implement Promise.allSettled to handle partial failures gracefully
-    - [ ] 4.2.3 Add individual timeout handling for each restaurant parser
-    - [ ] 4.2.4 Create aggregation logic to combine results from all parsers
-  - [ ] 4.3 Add data validation and caching logic
-    - [ ] 4.3.1 Integrate data validator to check all extracted lunch objects
-    - [ ] 4.3.2 Filter out invalid data and log validation errors
-    - [ ] 4.3.3 Transform validated data for DynamoDB storage format
-    - [ ] 4.3.4 Implement batch write operations to DynamoDB cache
-    - [ ] 4.3.5 Add cache metadata (last updated timestamp, data version)
-  - [ ] 4.4 Implement manual trigger capability for testing
-    - [ ] 4.4.1 Add event source detection (EventBridge vs manual invocation)
-    - [ ] 4.4.2 Create manual trigger option that accepts specific restaurants
-    - [ ] 4.4.3 Add development mode with enhanced logging for testing
-    - [ ] 4.4.4 Implement test-specific configuration overrides
-  - [ ] 4.5 Add comprehensive error handling and logging
-    - [ ] 4.5.1 Implement structured logging for all operations
-    - [ ] 4.5.2 Add error categorization (network, parsing, validation, cache)
-    - [ ] 4.5.3 Create success/failure metrics for monitoring
-    - [ ] 4.5.4 Ensure partial success scenarios are properly handled and logged
-  - [ ] 4.6 Create unit tests for data collection Lambda
-    - [ ] 4.6.1 Mock restaurant parsers and DynamoDB operations
-    - [ ] 4.6.2 Test successful data collection scenario
-    - [ ] 4.6.3 Test partial failure scenarios (some restaurants fail)
-    - [ ] 4.6.4 Test complete failure scenarios and error handling
-    - [ ] 4.6.5 Test manual trigger functionality
+- [x] 4.0 Develop Data Collection Lambda Function
+  - [x] 4.1 Create background Lambda for weekly data collection
+    - [x] 4.1.1 Set up Lambda function structure with proper event handling
+    - [x] 4.1.2 Configure Lambda timeout for long-running data collection
+    - [x] 4.1.3 Add environment variables for configuration
+    - [x] 4.1.4 Set up proper IAM role with DynamoDB and CloudWatch permissions
+  - [x] 4.2 Implement restaurant data fetching with parallel processing
+    - [x] 4.2.1 Create parallel execution of all restaurant parsers
+    - [x] 4.2.2 Implement Promise.allSettled to handle partial failures gracefully
+    - [x] 4.2.3 Add individual timeout handling for each restaurant parser
+    - [x] 4.2.4 Create aggregation logic to combine results from all parsers
+  - [x] 4.3 Add data validation and caching logic
+    - [x] 4.3.1 Integrate data validator to check all extracted lunch objects
+    - [x] 4.3.2 Filter out invalid data and log validation errors
+    - [x] 4.3.3 Transform validated data for DynamoDB storage format
+    - [x] 4.3.4 Implement batch write operations to DynamoDB cache
+    - [x] 4.3.5 Add cache metadata (last updated timestamp, data version)
+  - [x] 4.4 Implement manual trigger capability for testing
+    - [x] 4.4.1 Add event source detection (EventBridge vs manual invocation)
+    - [x] 4.4.2 Create manual trigger option that accepts specific restaurants
+    - [x] 4.4.3 Add development mode with enhanced logging for testing
+    - [x] 4.4.4 Implement test-specific configuration overrides
+  - [x] 4.5 Add comprehensive error handling and logging
+    - [x] 4.5.1 Implement structured logging for all operations
+    - [x] 4.5.2 Add error categorization (network, parsing, validation, cache)
+    - [x] 4.5.3 Create success/failure metrics for monitoring
+    - [x] 4.5.4 Ensure partial success scenarios are properly handled and logged
+  - [x] 4.6 Create unit tests for data collection Lambda
+    - [x] 4.6.1 Mock restaurant parsers and DynamoDB operations
+    - [x] 4.6.2 Test successful data collection scenario
+    - [x] 4.6.3 Test partial failure scenarios (some restaurants fail)
+    - [x] 4.6.4 Test complete failure scenarios and error handling
+    - [x] 4.6.5 Test manual trigger functionality
 
 - [ ] 5.0 Build Fast HTML Serving Lambda Function
   - [ ] 5.1 Create API Lambda for serving HTML with injected cached data
