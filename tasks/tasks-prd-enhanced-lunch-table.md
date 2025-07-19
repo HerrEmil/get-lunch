@@ -91,11 +91,11 @@ Based on the PRD for Enhanced Lunch Table, this document outlines the implementa
     - [x] 2.3.3 Implement Swedish weekday validation ("måndag", "tisdag", "onsdag", "torsdag", "fredag")
     - [x] 2.3.4 Add comprehensive validation for complete lunch objects
     - [x] 2.3.5 Create error reporting for invalid data with specific field information
-  - [ ] 2.4 Create logging utility with CloudWatch integration
-    - [ ] 2.4.1 Set up structured logging with different log levels
-    - [ ] 2.4.2 Configure CloudWatch log groups and retention policies
-    - [ ] 2.4.3 Add context-aware logging (restaurant, operation, timestamp)
-    - [ ] 2.4.4 Implement error logging with stack traces for debugging
+  - [x] 2.4 Create logging utility with CloudWatch integration
+    - [x] 2.4.1 Set up structured logging with different log levels
+    - [x] 2.4.2 Configure CloudWatch log groups and retention policies
+    - [x] 2.4.3 Add context-aware logging (restaurant, operation, timestamp)
+    - [x] 2.4.4 Implement error logging with stack traces for debugging
   - [ ] 2.5 Set up AWS EventBridge for weekly scheduling
     - [ ] 2.5.1 Create EventBridge rule for Monday 10:00 UTC trigger
     - [ ] 2.5.2 Configure rule to target data collection Lambda

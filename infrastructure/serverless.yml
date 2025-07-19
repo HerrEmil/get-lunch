@@ -10,6 +10,10 @@ provider:
     AWS_REGION: ${self:provider.region}
     CACHE_TTL_DAYS: 14
     STAGE: ${self:provider.stage}
+    LOG_GROUP_NAME: /aws/lambda/${self:service}-${self:provider.stage}
+    SERVICE_NAME: ${self:service}
+    LOG_LEVEL: ${opt:log-level, 'INFO'}
+  iamRoleStatements:
   iam:
     role:
       statements:
@@ -30,6 +34,8 @@ provider:
             - logs:CreateLogGroup
             - logs:CreateLogStream
             - logs:PutLogEvents
+            - logs:DescribeLogGroups
+            - logs:DescribeLogStreams
           Resource: "arn:aws:logs:${self:provider.region}:*:*"
         - Effect: Allow
           Action:
@@ -125,6 +131,72 @@ resources:
             Value: ${self:provider.stage}
           - Key: Purpose
             Value: LunchDataCache
+
+    # Main Application Log Group
+    EnhancedLunchTableLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/${self:service}-${self:provider.stage}
+        RetentionInDays: 14
+        Tags:
+          - Key: Project
+            Value: EnhancedLunchTable
+          - Key: Environment
+            Value: ${self:provider.stage}
+          - Key: Component
+            Value: Application
+
+    # Data Collector Lambda Log Group
+    DataCollectorLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/${self:service}-${self:provider.stage}-dataCollector
+        RetentionInDays: 30
+        Tags:
+          - Key: Project
+            Value: EnhancedLunchTable
+          - Key: Environment
+            Value: ${self:provider.stage}
+          - Key: Component
+            Value: DataCollector
+
+    # API Server Lambda Log Group
+    ApiServerLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/${self:service}-${self:provider.stage}-apiServer
+        RetentionInDays: 14
+        Tags:
+          - Key: Project
+            Value: EnhancedLunchTable
+          - Key: Environment
+            Value: ${self:provider.stage}
+          - Key: Component
+            Value: ApiServer
+
+    # Error Metric Filter
+    ErrorMetricFilter:
+      Type: AWS::Logs::MetricFilter
+      Properties:
+        LogGroupName: !Ref EnhancedLunchTableLogGroup
+        FilterPattern: '[timestamp, requestId, level="ERROR", ...]'
+        MetricTransformations:
+          - MetricNamespace: ${self:service}/${self:provider.stage}
+            MetricName: ErrorCount
+            MetricValue: "1"
+            DefaultValue: 0
+
+    # Warning Metric Filter
+    WarningMetricFilter:
+      Type: AWS::Logs::MetricFilter
+      Properties:
+        LogGroupName: !Ref EnhancedLunchTableLogGroup
+        FilterPattern: '[timestamp, requestId, level="WARN", ...]'
+        MetricTransformations:
+          - MetricNamespace: ${self:service}/${self:provider.stage}
+            MetricName: WarningCount
+            MetricValue: "1"
+            DefaultValue: 0
 
     # SNS Topic for Error Notifications
     ErrorNotificationTopic:
@@ -245,6 +317,19 @@ resources:
         Ref: ErrorNotificationTopic
       Export:
         Name: ${self:service}-${self:provider.stage}-error-topic-arn
+
+    # CloudWatch Log Groups
+    LogGroupName:
+      Description: "Main application log group name"
+      Value: !Ref EnhancedLunchTableLogGroup
+      Export:
+        Name: ${self:service}-${self:provider.stage}-log-group
+
+    DataCollectorLogGroupName:
+      Description: "Data collector log group name"
+      Value: !Ref DataCollectorLogGroup
+      Export:
+        Name: ${self:service}-${self:provider.stage}-data-collector-log-group
 
 plugins:
   - serverless-offline

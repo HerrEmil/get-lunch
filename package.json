@@ -4,9 +4,27 @@
   "version": "1.0.0",
   "license": "UNLICENSED",
   "scripts": {
-    "start": "node local-test-server.js"
+    "start": "node local-test-server.js",
+    "test": "node niagara-parser.test.mjs && node test-comprehensive-validation.mjs",
+    "deploy": "cd infrastructure && serverless deploy",
+    "deploy:dev": "cd infrastructure && serverless deploy --stage dev",
+    "deploy:prod": "cd infrastructure && serverless deploy --stage prod",
+    "logs": "cd infrastructure && serverless logs -f apiServer --tail",
+    "remove": "cd infrastructure && serverless remove"
   },
   "dependencies": {
-    "jsdom": "^24.1.0"
+    "jsdom": "^24.1.0",
+    "@aws-sdk/client-dynamodb": "^3.470.0",
+    "@aws-sdk/lib-dynamodb": "^3.470.0",
+    "@aws-sdk/client-cloudwatch-logs": "^3.470.0"
+  },
+  "devDependencies": {
+    "serverless": "^3.38.0",
+    "serverless-offline": "^13.3.0",
+    "serverless-dynamodb-local": "^0.2.40",
+    "serverless-plugin-warmup": "^8.2.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

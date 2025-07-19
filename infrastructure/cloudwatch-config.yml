@@ -1,0 +1,369 @@
+# CloudWatch Logs Configuration for Enhanced Lunch Table
+# Defines log groups, retention policies, and monitoring setup
+
+Resources:
+  # Main Application Log Group
+  EnhancedLunchTableLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${self:service}-${self:provider.stage}"
+      RetentionInDays: 14
+      KmsKeyId: !Ref LogsKMSKey
+      Tags:
+        - Key: Project
+          Value: EnhancedLunchTable
+        - Key: Environment
+          Value: ${self:provider.stage}
+        - Key: Component
+          Value: Application
+
+  # Data Collector Lambda Log Group
+  DataCollectorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${self:service}-${self:provider.stage}-dataCollector"
+      RetentionInDays: 30
+      KmsKeyId: !Ref LogsKMSKey
+      Tags:
+        - Key: Project
+          Value: EnhancedLunchTable
+        - Key: Environment
+          Value: ${self:provider.stage}
+        - Key: Component
+          Value: DataCollector
+
+  # API Server Lambda Log Group
+  ApiServerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${self:service}-${self:provider.stage}-apiServer"
+      RetentionInDays: 14
+      KmsKeyId: !Ref LogsKMSKey
+      Tags:
+        - Key: Project
+          Value: EnhancedLunchTable
+        - Key: Environment
+          Value: ${self:provider.stage}
+        - Key: Component
+          Value: ApiServer
+
+  # Error Logs Group (for centralized error logging)
+  ErrorLogsGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${self:service}-${self:provider.stage}-errors"
+      RetentionInDays: 90
+      KmsKeyId: !Ref LogsKMSKey
+      Tags:
+        - Key: Project
+          Value: EnhancedLunchTable
+        - Key: Environment
+          Value: ${self:provider.stage}
+        - Key: Component
+          Value: ErrorTracking
+
+  # Performance Metrics Log Group
+  PerformanceLogsGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${self:service}-${self:provider.stage}-performance"
+      RetentionInDays: 7
+      KmsKeyId: !Ref LogsKMSKey
+      Tags:
+        - Key: Project
+          Value: EnhancedLunchTable
+        - Key: Environment
+          Value: ${self:provider.stage}
+        - Key: Component
+          Value: Performance
+
+  # Business Metrics Log Group
+  BusinessLogsGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${self:service}-${self:provider.stage}-business"
+      RetentionInDays: 365
+      KmsKeyId: !Ref LogsKMSKey
+      Tags:
+        - Key: Project
+          Value: EnhancedLunchTable
+        - Key: Environment
+          Value: ${self:provider.stage}
+        - Key: Component
+          Value: BusinessMetrics
+
+  # KMS Key for Log Encryption
+  LogsKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: KMS Key for Enhanced Lunch Table CloudWatch Logs encryption
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "kms:*"
+            Resource: "*"
+          - Sid: Allow CloudWatch Logs
+            Effect: Allow
+            Principal:
+              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:CreateGrant
+              - kms:DescribeKey
+            Resource: "*"
+            Condition:
+              ArnEquals:
+                "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+      Tags:
+        - Key: Project
+          Value: EnhancedLunchTable
+        - Key: Environment
+          Value: ${self:provider.stage}
+        - Key: Purpose
+          Value: LogsEncryption
+
+  # KMS Key Alias
+  LogsKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${self:service}-${self:provider.stage}-logs"
+      TargetKeyId: !Ref LogsKMSKey
+
+  # Log Metric Filters for Error Detection
+  ErrorMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref EnhancedLunchTableLogGroup
+      FilterPattern: '[timestamp, requestId, level="ERROR", ...]'
+      MetricTransformations:
+        - MetricNamespace: !Sub "${self:service}/${self:provider.stage}"
+          MetricName: ErrorCount
+          MetricValue: "1"
+          DefaultValue: 0
+
+  # Warning Metric Filter
+  WarningMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref EnhancedLunchTableLogGroup
+      FilterPattern: '[timestamp, requestId, level="WARN", ...]'
+      MetricTransformations:
+        - MetricNamespace: !Sub "${self:service}/${self:provider.stage}"
+          MetricName: WarningCount
+          MetricValue: "1"
+          DefaultValue: 0
+
+  # Data Collection Success Metric
+  DataCollectionSuccessFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref DataCollectorLogGroup
+      FilterPattern: '[timestamp, requestId, level="INFO", message="Data collection completed successfully", ...]'
+      MetricTransformations:
+        - MetricNamespace: !Sub "${self:service}/${self:provider.stage}/DataCollection"
+          MetricName: SuccessfulCollections
+          MetricValue: "1"
+          DefaultValue: 0
+
+  # Data Collection Failure Metric
+  DataCollectionFailureFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref DataCollectorLogGroup
+      FilterPattern: '[timestamp, requestId, level="ERROR", message="Data collection failed", ...]'
+      MetricTransformations:
+        - MetricNamespace: !Sub "${self:service}/${self:provider.stage}/DataCollection"
+          MetricName: FailedCollections
+          MetricValue: "1"
+          DefaultValue: 0
+
+  # API Response Time Metric
+  ApiResponseTimeFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref ApiServerLogGroup
+      FilterPattern: '[timestamp, requestId, level="INFO", message="Request completed", method, path, statusCode, duration, ...]'
+      MetricTransformations:
+        - MetricNamespace: !Sub "${self:service}/${self:provider.stage}/API"
+          MetricName: ResponseTime
+          MetricValue: "$duration"
+          DefaultValue: 0
+
+  # Cache Hit Rate Metric
+  CacheHitFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref EnhancedLunchTableLogGroup
+      FilterPattern: '[timestamp, requestId, level="INFO", message="Cache hit", ...]'
+      MetricTransformations:
+        - MetricNamespace: !Sub "${self:service}/${self:provider.stage}/Cache"
+          MetricName: CacheHits
+          MetricValue: "1"
+          DefaultValue: 0
+
+  # Cache Miss Metric
+  CacheMissFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref EnhancedLunchTableLogGroup
+      FilterPattern: '[timestamp, requestId, level="INFO", message="Cache miss", ...]'
+      MetricTransformations:
+        - MetricNamespace: !Sub "${self:service}/${self:provider.stage}/Cache"
+          MetricName: CacheMisses
+          MetricValue: "1"
+          DefaultValue: 0
+
+  # Restaurant Parse Success Metric
+  RestaurantParseSuccessFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref DataCollectorLogGroup
+      FilterPattern: '[timestamp, requestId, level="INFO", message="Restaurant parsing successful", restaurant, ...]'
+      MetricTransformations:
+        - MetricNamespace: !Sub "${self:service}/${self:provider.stage}/Parsing"
+          MetricName: SuccessfulParses
+          MetricValue: "1"
+          DefaultValue: 0
+
+# CloudWatch Dashboards
+  EnhancedLunchTableDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub "${self:service}-${self:provider.stage}-overview"
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 0,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "${self:service}/${self:provider.stage}", "ErrorCount" ],
+                  [ ".", "WarningCount" ]
+                ],
+                "period": 300,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Error and Warning Counts",
+                "view": "timeSeries",
+                "stacked": false
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12,
+              "y": 0,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "${self:service}/${self:provider.stage}/DataCollection", "SuccessfulCollections" ],
+                  [ ".", "FailedCollections" ]
+                ],
+                "period": 3600,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Data Collection Success/Failure",
+                "view": "timeSeries",
+                "stacked": false
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 6,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "${self:service}/${self:provider.stage}/API", "ResponseTime" ]
+                ],
+                "period": 300,
+                "stat": "Average",
+                "region": "${AWS::Region}",
+                "title": "API Response Time (Average)",
+                "view": "timeSeries"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12,
+              "y": 6,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "${self:service}/${self:provider.stage}/Cache", "CacheHits" ],
+                  [ ".", "CacheMisses" ]
+                ],
+                "period": 300,
+                "stat": "Sum",
+                "region": "${AWS::Region}",
+                "title": "Cache Performance",
+                "view": "timeSeries",
+                "stacked": false
+              }
+            },
+            {
+              "type": "log",
+              "x": 0,
+              "y": 12,
+              "width": 24,
+              "height": 6,
+              "properties": {
+                "query": "SOURCE '/aws/lambda/${self:service}-${self:provider.stage}' | fields @timestamp, level, message, correlationId\n| filter level = \"ERROR\"\n| sort @timestamp desc\n| limit 20",
+                "region": "${AWS::Region}",
+                "title": "Recent Errors",
+                "view": "table"
+              }
+            }
+          ]
+        }
+
+# Outputs for reference in other templates
+Outputs:
+  LogGroupName:
+    Description: "Main log group name"
+    Value: !Ref EnhancedLunchTableLogGroup
+    Export:
+      Name: !Sub "${self:service}-${self:provider.stage}-log-group"
+
+  DataCollectorLogGroupName:
+    Description: "Data collector log group name"
+    Value: !Ref DataCollectorLogGroup
+    Export:
+      Name: !Sub "${self:service}-${self:provider.stage}-data-collector-log-group"
+
+  ApiServerLogGroupName:
+    Description: "API server log group name"
+    Value: !Ref ApiServerLogGroup
+    Export:
+      Name: !Sub "${self:service}-${self:provider.stage}-api-server-log-group"
+
+  ErrorLogsGroupName:
+    Description: "Error logs group name"
+    Value: !Ref ErrorLogsGroup
+    Export:
+      Name: !Sub "${self:service}-${self:provider.stage}-error-log-group"
+
+  LogsKMSKeyId:
+    Description: "KMS Key ID for logs encryption"
+    Value: !Ref LogsKMSKey
+    Export:
+      Name: !Sub "${self:service}-${self:provider.stage}-logs-kms-key"
+
+  DashboardURL:
+    Description: "CloudWatch Dashboard URL"
+    Value: !Sub "https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#dashboards:name=${self:service}-${self:provider.stage}-overview"
+    Export:
+      Name: !Sub "${self:service}-${self:provider.stage}-dashboard-url"
