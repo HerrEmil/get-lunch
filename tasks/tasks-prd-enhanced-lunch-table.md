@@ -68,8 +68,8 @@ Based on the PRD for Enhanced Lunch Table, this document outlines the implementa
     - [x] 1.4.3 Add validation for extracted data before adding to lunches array
     - [x] 1.4.4 Log meaningful error messages for debugging
   - [ ] 1.5 Create unit tests for updated Niagara parser
-    - [ ] 1.5.1 Create mock HTML fixtures representing current website structure
-    - [ ] 1.5.2 Test successful data extraction with valid HTML
+    - [x] 1.5.1 Create mock HTML fixtures representing current website structure
+    - [x] 1.5.2 Test successful data extraction with valid HTML
     - [ ] 1.5.3 Test error handling with malformed or missing HTML elements
     - [ ] 1.5.4 Verify data validation and Swedish weekday handling
 
