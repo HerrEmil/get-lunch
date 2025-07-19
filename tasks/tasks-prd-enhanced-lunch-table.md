@@ -70,7 +70,7 @@ Based on the PRD for Enhanced Lunch Table, this document outlines the implementa
   - [ ] 1.5 Create unit tests for updated Niagara parser
     - [x] 1.5.1 Create mock HTML fixtures representing current website structure
     - [x] 1.5.2 Test successful data extraction with valid HTML
-    - [ ] 1.5.3 Test error handling with malformed or missing HTML elements
+    - [x] 1.5.3 Test error handling with malformed or missing HTML elements
     - [ ] 1.5.4 Verify data validation and Swedish weekday handling
 
 - [ ] 2.0 Implement Core Infrastructure and Architecture

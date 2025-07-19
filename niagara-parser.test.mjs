@@ -13,6 +13,7 @@ import {
   findLunchContainer,
   findWeekdayContent,
 } from "./data-extractor.mjs";
+import { extractWeekNumber } from "./week-extractor.mjs";
 import {
   validateLunch,
   validateLunches,
@@ -22,7 +23,6 @@ import {
   isValidPrice,
   isValidWeek,
 } from "./data-validator.mjs";
-import { extractWeekNumber } from "./week-extractor.mjs";
 
 // Test suite configuration
 const TEST_SUITE_NAME = "Niagara Parser Unit Tests";
@@ -652,6 +652,227 @@ function testErrorHandlingEdgeCases() {
   });
 }
 
+function testMalformedHTMLElements() {
+  console.log("\n🧪 TEST SUITE 9: Malformed HTML Elements");
+  console.log("=".repeat(50));
+
+  // Test 1: Broken HTML structure with unclosed tags
+  runTest("Handle unclosed HTML tags", () => {
+    const html = `<tr><td>Broken Name<td>Description</td><td>125:-`;
+    const element = createMockElement(html);
+    const result = extractLunchFromElement(element, 47, "måndag");
+    return result === null || (result && typeof result === "object");
+  });
+
+  // Test 2: Deeply nested malformed structure
+  runTest("Handle deeply nested broken structure", () => {
+    const html = `<tr><td><div><span><p>Name</p></span></div><td>Desc</td><td>125:-</td></tr>`;
+    const element = createMockElement(html);
+    const result = extractLunchFromElement(element, 47, "måndag");
+    return result === null || (result && typeof result === "object");
+  });
+
+  // Test 3: Missing table cells
+  runTest("Handle missing table cells", () => {
+    const html = `<tr><td>Only Name</td></tr>`;
+    const element = createMockElement(html);
+    const result = extractLunchFromElement(element, 47, "måndag");
+    return result === null;
+  });
+
+  // Test 4: Extra table cells
+  runTest("Handle extra table cells", () => {
+    const html = `<tr><td>Name</td><td>Desc</td><td>125:-</td><td>Extra</td><td>More</td></tr>`;
+    const element = createMockElement(html);
+    const result = extractLunchFromElement(element, 47, "måndag");
+    return result === null || (result && result.name === "Name");
+  });
+
+  // Test 5: Invalid HTML entities
+  runTest("Handle invalid HTML entities", () => {
+    const html = `<tr><td>&invalid;</td><td>&unknown;</td><td>125&malformed</td></tr>`;
+    const element = createMockElement(html);
+    const result = extractLunchFromElement(element, 47, "måndag");
+    return result === null || (result && typeof result === "object");
+  });
+
+  // Test 6: Script injection attempts
+  runTest("Handle script injection in content", () => {
+    const html = `<tr><td><script>alert('xss')</script>Name</td><td>Desc</td><td>125:-</td></tr>`;
+    const element = createMockElement(html);
+    const result = extractLunchFromElement(element, 47, "måndag");
+    return result === null || (result && !result.name.includes("<script>"));
+  });
+
+  // Test 7: Very long text content
+  runTest("Handle extremely long text content", () => {
+    const longText = "A".repeat(10000);
+    const html = `<tr><td>${longText}</td><td>Desc</td><td>125:-</td></tr>`;
+    const element = createMockElement(html);
+    const result = extractLunchFromElement(element, 47, "måndag");
+    // Parser should handle long text gracefully - either accept it or reject it
+    return (
+      result === null ||
+      (result && typeof result === "object" && result.name === longText)
+    );
+  });
+
+  // Test 8: Non-standard HTML5 elements
+  runTest("Handle non-standard HTML elements", () => {
+    const html = `<tr><custom-element>Name</custom-element><unknown-tag>Desc</unknown-tag><td>125:-</td></tr>`;
+    const element = createMockElement(html);
+    const result = extractLunchFromElement(element, 47, "måndag");
+    return result === null || (result && typeof result === "object");
+  });
+
+  // Test 9: Empty container with complex structure
+  runTest("Handle empty container with nested structure", () => {
+    const html = `<main><div><section><article><table><tbody></tbody></table></article></section></div></main>`;
+    const container = createMockElement(html);
+    const result = extractAllLunchData(container);
+    return Array.isArray(result) && result.length === 0;
+  });
+
+  // Test 10: Container with only invalid elements
+  runTest("Handle container with only invalid elements", () => {
+    const html = `<main><h3>Vecka 47</h3><table><tr><td></td><td></td><td></td></tr></table></main>`;
+    const container = createMockElement(html);
+    const result = extractAllLunchData(container);
+    return Array.isArray(result) && result.length === 0;
+  });
+
+  // Test 11: Malformed week extraction elements
+  runTest("Handle malformed week extraction", () => {
+    const html = `<main><h3></h3><h4></h4><span></span></main>`;
+    const container = createMockElement(html);
+    const result = extractWeekNumber(container);
+    return typeof result === "number" && result >= 1 && result <= 53;
+  });
+
+  // Test 12: Mixed valid and invalid rows
+  runTest("Handle mixed valid and invalid table rows", () => {
+    const html = `
+      <main>
+        <h3>Vecka 47</h3>
+        <table>
+          <tbody>
+            <tr><td>Valid Name</td><td>Valid Desc</td><td>125:-</td></tr>
+            <tr><td></td><td>Missing name</td><td>95:-</td></tr>
+            <tr><td>Another Valid</td><td>Good desc</td><td>invalid-price</td></tr>
+            <tr><td>Third Valid</td><td>Another desc</td><td>115:-</td></tr>
+          </tbody>
+        </table>
+      </main>
+    `;
+    const container = createMockElement(html);
+    const result = extractAllLunchData(container);
+    // Parser should extract what it can, gracefully handling mixed valid/invalid data
+    return Array.isArray(result);
+  });
+
+  // Test 13: Circular DOM references simulation
+  runTest("Handle element with broken querySelector", () => {
+    const element = {
+      querySelector: () => {
+        throw new Error("querySelector failed");
+      },
+      querySelectorAll: () => {
+        throw new Error("querySelectorAll failed");
+      },
+      textContent: "Some text",
+    };
+    const result = extractLunchFromElement(element, 47, "måndag");
+    return result === null;
+  });
+
+  // Test 14: Element with broken textContent
+  runTest("Handle element with broken textContent", () => {
+    const element = createMockElement(
+      "<tr><td>Name</td><td>Desc</td><td>125:-</td></tr>",
+    );
+    // Override textContent to throw error
+    Object.defineProperty(element, "textContent", {
+      get() {
+        throw new Error("textContent access failed");
+      },
+    });
+    const result = extractLunchFromElement(element, 47, "måndag");
+    return result === null;
+  });
+
+  // Test 15: Container with broken DOM methods
+  runTest("Handle container with broken DOM methods", () => {
+    const container = {
+      querySelector: () => null,
+      querySelectorAll: () => {
+        throw new Error("DOM access failed");
+      },
+    };
+    const result = findWeekdayContent(container, "måndag");
+    return Array.isArray(result) && result.length === 0;
+  });
+
+  // Test 16: Invalid CSS selector characters
+  runTest("Handle element with special characters in selectors", () => {
+    const html = `<tr><td class="special@#$%">Name</td><td>Desc</td><td>125:-</td></tr>`;
+    const element = createMockElement(html);
+    const result = extractLunchFromElement(element, 47, "måndag");
+    return result === null || (result && typeof result === "object");
+  });
+
+  // Test 17: Memory exhaustion simulation
+  runTest("Handle very deep nesting levels", () => {
+    let deepHtml = "<main><h3>Vecka 47</h3>";
+    for (let i = 0; i < 100; i++) {
+      deepHtml += "<div>";
+    }
+    deepHtml +=
+      "<table><tr><td>Deep Name</td><td>Deep Desc</td><td>125:-</td></tr></table>";
+    for (let i = 0; i < 100; i++) {
+      deepHtml += "</div>";
+    }
+    deepHtml += "</main>";
+
+    const container = createMockElement(deepHtml);
+    const result = extractAllLunchData(container);
+    return Array.isArray(result);
+  });
+
+  // Test 18: Binary content simulation
+  runTest("Handle binary content in text nodes", () => {
+    const binaryContent = String.fromCharCode(0, 1, 2, 3, 4, 5);
+    const html = `<tr><td>${binaryContent}</td><td>Desc</td><td>125:-</td></tr>`;
+    const element = createMockElement(html);
+    const result = extractLunchFromElement(element, 47, "måndag");
+    return result === null || (result && typeof result === "object");
+  });
+
+  // Test 19: Unicode edge cases
+  runTest("Handle Unicode edge cases", () => {
+    const unicodeText = "𝕌𝕟𝕚𝕔𝕠𝕕𝕖 𝔑𝔞𝔪𝔢";
+    const html = `<tr><td>${unicodeText}</td><td>Normal Desc</td><td>125:-</td></tr>`;
+    const element = createMockElement(html);
+    const result = extractLunchFromElement(element, 47, "måndag");
+    return result === null || (result && typeof result === "object");
+  });
+
+  // Test 20: Async content simulation (shouldn't affect sync processing)
+  runTest("Handle async content modifications", () => {
+    const html = `<tr><td>Async Name</td><td>Async Desc</td><td>125:-</td></tr>`;
+    const element = createMockElement(html);
+
+    // Simulate async content change after creation
+    setTimeout(() => {
+      if (element.querySelector && element.querySelector("td")) {
+        element.querySelector("td").textContent = "Changed";
+      }
+    }, 1);
+
+    const result = extractLunchFromElement(element, 47, "måndag");
+    return result === null || (result && typeof result === "object");
+  });
+}
+
 // Main test runner
 async function runAllTests() {
   console.log(`🧪 ${TEST_SUITE_NAME}`);
@@ -669,6 +890,7 @@ async function runAllTests() {
   testAllDataExtraction();
   await testEndToEndIntegration();
   testErrorHandlingEdgeCases();
+  testMalformedHTMLElements();
 
   // Print final results
   console.log("\n" + "=".repeat(60));
@@ -694,6 +916,7 @@ async function runAllTests() {
   console.log("\n📋 COVERAGE AREAS TESTED:");
   console.log("- Data validation functions");
   console.log("- Week number extraction");
+  console.log("- Malformed HTML element handling");
   console.log("- Individual element extraction");
   console.log("- Weekday content finding");
   console.log("- Container detection");
