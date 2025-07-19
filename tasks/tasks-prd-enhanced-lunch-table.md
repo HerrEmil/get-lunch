@@ -71,7 +71,7 @@ Based on the PRD for Enhanced Lunch Table, this document outlines the implementa
     - [x] 1.5.1 Create mock HTML fixtures representing current website structure
     - [x] 1.5.2 Test successful data extraction with valid HTML
     - [x] 1.5.3 Test error handling with malformed or missing HTML elements
-    - [ ] 1.5.4 Verify data validation and Swedish weekday handling
+    - [x] 1.5.4 Verify data validation and Swedish weekday handling
 
 - [ ] 2.0 Implement Core Infrastructure and Architecture
   - [ ] 2.1 Set up DynamoDB table schema for lunch data caching
