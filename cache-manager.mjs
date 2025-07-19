@@ -19,6 +19,12 @@ const DEFAULT_REGION = process.env.AWS_REGION || "eu-west-1";
 const TABLE_NAME = process.env.LUNCH_CACHE_TABLE || "lunch-cache";
 const TTL_DAYS = parseInt(process.env.CACHE_TTL_DAYS || "14");
 
+// Retry configuration
+const MAX_RETRIES = 3;
+const BASE_DELAY = 100; // Base delay in milliseconds
+const MAX_DELAY = 5000; // Maximum delay in milliseconds
+const RETRY_JITTER = 0.1; // Add 10% jitter to prevent thundering herd
+
 // Initialize DynamoDB client
 let dynamoClient;
 let docClient;
@@ -59,15 +65,140 @@ function getTtlTimestamp() {
 }
 
 /**
+ * Sleep for a specified duration
+ * @param {number} ms - Milliseconds to sleep
+ * @returns {Promise} - Promise that resolves after the delay
+ */
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Calculate exponential backoff delay with jitter
+ * @param {number} attempt - Attempt number (0-based)
+ * @returns {number} - Delay in milliseconds
+ */
+function calculateDelay(attempt) {
+  const exponentialDelay = Math.min(
+    BASE_DELAY * Math.pow(2, attempt),
+    MAX_DELAY,
+  );
+  const jitter = exponentialDelay * RETRY_JITTER * Math.random();
+  return Math.floor(exponentialDelay + jitter);
+}
+
+/**
+ * Check if an error is retryable
+ * @param {Error} error - The error to check
+ * @returns {boolean} - True if the error is retryable
+ */
+function isRetryableError(error) {
+  if (!error) return false;
+
+  // AWS SDK error codes that should be retried
+  const retryableErrorCodes = [
+    "ProvisionedThroughputExceededException",
+    "ThrottlingException",
+    "RequestLimitExceeded",
+    "InternalServerError",
+    "ServiceUnavailable",
+    "UnknownError",
+    "NetworkingError",
+    "TimeoutError",
+  ];
+
+  // Check error code
+  if (error.name && retryableErrorCodes.includes(error.name)) {
+    return true;
+  }
+
+  // Check for network errors
+  if (error.code && retryableErrorCodes.includes(error.code)) {
+    return true;
+  }
+
+  // Check for HTTP status codes that should be retried
+  if (error.$metadata && error.$metadata.httpStatusCode) {
+    const statusCode = error.$metadata.httpStatusCode;
+    return statusCode >= 500 || statusCode === 429;
+  }
+
+  return false;
+}
+
+/**
+ * Execute a DynamoDB operation with retry logic
+ * @param {Function} operation - The operation to execute
+ * @param {string} operationName - Name of the operation for logging
+ * @returns {Promise} - The result of the operation
+ */
+async function executeWithRetry(operation, operationName) {
+  let lastError;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const result = await operation();
+
+      // Log successful retry if this wasn't the first attempt
+      if (attempt > 0) {
+        console.log(`${operationName} succeeded after ${attempt + 1} attempts`);
+      }
+
+      return result;
+    } catch (error) {
+      lastError = error;
+
+      // Don't retry on the last attempt
+      if (attempt === MAX_RETRIES) {
+        break;
+      }
+
+      // Check if the error is retryable
+      if (!isRetryableError(error)) {
+        console.warn(
+          `${operationName} failed with non-retryable error:`,
+          error.message,
+        );
+        throw error;
+      }
+
+      // Calculate delay and wait before retrying
+      const delay = calculateDelay(attempt);
+      console.warn(
+        `${operationName} failed (attempt ${attempt + 1}/${MAX_RETRIES + 1}), retrying in ${delay}ms:`,
+        error.message,
+      );
+
+      await sleep(delay);
+    }
+  }
+
+  // All retries exhausted
+  console.error(
+    `${operationName} failed after ${MAX_RETRIES + 1} attempts:`,
+    lastError.message,
+  );
+  throw new Error(
+    `${operationName} failed after ${MAX_RETRIES + 1} attempts: ${lastError.message}`,
+  );
+}
+
+/**
  * Create cache key for restaurant and week
  * @param {string} restaurant - Restaurant name
  * @param {number} week - Week number
  * @param {number} year - Year (optional, defaults to current year)
  * @returns {string} - Cache key
  */
-export function createCacheKey(restaurant, week, year = new Date().getFullYear()) {
+export function createCacheKey(
+  restaurant,
+  week,
+  year = new Date().getFullYear(),
+) {
   if (!restaurant || !week) {
-    throw new Error("Restaurant name and week number are required for cache key");
+    throw new Error(
+      "Restaurant name and week number are required for cache key",
+    );
   }
   return `${restaurant.toLowerCase()}-${year}-${String(week).padStart(2, "0")}`;
 }
@@ -87,7 +218,9 @@ export async function cacheLunchData(restaurant, week, lunches, metadata = {}) {
 
   try {
     if (!restaurant || !week || !Array.isArray(lunches)) {
-      throw new Error("Invalid parameters: restaurant, week, and lunches array are required");
+      throw new Error(
+        "Invalid parameters: restaurant, week, and lunches array are required",
+      );
     }
 
     const cacheKey = createCacheKey(restaurant, week);
@@ -115,8 +248,14 @@ export async function cacheLunchData(restaurant, week, lunches, metadata = {}) {
       Item: item,
     });
 
-    await docClient.send(command);
-    console.log(`Successfully cached ${lunches.length} lunches for ${restaurant} week ${week}`);
+    await executeWithRetry(
+      () => docClient.send(command),
+      `cacheLunchData(${restaurant}, week ${week})`,
+    );
+
+    console.log(
+      `Successfully cached ${lunches.length} lunches for ${restaurant} week ${week}`,
+    );
     return true;
   } catch (error) {
     console.error("Error caching lunch data:", error);
@@ -131,7 +270,11 @@ export async function cacheLunchData(restaurant, week, lunches, metadata = {}) {
  * @param {number} year - Year (optional, defaults to current year)
  * @returns {Promise<Object|null>} - Cached data or null if not found
  */
-export async function getCachedLunchData(restaurant, week, year = new Date().getFullYear()) {
+export async function getCachedLunchData(
+  restaurant,
+  week,
+  year = new Date().getFullYear(),
+) {
   if (!docClient) {
     initializeDynamoClient();
   }
@@ -150,14 +293,19 @@ export async function getCachedLunchData(restaurant, week, year = new Date().get
       },
     });
 
-    const response = await docClient.send(command);
+    const response = await executeWithRetry(
+      () => docClient.send(command),
+      `getCachedLunchData(${restaurant}, week ${week})`,
+    );
 
     if (!response.Item) {
       console.log(`No cached data found for ${restaurant} week ${week}`);
       return null;
     }
 
-    console.log(`Retrieved cached data for ${restaurant} week ${week} (${response.Item.lunchCount} lunches)`);
+    console.log(
+      `Retrieved cached data for ${restaurant} week ${week} (${response.Item.lunchCount} lunches)`,
+    );
     return response.Item;
   } catch (error) {
     console.error("Error retrieving cached lunch data:", error);
@@ -192,8 +340,13 @@ export async function getRestaurantCache(restaurant, limit = 10) {
       Limit: limit,
     });
 
-    const response = await docClient.send(command);
-    console.log(`Retrieved ${response.Items.length} cached entries for ${restaurant}`);
+    const response = await executeWithRetry(
+      () => docClient.send(command),
+      `getRestaurantCache(${restaurant})`,
+    );
+    console.log(
+      `Retrieved ${response.Items.length} cached entries for ${restaurant}`,
+    );
     return response.Items || [];
   } catch (error) {
     console.error("Error retrieving restaurant cache:", error);
@@ -219,9 +372,14 @@ async function scanForRestaurant(restaurant, limit) {
       Limit: limit,
     });
 
-    const response = await docClient.send(command);
-    console.log(`Scanned and found ${response.Items.length} cached entries for ${restaurant}`);
-    return response.Items || [];
+    const scanResponse = await executeWithRetry(
+      () => docClient.send(command),
+      `scanForRestaurant(${restaurant})`,
+    );
+    console.log(
+      `Scanned and found ${scanResponse.Items.length} cached entries for ${restaurant}`,
+    );
+    return scanResponse.Items || [];
   } catch (error) {
     console.error("Error scanning for restaurant data:", error);
     return [];
@@ -235,7 +393,11 @@ async function scanForRestaurant(restaurant, limit) {
  * @param {number} year - Year (optional, defaults to current year)
  * @returns {Promise<boolean>} - Success status
  */
-export async function deleteCachedData(restaurant, week, year = new Date().getFullYear()) {
+export async function deleteCachedData(
+  restaurant,
+  week,
+  year = new Date().getFullYear(),
+) {
   if (!docClient) {
     initializeDynamoClient();
   }
@@ -254,8 +416,14 @@ export async function deleteCachedData(restaurant, week, year = new Date().getFu
       },
     });
 
-    await docClient.send(command);
-    console.log(`Deleted cached data for ${restaurant} week ${week}`);
+    await executeWithRetry(
+      () => docClient.send(command),
+      `deleteCachedData(${restaurant}, week ${week})`,
+    );
+
+    console.log(
+      `Successfully deleted cached data for ${restaurant} week ${week}`,
+    );
     return true;
   } catch (error) {
     console.error("Error deleting cached data:", error);
@@ -335,13 +503,19 @@ export async function batchCacheLunchData(entries) {
           },
         });
 
-        const response = await docClient.send(command);
-        successCount += batch.length - (response.UnprocessedItems?.[TABLE_NAME]?.length || 0);
+        const response = await executeWithRetry(
+          () => docClient.send(command),
+          `batchCacheLunchData(batch ${Math.floor(index / 25) + 1})`,
+        );
+        successCount +=
+          batch.length - (response.UnprocessedItems?.[TABLE_NAME]?.length || 0);
         failureCount += response.UnprocessedItems?.[TABLE_NAME]?.length || 0;
 
         // Handle unprocessed items
         if (response.UnprocessedItems?.[TABLE_NAME]?.length > 0) {
-          console.warn(`${response.UnprocessedItems[TABLE_NAME].length} items were not processed in batch`);
+          console.warn(
+            `${response.UnprocessedItems[TABLE_NAME].length} items were not processed in batch`,
+          );
         }
       } catch (batchError) {
         console.error("Error in batch write:", batchError);
@@ -349,7 +523,9 @@ export async function batchCacheLunchData(entries) {
       }
     }
 
-    console.log(`Batch operation completed: ${successCount} success, ${failureCount} failures`);
+    console.log(
+      `Batch operation completed: ${successCount} success, ${failureCount} failures`,
+    );
     return {
       success: true,
       successCount,
@@ -377,7 +553,10 @@ export async function getCacheStats() {
       Select: "COUNT",
     });
 
-    const response = await docClient.send(command);
+    const response = await executeWithRetry(
+      () => docClient.send(command),
+      "getCacheStats",
+    );
 
     return {
       totalEntries: response.Count || 0,
@@ -418,7 +597,10 @@ export async function cleanupExpiredCache() {
         ExclusiveStartKey: lastEvaluatedKey,
       });
 
-      const scanResponse = await docClient.send(scanCommand);
+      const scanResponse = await executeWithRetry(
+        () => docClient.send(scanCommand),
+        "cleanupExpiredCache(scan)",
+      );
 
       if (scanResponse.Items && scanResponse.Items.length > 0) {
         // Delete expired items
@@ -428,10 +610,18 @@ export async function cleanupExpiredCache() {
               TableName: TABLE_NAME,
               Key: { pk: item.pk },
             });
-            await docClient.send(deleteCommand);
+
+            await executeWithRetry(
+              () => docClient.send(deleteCommand),
+              `cleanupExpiredCache(delete ${item.pk})`,
+            );
+
             deletedCount++;
           } catch (deleteError) {
-            console.warn(`Failed to delete expired item ${item.pk}:`, deleteError.message);
+            console.warn(
+              `Failed to delete expired item ${item.pk}:`,
+              deleteError.message,
+            );
           }
         }
       }
@@ -471,7 +661,10 @@ export async function healthCheck() {
       },
     });
 
-    await docClient.send(putCommand);
+    await executeWithRetry(
+      () => docClient.send(putCommand),
+      "healthCheck(put)",
+    );
 
     // Read test item
     const getCommand = new GetCommand({
@@ -479,15 +672,25 @@ export async function healthCheck() {
       Key: { pk: testKey },
     });
 
-    const response = await docClient.send(getCommand);
+    const getResponse = await executeWithRetry(
+      () => docClient.send(getCommand),
+      "healthCheck(get)",
+    );
 
-    // Clean up test item
+    if (!getResponse.Item) {
+      throw new Error("Health check failed: test item not found after write");
+    }
+
+    // Delete test item
     const deleteCommand = new DeleteCommand({
       TableName: TABLE_NAME,
       Key: { pk: testKey },
     });
 
-    await docClient.send(deleteCommand);
+    await executeWithRetry(
+      () => docClient.send(deleteCommand),
+      "healthCheck(delete)",
+    );
 
     return {
       status: "healthy",

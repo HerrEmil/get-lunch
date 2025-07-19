@@ -79,18 +79,18 @@ Based on the PRD for Enhanced Lunch Table, this document outlines the implementa
     - [x] 2.1.2 Add TTL attribute for automatic data expiration
     - [x] 2.1.3 Create CloudFormation/Serverless template for table creation
     - [x] 2.1.4 Configure appropriate read/write capacity for expected load
-  - [ ] 2.2 Create cache manager utility for DynamoDB operations
-    - [ ] 2.2.1 Implement cache write operations (put/update lunch data)
-    - [ ] 2.2.2 Implement cache read operations with error handling
-    - [ ] 2.2.3 Add cache invalidation and cleanup methods
-    - [ ] 2.2.4 Create connection management and AWS SDK configuration
-    - [ ] 2.2.5 Add retry logic for DynamoDB operations
-  - [ ] 2.3 Implement data validator with Swedish weekday validation
-    - [ ] 2.3.1 Create validation functions for price and week (must be numbers)
-    - [ ] 2.3.2 Create validation for name and description (must be strings)
-    - [ ] 2.3.3 Implement Swedish weekday validation ("måndag", "tisdag", "onsdag", "torsdag", "fredag")
-    - [ ] 2.3.4 Add comprehensive validation for complete lunch objects
-    - [ ] 2.3.5 Create error reporting for invalid data with specific field information
+  - [x] 2.2 Create cache manager utility for DynamoDB operations
+    - [x] 2.2.1 Implement cache write operations (put/update lunch data)
+    - [x] 2.2.2 Implement cache read operations with error handling
+    - [x] 2.2.3 Add cache invalidation and cleanup methods
+    - [x] 2.2.4 Create connection management and AWS SDK configuration
+    - [x] 2.2.5 Add retry logic for DynamoDB operations
+  - [x] 2.3 Implement data validator with Swedish weekday validation
+    - [x] 2.3.1 Create validation functions for price and week (must be numbers)
+    - [x] 2.3.2 Create validation for name and description (must be strings)
+    - [x] 2.3.3 Implement Swedish weekday validation ("måndag", "tisdag", "onsdag", "torsdag", "fredag")
+    - [x] 2.3.4 Add comprehensive validation for complete lunch objects
+    - [x] 2.3.5 Create error reporting for invalid data with specific field information
   - [ ] 2.4 Create logging utility with CloudWatch integration
     - [ ] 2.4.1 Set up structured logging with different log levels
     - [ ] 2.4.2 Configure CloudWatch log groups and retention policies
