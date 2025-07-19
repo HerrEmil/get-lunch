@@ -73,7 +73,7 @@ Based on the PRD for Enhanced Lunch Table, this document outlines the implementa
     - [x] 1.5.3 Test error handling with malformed or missing HTML elements
     - [x] 1.5.4 Verify data validation and Swedish weekday handling
 
-- [ ] 2.0 Implement Core Infrastructure and Architecture
+- [x] 2.0 Implement Core Infrastructure and Architecture
   - [x] 2.1 Set up DynamoDB table schema for lunch data caching
     - [x] 2.1.1 Design table schema with composite key (restaurant + week)
     - [x] 2.1.2 Add TTL attribute for automatic data expiration
@@ -96,17 +96,17 @@ Based on the PRD for Enhanced Lunch Table, this document outlines the implementa
     - [x] 2.4.2 Configure CloudWatch log groups and retention policies
     - [x] 2.4.3 Add context-aware logging (restaurant, operation, timestamp)
     - [x] 2.4.4 Implement error logging with stack traces for debugging
-  - [ ] 2.5 Set up AWS EventBridge for weekly scheduling
-    - [ ] 2.5.1 Create EventBridge rule for Monday 10:00 UTC trigger
-    - [ ] 2.5.2 Configure rule to target data collection Lambda
-    - [ ] 2.5.3 Set up proper IAM permissions for EventBridge to invoke Lambda
-    - [ ] 2.5.4 Add rule description and tags for resource management
-  - [ ] 2.6 Configure CloudWatch Alarms and SNS for error notifications
-    - [ ] 2.6.1 Create SNS topic for error notifications
-    - [ ] 2.6.2 Set up CloudWatch alarm for Lambda function errors
-    - [ ] 2.6.3 Configure alarm for DynamoDB operation failures
-    - [ ] 2.6.4 Add email subscription to SNS topic for alerts
-    - [ ] 2.6.5 Set appropriate alarm thresholds and evaluation periods
+  - [x] 2.5 Set up AWS EventBridge for weekly scheduling
+    - [x] 2.5.1 Create EventBridge rule for Monday 10:00 UTC trigger
+    - [x] 2.5.2 Configure rule to target data collection Lambda
+    - [x] 2.5.3 Set up proper IAM permissions for EventBridge to invoke Lambda
+    - [x] 2.5.4 Add rule description and tags for resource management
+  - [x] 2.6 Configure CloudWatch Alarms and SNS for error notifications
+    - [x] 2.6.1 Create SNS topic for error notifications
+    - [x] 2.6.2 Set up CloudWatch alarm for Lambda function errors
+    - [x] 2.6.3 Configure alarm for DynamoDB operation failures
+    - [x] 2.6.4 Add email subscription to SNS topic for alerts
+    - [x] 2.6.5 Set appropriate alarm thresholds and evaluation periods
 
 - [ ] 3.0 Build Restaurant Parser Framework
   - [ ] 3.1 Design and implement abstract base parser class
