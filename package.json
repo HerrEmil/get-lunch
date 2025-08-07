@@ -19,9 +19,9 @@
     "jsdom": "^24.1.0"
   },
   "devDependencies": {
-    "serverless": "^3.38.0",
+    "serverless": "^4.18.0",
     "serverless-dynamodb-local": "^0.2.40",
-    "serverless-offline": "^13.3.0",
+    "serverless-offline": "^14.4.0",
     "serverless-plugin-warmup": "^8.2.1"
   },
   "engines": {
