@@ -333,7 +333,7 @@ resources:
 
 plugins:
   - serverless-offline
-  - serverless-dynamodb-local
+  - serverless-dynamodb
   - serverless-plugin-warmup
 
 package:
@@ -368,7 +368,7 @@ custom:
     lambdaPort: 3002
     printOutput: true
 
-  dynamodb:
+  serverless-dynamodb:
     stages:
       - dev
     start:

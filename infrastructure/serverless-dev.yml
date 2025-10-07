@@ -69,7 +69,7 @@ custom:
     useSeparateProcesses: false
     useChildProcesses: false
 
-  dynamodb:
+  serverless-dynamodb:
     stages:
       - dev
     start:
@@ -364,6 +364,6 @@ package:
 
 plugins:
   - serverless-offline
-  - serverless-dynamodb-local
+  - serverless-dynamodb
 
 configValidationMode: warn  # More relaxed validation for development
