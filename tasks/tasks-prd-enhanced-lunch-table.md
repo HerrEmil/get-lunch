@@ -7,7 +7,7 @@ Based on the PRD for Enhanced Lunch Table, this document outlines the implementa
 - `src/lambdas/data-collector.mjs` - Background Lambda function for weekly data collection from restaurants
 - `src/lambdas/data-collector.test.mjs` - Unit tests for data collector Lambda
 - `src/lambdas/api-server.mjs` - Main Lambda function for serving HTML with cached data injected (✅ Created)
-- `src/lambdas/api-server.test.mjs` - Unit tests for API server Lambda
+- `src/lambdas/api-server.test.mjs` - Unit tests for API server Lambda (✅ Created)
 - `src/parsers/base-parser.mjs` - Abstract base class for restaurant parsers
 - `src/parsers/base-parser.test.mjs` - Unit tests for base parser
 - `src/parsers/niagara-parser.mjs` - Updated Niagara restaurant parser
@@ -19,8 +19,12 @@ Based on the PRD for Enhanced Lunch Table, this document outlines the implementa
 - `src/utils/logger.mjs` - Logging utility with CloudWatch integration
 - `src/utils/logger.test.mjs` - Unit tests for logger
 - `index.html` - Existing frontend file (no changes needed for this initiative)
-- `infrastructure/serverless.yml` - AWS infrastructure configuration
-- `local-test-server.mjs` - Updated local development server
+- `infrastructure/serverless.yml` - AWS infrastructure configuration (✅ Enhanced)
+- `infrastructure/serverless-dev.yml` - Development environment configuration (✅ Created)
+- `infrastructure/serverless-prod.yml` - Production environment configuration (✅ Created)
+- `local-test-server.mjs` - Updated local development server with new architecture (✅ Created)
+- `vitest.config.mjs` - Vitest testing configuration (✅ Created)
+- `test-setup.mjs` - Global test setup and mocking configuration (✅ Created)
 - `package.json` - Updated dependencies including AWS SDK (managed with yarn)
 - `docs/niagara-website-analysis.md` - Analysis of current Niagara website structure and required selector updates
 - `index.mjs` - Updated with improved Niagara parser that handles both old and new website structures
