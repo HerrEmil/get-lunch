@@ -41,5 +41,14 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "resolutions": {
+    "whatwg-url": "^14.0.0",
+    "tr46": "^5.0.0"
+  },
+  "overrides": {
+    "whatwg-url": "^14.0.0",
+    "node-fetch>whatwg-url": "^14.0.0",
+    "node-fetch>whatwg-url>tr46": "^5.0.0"
   }
 }
