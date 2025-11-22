@@ -44,7 +44,12 @@ export class NiagaraParser extends BaseParser {
       // Modern structure selectors
       modernSelectors: {
         weekdayHeaders: ["h3", "h4", ".day-header", ".tab-header"],
-        tabPanels: ["[data-day]", "[data-weekday]", ".tab-content"],
+        tabPanels: [
+          "[role='tabpanel']",
+          "[data-day]",
+          "[data-weekday]",
+          ".tab-content",
+        ],
         daySections: [
           ".{{weekday}}",
           ".day-{{weekday}}",
@@ -396,17 +401,31 @@ export class NiagaraParser extends BaseParser {
           const dataDay = panel.getAttribute && panel.getAttribute("data-day");
           const dataWeekday =
             panel.getAttribute && panel.getAttribute("data-weekday");
+          const ariaLabel = panel.getAttribute && panel.getAttribute("aria-label");
+          const labelledBy =
+            panel.getAttribute && panel.getAttribute("aria-labelledby");
+          const labelledByText = labelledBy
+            ? this.extractText(
+                this.safeQuery(container, `#${labelledBy}`) || panel,
+              ).toLowerCase()
+            : "";
           const panelText = this.extractText(panel).toLowerCase();
+
+          const headingMatch =
+            ariaLabel?.toLowerCase().includes(weekday) ||
+            labelledByText.includes(weekday) ||
+            panelText.includes(weekday);
 
           if (
             dataDay === weekday ||
             dataWeekday === weekday ||
-            panelText.includes(weekday)
+            headingMatch
           ) {
             await this.logger.debug(`Found matching tab panel for ${weekday}`, {
               "data-day": !!dataDay,
               "data-weekday": !!dataWeekday,
-              text: !!panelText.includes(weekday),
+              text: headingMatch,
+              labelledBy,
             });
 
             const items = this.safeQuery(
@@ -419,6 +438,8 @@ export class NiagaraParser extends BaseParser {
               await this.logger.debug(
                 `Found ${items.length} items in tab panel for ${weekday}`,
               );
+            } else if (panelText.trim().length > 0) {
+              elements.push(panel);
             }
           }
         }
@@ -589,44 +610,70 @@ export class NiagaraParser extends BaseParser {
    */
   extractWeekNumber(container) {
     try {
+      const textCandidates = [this.extractText(container)];
+
       for (const selector of this.selectors.weekSelectors) {
         const weekElement = this.safeQuery(container, selector);
         if (weekElement) {
-          const weekText = this.extractText(weekElement);
+          textCandidates.push(this.extractText(weekElement));
+        }
+      }
 
-          // Try different week formats
-          // Format 1: "Vecka 47"
-          let match = weekText.match(/vecka\s*(\d+)/i);
-          if (match) {
-            const week = parseInt(match[1]);
-            if (week >= 1 && week <= 53) {
-              this.logger.debug(
-                `Found week number: ${week} from text: "${weekText}"`,
-              );
-              return week;
-            }
+      for (const weekText of textCandidates.filter(Boolean)) {
+        const normalizedText = weekText.replace(/\s+/g, " ").trim();
+
+        // Format 1: "Vecka 47"
+        let match = normalizedText.match(/vecka[\s\u00a0]*(\d{1,2})\b/i);
+        if (match) {
+          const week = parseInt(match[1]);
+          if (week >= 1 && week <= 53) {
+            this.logger.debug(
+              `Found week number: ${week} from text: "${weekText}"`,
+            );
+            return week;
           }
+        }
 
-          // Format 2: "Vecka 20250714" (date format)
-          match = weekText.match(/vecka\s*(\d{8})/i);
-          if (match) {
-            const dateStr = match[1];
-            const year = parseInt(dateStr.substring(0, 4));
-            const month = parseInt(dateStr.substring(4, 6));
-            const day = parseInt(dateStr.substring(6, 8));
+        // Format 2: "Vecka 20250714" (date format without separators)
+        const eightDigitSequence = normalizedText.replace(/\D/g, "");
+        match =
+          normalizedText.match(/vecka[\s\u00a0]*(\d{8})/i) ||
+          (eightDigitSequence.length === 8 ? [null, eightDigitSequence] : null);
+        if (match) {
+          const dateStr = match[1];
+          const year = parseInt(dateStr.substring(0, 4));
+          const month = parseInt(dateStr.substring(4, 6));
+          const day = parseInt(dateStr.substring(6, 8));
 
-            try {
-              const date = new Date(year, month - 1, day);
-              const week = this.getWeekNumber(date);
-              this.logger.debug(
-                `Calculated week number: ${week} from date: ${dateStr}`,
-              );
-              return week;
-            } catch (dateError) {
-              this.logger.warn("Failed to parse date from week text", {
-                dateStr,
-              });
-            }
+          try {
+            const date = new Date(year, month - 1, day);
+            const week = this.getWeekNumber(date);
+            this.logger.debug(
+              `Calculated week number: ${week} from date: ${dateStr}`,
+            );
+            return week;
+          } catch (dateError) {
+            this.logger.warn("Failed to parse date from week text", {
+              dateStr,
+            });
+          }
+        }
+
+        // Format 3: "Vecka 2025-07-14" (date with separators)
+        match = weekText.match(/vecka\s*(\d{4})[-/.](\d{2})[-/.](\d{2})/i);
+        if (match) {
+          const [, year, month, day] = match.map((v) => parseInt(v));
+          try {
+            const date = new Date(year, month - 1, day);
+            const week = this.getWeekNumber(date);
+            this.logger.debug(
+              `Calculated week number: ${week} from formatted date: ${weekText}`,
+            );
+            return week;
+          } catch (dateError) {
+            this.logger.warn("Failed to parse formatted date from week text", {
+              weekText,
+            });
           }
         }
       }

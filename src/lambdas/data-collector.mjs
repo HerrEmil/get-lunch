@@ -54,10 +54,7 @@ export async function handler(event, context) {
     });
 
     // Cache configuration
-    const cacheConfig = {
-      tableName: process.env.LUNCH_TABLE_NAME || "lunch-data",
-      ttlHours: 168, // 1 week
-    };
+    const cacheConfig = resolveCacheConfig();
 
     // Register and create parsers for active restaurants
     const activeParsers = await setupParsers(factory, logger);
@@ -355,4 +352,18 @@ function getCurrentWeek() {
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
   return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+}
+
+/**
+ * Resolve cache configuration from environment variables
+ * Ensures the Lambda uses the same table name as the deployed stack
+ */
+export function resolveCacheConfig() {
+  return {
+    tableName:
+      process.env.LUNCH_CACHE_TABLE ||
+      process.env.LUNCH_TABLE_NAME ||
+      "lunch-data",
+    ttlHours: 168, // 1 week
+  };
 }
