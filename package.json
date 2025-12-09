@@ -44,11 +44,13 @@
   },
   "resolutions": {
     "whatwg-url": "^14.0.0",
-    "tr46": "^5.0.0"
+    "tr46": "^5.0.0",
+    "cross-spawn": "^7.0.6"
   },
   "overrides": {
     "whatwg-url": "^14.0.0",
     "node-fetch>whatwg-url": "^14.0.0",
-    "node-fetch>whatwg-url>tr46": "^5.0.0"
+    "node-fetch>whatwg-url>tr46": "^5.0.0",
+    "cross-spawn": "^7.0.6"
   }
 }
