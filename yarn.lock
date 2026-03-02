@@ -7129,10 +7129,10 @@ prelude-ls@^1.2.1:
   resolved "https://registry.yarnpkg.com/prelude-ls/-/prelude-ls-1.2.1.tgz#debc6489d7a6e6b0e7611888cec880337d316396"
   integrity sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==
 
-prettier@^3.1.0:
-  version "3.6.2"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.6.2.tgz#ccda02a1003ebbb2bfda6f83a074978f608b9393"
-  integrity sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==
+prettier@^3.8.1:
+  version "3.8.1"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.8.1.tgz#edf48977cf991558f4fcbd8a3ba6015ba2a3a173"
+  integrity sha512-UOnG6LftzbdaHZcKoPFtOcCKztrQ57WkHDeRD9t/PTQtmT0NHSeWWepj6pS0z/N7+08BHFDQVUrfmfMRcZwbMg==
 
 process-nextick-args@~2.0.0:
   version "2.0.1"
@@ -7520,10 +7520,10 @@ serverless-offline@^13.3.0:
     velocityjs "^2.0.6"
     ws "^8.18.0"
 
-serverless-plugin-warmup@^8.2.1:
-  version "8.3.0"
-  resolved "https://registry.npmjs.org/serverless-plugin-warmup/-/serverless-plugin-warmup-8.3.0.tgz"
-  integrity sha512-FBPPfY6CFdg/BAbvR+UrgHUFNgkUsQxXApSUVwoBqoaLH7amc2aCUYxYncJaD+kRLHTD4WKB0VC7QuyfUPJ+XQ==
+serverless-plugin-warmup@^8.4.1:
+  version "8.4.1"
+  resolved "https://registry.yarnpkg.com/serverless-plugin-warmup/-/serverless-plugin-warmup-8.4.1.tgz#19a17c8d8c0f3981250a071aad1e2a4ecab0e289"
+  integrity sha512-DDVAD9seNQdNZCemrwCUqNp2U0SRY+gMhf0z28TxFgLz81NAA9rqIwLSI1nMdLeLQF3geBIvvCtN/S/1OsKA1A==
 
 serverless@^3.38.0:
   version "3.40.0"
