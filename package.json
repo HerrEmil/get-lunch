@@ -27,7 +27,7 @@
     "@aws-sdk/client-cloudwatch-logs": "^3.973.0",
     "@aws-sdk/client-dynamodb": "^3.973.0",
     "@aws-sdk/lib-dynamodb": "^3.973.0",
-    "jsdom": "^24.1.0"
+    "jsdom": "^28.1.0"
   },
   "devDependencies": {
     "@vitest/ui": "^3.2.0",
