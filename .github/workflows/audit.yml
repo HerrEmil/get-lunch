@@ -1,0 +1,27 @@
+name: Dependency Audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: yarn install --frozen-lockfile
+
+      - name: Audit prod deps (fail on high+)
+        run: yarn audit --groups dependencies --level high
+
+      - name: Audit all deps (informational)
+        if: always()
+        continue-on-error: true
+        run: yarn audit
