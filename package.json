@@ -51,7 +51,8 @@
     "tar": "^7.5.3",
     "minimatch": "^5.1.6",
     "qs": "^6.15.0",
-    "lodash": "^4.17.23"
+    "lodash": "^4.17.23",
+    "@smithy/config-resolver": "^4.4.0"
   },
   "overrides": {
     "js-yaml": "^4.1.1",
