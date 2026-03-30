@@ -376,7 +376,7 @@ custom:
     basePath: ''
     stage: ${self:provider.stage}
     certificateName: lunch.herremil.com
-    createRoute53Record: true
+    createRoute53Record: false
     endpointType: regional
     securityPolicy: tls_1_2
 
