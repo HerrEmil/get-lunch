@@ -332,6 +332,7 @@ plugins:
 package:
   individually: true
   exclude:
+    - node_modules/**
     - .git/**
     - .gitignore
     - README.md
