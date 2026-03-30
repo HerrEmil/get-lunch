@@ -86,6 +86,40 @@ describe("NiagaraParser modern layout handling", () => {
     });
   });
 
+  it("uses dish description as name when heading is a category", async () => {
+    const dom = new JSDOM(`
+      <section class="lunch-section">
+        <h3>Vecka 20250714</h3>
+        <div role="tabpanel" data-day="måndag">
+          <div class="lunchmeny_container">
+            <span class="lunch_title">Green</span>
+            <span class="lunch_price">115:-</span>
+            <div class="lunch_desc">Frittata på champinjoner, paprika &amp; potatis, ruccola- &amp; tomatsallad, parmesan</div>
+          </div>
+          <div class="lunchmeny_container">
+            <span class="lunch_title">Local</span>
+            <span class="lunch_price">115:-</span>
+            <div class="lunch_desc">Stekt strömming med potatismos och lingon</div>
+          </div>
+        </div>
+      </section>
+    `);
+
+    const container = dom.window.document.querySelector("section");
+    const lunches = await parser.extractFromModernStructure(container);
+
+    expect(lunches.length).toBeGreaterThanOrEqual(2);
+    const green = lunches.find((l) => l.description === "Green");
+    const local = lunches.find((l) => l.description === "Local");
+
+    expect(green).toBeDefined();
+    expect(green.name).toContain("Frittata");
+    expect(green.price).toBe(115);
+
+    expect(local).toBeDefined();
+    expect(local.name).toContain("strömming");
+  });
+
   it("detects closure messaging when no lunches exist", async () => {
     const dom = new JSDOM(`
       <section>

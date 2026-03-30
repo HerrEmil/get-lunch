@@ -1,8 +1,15 @@
 # TODO
 
-- [ ] Trigger initial data collection — cache is empty, invoke Lambda manually or wait for next weekday 08:00 UTC
-- [ ] Verify Lambda packaging bundles jsdom — `package.individually: true` may skip node_modules, and jsdom is not in Lambda runtime
-- [ ] Verify index.html is included in Lambda package — api-server reads it via readFileSync
-- [ ] Fix Niagara parser dish names — name field is the category ("Green", "Local") instead of the actual dish; description has the real food
-- [ ] Remove stale `iamRoleStatements:` key from serverless.yml line 16
-- [ ] Set up custom domain instead of raw API Gateway URL
+- [x] ~~Verify Lambda packaging bundles jsdom~~ — Fixed: removed `node_modules/**` from exclude list
+- [x] ~~Verify index.html is included in Lambda package~~ — Confirmed: include list has `index.html`, path resolves correctly
+- [x] ~~Fix Niagara parser dish names~~ — Fixed: detects category headings (Green/Local/Asia/World Wide) and swaps with description
+- [x] ~~Remove stale `iamRoleStatements:` key from serverless.yml~~ — Removed
+- [x] ~~Set up custom domain~~ — Added `serverless-domain-manager` plugin for lunch.herremil.com
+
+## Deployment steps (manual)
+
+- [ ] Request ACM certificate for `lunch.herremil.com` in `eu-west-1` (DNS validation via Route 53)
+- [ ] Create custom domain: `npx serverless create_domain --stage prod`
+- [ ] Deploy: `npx serverless deploy --stage prod`
+- [ ] Trigger initial data collection: `aws lambda invoke --function-name enhanced-lunch-table-prod-dataCollector /tmp/out.json`
+- [ ] Verify DynamoDB has data: `aws dynamodb scan --table-name enhanced-lunch-table-lunch-cache-prod --select COUNT`

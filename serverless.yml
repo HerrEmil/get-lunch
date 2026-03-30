@@ -326,6 +326,7 @@ resources:
         Name: ${self:service}-${self:provider.stage}-data-collector-log-group
 
 plugins:
+  - serverless-domain-manager
   - serverless-offline
   - serverless-dynamodb
 
