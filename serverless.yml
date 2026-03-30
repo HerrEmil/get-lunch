@@ -45,13 +45,6 @@ provider:
             - events:RemoveTargets
           Resource: "*"
 
-custom:
-  tableName: ${self:service}-lunch-cache-${self:provider.stage}
-  tableArn:
-    Fn::GetAtt:
-      - LunchCacheTable
-      - Arn
-
 functions:
   # Data Collection Lambda (weekly scheduled)
   dataCollector:
@@ -368,6 +361,11 @@ configValidationMode: error
 
 # Local development configuration
 custom:
+  tableName: ${self:service}-lunch-cache-${self:provider.stage}
+  tableArn:
+    Fn::GetAtt:
+      - LunchCacheTable
+      - Arn
   serverless-offline:
     httpPort: 3000
     lambdaPort: 3002
