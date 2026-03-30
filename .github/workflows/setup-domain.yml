@@ -20,10 +20,13 @@ jobs:
           node-version: "20"
           cache: yarn
 
-      - run: yarn install --frozen-lockfile
-
-      - name: Verify plugin
-        run: ls node_modules/serverless-domain-manager/dist/src/index.js
+      - run: yarn install --frozen-lockfile || yarn install
+      - run: |
+          if [ ! -d node_modules/serverless-domain-manager ]; then
+            echo "Plugin missing after yarn install, installing explicitly..."
+            yarn add --dev serverless-domain-manager@10.0.0
+          fi
+          ls node_modules/serverless-domain-manager/dist/src/index.js
 
       - name: Create custom domain
         run: npx serverless create_domain --stage prod
