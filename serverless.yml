@@ -27,8 +27,11 @@ provider:
             - dynamodb:BatchWriteItem
             - dynamodb:UpdateItem
           Resource:
-            - ${self:custom.tableArn}
-            - ${self:custom.tableArn}/index/*
+            - Fn::GetAtt: [LunchCacheTable, Arn]
+            - Fn::Join:
+                - ""
+                - - Fn::GetAtt: [LunchCacheTable, Arn]
+                  - "/index/*"
         - Effect: Allow
           Action:
             - logs:CreateLogGroup
