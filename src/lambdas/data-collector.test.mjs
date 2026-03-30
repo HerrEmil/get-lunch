@@ -1,9 +1,49 @@
 /**
  * Unit Tests for Data Collection Lambda
+ * Mocks the ParserFactory to avoid live HTTP requests in CI
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
-import { handler, resolveCacheConfig } from "./data-collector.mjs";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+// Mock the parser factory to avoid real network calls
+vi.mock("../parsers/parser-factory.mjs", () => {
+  const mockResults = [
+    {
+      success: true,
+      restaurant: "Mock Restaurant",
+      lunches: [
+        { name: "Test Lunch", description: "Desc", price: 125, weekday: "måndag", week: 14, place: "Mock Restaurant" },
+      ],
+      metadata: { validCount: 1, invalidCount: 0 },
+    },
+  ];
+
+  return {
+    ParserFactory: vi.fn(function () {
+      this.parserClasses = new Map();
+      this.parsers = new Map();
+      this.circuitBreakers = new Map();
+      this.registerParserClass = vi.fn(() => true);
+      this.validateParserConfig = vi.fn(() => ({ isValid: true, errors: [] }));
+      this.createParser = vi.fn((config) => {
+        this.parsers.set(config.id, { config });
+        return {};
+      });
+      this.executeAllParsers = vi.fn(async () => mockResults);
+      this.executeParser = vi.fn(async () => mockResults[0]);
+      this.getFactoryStats = vi.fn(() => ({
+        totalParsers: 1,
+        totalRequests: 1,
+        successfulRequests: 1,
+        successRate: "100.0%",
+        registeredParserTypes: ["mock"],
+      }));
+      this.destroy = vi.fn();
+    }),
+  };
+});
+
+const { handler } = await import("./data-collector.mjs");
 
 const mockContext = {
   awsRequestId: "test-request-id-123",
@@ -92,7 +132,7 @@ describe("Performance", () => {
   it("completes within reasonable time", async () => {
     const start = Date.now();
     const result = await handler({ source: "manual" }, mockContext);
-    expect(Date.now() - start).toBeLessThan(30000);
+    expect(Date.now() - start).toBeLessThan(5000);
     const body = JSON.parse(result.body);
     expect(body.duration).toBeGreaterThanOrEqual(0);
   });
