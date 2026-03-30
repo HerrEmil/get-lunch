@@ -24,6 +24,13 @@ jobs:
       - name: Downgrade serverless-domain-manager to v7 (compatible with SLS v3)
         run: yarn add --dev serverless-domain-manager@7
 
+      - name: Debug serverless config
+        run: |
+          cat serverless.yml | grep -A5 plugins
+          npx serverless doctor 2>&1 || true
+          node -e "try { require('serverless-domain-manager'); console.log('require OK') } catch(e) { console.log('require FAIL:', e.message) }"
+          npx serverless help 2>&1 | head -40
+
       - name: Create custom domain
         run: npx serverless create_domain --stage prod
 
