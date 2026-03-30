@@ -330,7 +330,6 @@ resources:
 plugins:
   - serverless-offline
   - serverless-dynamodb
-  - serverless-plugin-warmup
 
 package:
   individually: true
@@ -389,12 +388,3 @@ custom:
           - table: ${self:custom.tableName}
             sources: [./test-fixtures/sample-cache-data.json]
 
-  warmup:
-    default:
-      enabled: true
-      events:
-        - schedule: rate(5 minutes)
-      timeout: 20
-      prewarm: true
-      concurrency: 1
-      cleanFolder: false
