@@ -7,7 +7,6 @@ provider:
   stage: ${opt:stage, 'dev'}
   environment:
     LUNCH_CACHE_TABLE: ${self:custom.tableName}
-    AWS_REGION: ${self:provider.region}
     CACHE_TTL_DAYS: 14
     STAGE: ${self:provider.stage}
     LOG_GROUP_NAME: /aws/lambda/${self:service}-${self:provider.stage}
