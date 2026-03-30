@@ -12,7 +12,6 @@ provider:
     LOG_GROUP_NAME: /aws/lambda/${self:service}-${self:provider.stage}
     SERVICE_NAME: ${self:service}
     LOG_LEVEL: ${opt:log-level, 'INFO'}
-  iamRoleStatements:
   iam:
     role:
       statements:
@@ -327,13 +326,13 @@ resources:
         Name: ${self:service}-${self:provider.stage}-data-collector-log-group
 
 plugins:
+  - serverless-domain-manager
   - serverless-offline
   - serverless-dynamodb
 
 package:
   individually: true
   exclude:
-    - node_modules/**
     - .git/**
     - .gitignore
     - README.md
@@ -371,6 +370,15 @@ custom:
     httpPort: 3000
     lambdaPort: 3002
     printOutput: true
+
+  customDomain:
+    domainName: lunch.herremil.com
+    basePath: ''
+    stage: ${self:provider.stage}
+    certificateName: lunch.herremil.com
+    createRoute53Record: true
+    endpointType: regional
+    securityPolicy: tls_1_2
 
   serverless-dynamodb:
     stages:
