@@ -12,45 +12,6 @@ jobs:
       AWS_DEFAULT_REGION: eu-west-1
 
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: yarn
-
-      - run: yarn install --frozen-lockfile
-      - run: yarn add --dev serverless-domain-manager@10.0.0
-
-      - name: Create custom domain
-        id: domain
+      - name: Get API Gateway domain info
         run: |
-          npx serverless create_domain --stage prod 2>&1 | tee /tmp/output.log
-          # Get the API Gateway domain name for Route53 setup
-          APIGW_DOMAIN=$(aws apigateway get-domain-name \
-            --domain-name lunch.herremil.com \
-            --query 'regionalDomainName' \
-            --output text 2>/dev/null || echo "")
-          APIGW_ZONE=$(aws apigateway get-domain-name \
-            --domain-name lunch.herremil.com \
-            --query 'regionalHostedZoneId' \
-            --output text 2>/dev/null || echo "")
-          echo "apigw_domain=$APIGW_DOMAIN" >> "$GITHUB_OUTPUT"
-          echo "apigw_zone=$APIGW_ZONE" >> "$GITHUB_OUTPUT"
-
-      - name: Deploy
-        run: npx serverless deploy --stage prod
-
-      - name: Summary
-        run: |
-          echo "### ✅ Domain setup complete" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** https://lunch.herremil.com" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**API GW domain:** ${{ steps.domain.outputs.apigw_domain }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "⚠️ Route53 alias record must be created from the operations repo:" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "lunch.herremil.com -> ${{ steps.domain.outputs.apigw_domain }}" >> $GITHUB_STEP_SUMMARY
-          echo "Hosted zone ID: ${{ steps.domain.outputs.apigw_zone }}" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          aws apigateway get-domain-name --domain-name lunch.herremil.com
