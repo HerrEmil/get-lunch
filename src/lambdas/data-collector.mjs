@@ -16,7 +16,69 @@ const RESTAURANT_CONFIGS = [
     url: "https://restaurangniagara.se/lunch/",
     active: true,
   },
-  // Additional restaurants can be added here
+  {
+    id: "spill",
+    name: "Spill",
+    parser: "spill",
+    url: "https://www.restaurangspill.se/",
+    active: true,
+  },
+  {
+    id: "kontrast",
+    name: "Kontrast",
+    parser: "kontrast",
+    url: "https://www.kontrastrestaurang.se/vastra-hamnen/",
+    active: true,
+  },
+  {
+    id: "p2",
+    name: "P2",
+    parser: "p2",
+    url: "https://restaurangp2.se/",
+    active: true,
+  },
+  {
+    id: "taste",
+    name: "Taste",
+    parser: "taste",
+    url: "https://www.tastebynordrest.se/17/6/taste-malmo/",
+    active: true,
+  },
+  {
+    id: "varv",
+    name: "Varv",
+    parser: "varv",
+    url: "https://varvmalmo.com/menu",
+    active: true,
+  },
+  {
+    id: "fonderie",
+    name: "La Fonderie",
+    parser: "fonderie",
+    url: "https://www.lafonderie.se/lelunch",
+    active: true,
+  },
+  {
+    id: "laziza",
+    name: "Laziza",
+    parser: "laziza",
+    url: "https://www.laziza.se/lunch/",
+    active: true,
+  },
+  {
+    id: "holygreens",
+    name: "Holy Greens",
+    parser: "holygreens",
+    url: "https://holygreens.se/meny/",
+    active: true,
+  },
+  {
+    id: "kockum",
+    name: "Kockum Fritid",
+    parser: "kockum",
+    url: "https://www.freda49.se/lunch-malmo.html",
+    active: true,
+  },
 ];
 
 /**

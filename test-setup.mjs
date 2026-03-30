@@ -24,17 +24,20 @@ vi.mock('path', async () => {
 });
 
 // Mock AWS SDK
-vi.mock('@aws-sdk/client-dynamodb', () => ({
-  DynamoDBClient: vi.fn(() => ({
-    send: vi.fn(),
-    destroy: vi.fn(),
-  })),
-  GetItemCommand: vi.fn(),
-  PutItemCommand: vi.fn(),
-  DeleteItemCommand: vi.fn(),
-  ScanCommand: vi.fn(),
-  QueryCommand: vi.fn(),
-}));
+vi.mock('@aws-sdk/client-dynamodb', () => {
+  const DynamoDBClient = vi.fn(function () {
+    this.send = vi.fn();
+    this.destroy = vi.fn();
+  });
+  return {
+    DynamoDBClient,
+    GetItemCommand: vi.fn(),
+    PutItemCommand: vi.fn(),
+    DeleteItemCommand: vi.fn(),
+    ScanCommand: vi.fn(),
+    QueryCommand: vi.fn(),
+  };
+});
 
 vi.mock('@aws-sdk/lib-dynamodb', () => ({
   DynamoDBDocumentClient: {
@@ -61,9 +64,9 @@ vi.mock('@aws-sdk/client-cloudwatch-logs', () => ({
 }));
 
 // Mock JSDOM for HTML parsing tests
-vi.mock('jsdom', () => ({
-  JSDOM: vi.fn((html) => ({
-    window: {
+vi.mock('jsdom', () => {
+  const JSDOM = vi.fn(function (html) {
+    this.window = {
       document: {
         body: {
           firstElementChild: {
@@ -76,9 +79,10 @@ vi.mock('jsdom', () => ({
         querySelector: vi.fn(),
         querySelectorAll: vi.fn(),
       },
-    },
-  })),
-}));
+    };
+  });
+  return { JSDOM };
+});
 
 // Global test helpers
 global.createMockElement = (tag, attributes = {}, textContent = '') => ({

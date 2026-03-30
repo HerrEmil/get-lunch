@@ -57,7 +57,13 @@ export class NiagaraParser extends BaseParser {
           "#{{weekday}}",
           "#day-{{weekday}}",
         ],
-        lunchItems: [".lunch-item", ".meal", ".dish", ".menu-item"],
+        lunchItems: [
+          ".lunchmeny_container",
+          ".lunch-item",
+          ".meal",
+          ".dish",
+          ".menu-item",
+        ],
       },
     };
   }
@@ -501,6 +507,7 @@ export class NiagaraParser extends BaseParser {
     try {
       // Try multiple selectors for name
       const nameSelectors = [
+        ".lunch_title",
         ".lunch-name",
         ".name",
         ".title",
@@ -542,6 +549,7 @@ export class NiagaraParser extends BaseParser {
 
       // Try multiple selectors for description
       const descSelectors = [
+        ".lunch_desc",
         ".description",
         ".desc",
         "p",
@@ -559,7 +567,7 @@ export class NiagaraParser extends BaseParser {
       }
 
       // Try multiple selectors for price
-      const priceSelectors = [".price", ".cost", ".amount", "span", ".kr"];
+      const priceSelectors = [".lunch_price", ".price", ".cost", ".amount", "span", ".kr"];
       let price = 0;
 
       for (const selector of priceSelectors) {

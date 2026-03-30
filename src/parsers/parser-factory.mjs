@@ -5,6 +5,15 @@
 
 import { createRestaurantLogger } from "../../enhanced-logger.mjs";
 import { NiagaraParser } from "./niagara-parser.mjs";
+import { SpillParser } from "./spill-parser.mjs";
+import { KontrastParser } from "./kontrast-parser.mjs";
+import { P2Parser } from "./p2-parser.mjs";
+import { TasteParser } from "./taste-parser.mjs";
+import { VarvParser } from "./varv-parser.mjs";
+import { FonderieParser } from "./fonderie-parser.mjs";
+import { LazizaParser } from "./laziza-parser.mjs";
+import { HolyGreensParser } from "./holygreens-parser.mjs";
+import { KockumParser } from "./kockum-parser.mjs";
 import { DEFAULT_PARSER_CONFIG } from "./parser-interfaces.mjs";
 
 /**
@@ -54,6 +63,15 @@ export class ParserFactory {
 
     // Register built-in parsers
     this.registerParserClass("niagara", NiagaraParser);
+    this.registerParserClass("spill", SpillParser);
+    this.registerParserClass("kontrast", KontrastParser);
+    this.registerParserClass("p2", P2Parser);
+    this.registerParserClass("taste", TasteParser);
+    this.registerParserClass("varv", VarvParser);
+    this.registerParserClass("fonderie", FonderieParser);
+    this.registerParserClass("laziza", LazizaParser);
+    this.registerParserClass("holygreens", HolyGreensParser);
+    this.registerParserClass("kockum", KockumParser);
 
     // Initialize circuit breakers
     this.initializeCircuitBreakers();

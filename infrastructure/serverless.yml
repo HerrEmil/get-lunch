@@ -60,8 +60,8 @@ functions:
     memorySize: 1024
     events:
       - schedule:
-          rate: cron(0 10 ? * MON *)  # Every Monday at 10:00 UTC
-          description: "Weekly lunch data collection from restaurants"
+          rate: cron(0 8 ? * MON-FRI *)  # Every weekday at 08:00 UTC
+          description: "Daily lunch data collection from restaurants"
           enabled: true
     environment:
       FUNCTION_TYPE: data_collector

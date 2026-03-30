@@ -21,12 +21,16 @@ let htmlTemplate = null;
 
 // Restaurant configurations (should match data-collector.mjs)
 const RESTAURANT_CONFIGS = [
-  {
-    id: "niagara",
-    name: "Restaurang Niagara",
-    active: true,
-  },
-  // Additional restaurants can be added here
+  { id: "niagara", name: "Restaurang Niagara", active: true },
+  { id: "spill", name: "Spill", active: true },
+  { id: "kontrast", name: "Kontrast", active: true },
+  { id: "p2", name: "P2", active: true },
+  { id: "taste", name: "Taste", active: true },
+  { id: "varv", name: "Varv", active: true },
+  { id: "fonderie", name: "La Fonderie", active: true },
+  { id: "laziza", name: "Laziza", active: true },
+  { id: "holygreens", name: "Holy Greens", active: true },
+  { id: "kockum", name: "Kockum Fritid", active: true },
 ];
 
 // Swedish weekday mapping

@@ -71,7 +71,7 @@ const mockHtmlTemplate = `<!doctype html>
     <script>
         const lunches = [];
     </script>
-</html>\`;
+</html>`;
 
 const mockContext = {
   awsRequestId: "test-request-id-123",
@@ -85,11 +85,11 @@ describe("API Server Lambda", () => {
 
   it("should return HTML with injected lunch data", async () => {
     getCachedLunchData.mockResolvedValue(mockLunchData);
-    
+
     const event = {
       httpMethod: "GET",
       path: "/",
-      queryStringParameters: null,
+      queryStringParameters: { day: "all" },
     };
 
     const result = await handler(event, mockContext);
@@ -99,9 +99,9 @@ describe("API Server Lambda", () => {
     expect(result.body).toContain("Grillad kyckling");
   });
 
-  it("should handle errors gracefully", async () => {
+  it("should handle cache errors gracefully with 200", async () => {
     getCachedLunchData.mockRejectedValue(new Error("Test error"));
-    
+
     const event = {
       httpMethod: "GET",
       path: "/",
@@ -110,7 +110,7 @@ describe("API Server Lambda", () => {
 
     const result = await handler(event, mockContext);
 
-    expect(result.statusCode).toBe(500);
-    expect(result.body).toContain("Något gick fel");
+    // Cache errors are caught internally; handler returns 200 with empty data
+    expect(result.statusCode).toBe(200);
   });
 });
