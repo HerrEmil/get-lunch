@@ -10,7 +10,6 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: eu-west-1
-      NODE_ENV: development
 
     steps:
       - uses: actions/checkout@v4
@@ -20,16 +19,7 @@ jobs:
           node-version: "20"
           cache: yarn
 
-      - run: yarn install --frozen-lockfile || yarn install
-      - name: Downgrade serverless-domain-manager to v7 (compatible with SLS v3)
-        run: yarn add --dev serverless-domain-manager@7
-
-      - name: Debug serverless config
-        run: |
-          cat serverless.yml | grep -A5 plugins
-          npx serverless doctor 2>&1 || true
-          node -e "try { require('serverless-domain-manager'); console.log('require OK') } catch(e) { console.log('require FAIL:', e.message) }"
-          npx serverless help 2>&1 | head -40
+      - run: yarn install --frozen-lockfile
 
       - name: Create custom domain
         run: npx serverless create_domain --stage prod
