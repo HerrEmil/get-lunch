@@ -390,10 +390,11 @@ custom:
             sources: [./test-fixtures/sample-cache-data.json]
 
   warmup:
-    enabled: true
-    events:
-      - schedule: rate(5 minutes)
-    timeout: 20
-    prewarm: true
-    concurrency: 1
-    cleanFolder: false
+    default:
+      enabled: true
+      events:
+        - schedule: rate(5 minutes)
+      timeout: 20
+      prewarm: true
+      concurrency: 1
+      cleanFolder: false
