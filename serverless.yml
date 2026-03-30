@@ -355,6 +355,11 @@ package:
     - infrastructure/**
   include:
     - src/**
+    - cache-manager.mjs
+    - enhanced-logger.mjs
+    - data-validator.mjs
+    - week-extractor.mjs
+    - weekday-mapper.mjs
     - index.html
     - package.json
 
