@@ -21,12 +21,8 @@ jobs:
           cache: yarn
 
       - run: yarn install --frozen-lockfile || yarn install
-      - run: |
-          if [ ! -d node_modules/serverless-domain-manager ]; then
-            echo "Plugin missing after yarn install, installing explicitly..."
-            yarn add --dev serverless-domain-manager@10.0.0
-          fi
-          ls node_modules/serverless-domain-manager/dist/src/index.js
+      - name: Downgrade serverless-domain-manager to v7 (compatible with SLS v3)
+        run: yarn add --dev serverless-domain-manager@7
 
       - name: Create custom domain
         run: npx serverless create_domain --stage prod
