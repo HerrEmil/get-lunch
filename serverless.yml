@@ -345,9 +345,6 @@ package:
     - .nyc_output/**
     - docs/**
     - infrastructure/**
-    - node_modules/serverless-offline/**
-    - node_modules/serverless-dynamodb/**
-    - node_modules/serverless/**
   include:
     - src/**
     - cache-manager.mjs
