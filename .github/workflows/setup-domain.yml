@@ -22,7 +22,13 @@ jobs:
       - run: yarn install --frozen-lockfile
 
       - name: Create custom domain
-        run: npx serverless create_domain --stage prod
+        run: SLS_DEBUG=* npx serverless create_domain --stage prod 2>&1 || true
+
+      - name: Debug plugin
+        run: |
+          node -e "try { const P = require('serverless-domain-manager'); console.log('Plugin loaded:', typeof P) } catch(e) { console.error('LOAD ERROR:', e.message) }"
+          ls node_modules/serverless-domain-manager/dist/src/index.js
+          npx serverless print --stage prod 2>&1 | head -5 || true
 
       - name: Deploy
         run: npx serverless deploy --stage prod
