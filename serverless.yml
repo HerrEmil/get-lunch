@@ -90,7 +90,7 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: ${self:custom.tableName}
-        BillingMode: ON_DEMAND
+        BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
           - AttributeName: pk
             AttributeType: S
