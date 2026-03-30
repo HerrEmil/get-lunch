@@ -326,7 +326,6 @@ resources:
         Name: ${self:service}-${self:provider.stage}-data-collector-log-group
 
 plugins:
-  - serverless-domain-manager
   - serverless-offline
   - serverless-dynamodb
 
@@ -346,7 +345,6 @@ package:
     - .nyc_output/**
     - docs/**
     - infrastructure/**
-    - node_modules/serverless-domain-manager/**
     - node_modules/serverless-offline/**
     - node_modules/serverless-dynamodb/**
     - node_modules/serverless/**
