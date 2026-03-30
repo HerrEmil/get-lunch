@@ -356,6 +356,32 @@ package:
     - weekday-mapper.mjs
     - index.html
     - package.json
+    # jsdom + transitive deps (needed at runtime by parsers)
+    - node_modules/@asamuzakjp/css-color/**
+    - node_modules/@asamuzakjp/dom-selector/**
+    - node_modules/@asamuzakjp/nwsapi/**
+    - node_modules/@csstools/css-syntax-patches-for-csstree/**
+    - node_modules/bidi-js/**
+    - node_modules/css-tree/**
+    - node_modules/data-urls/**
+    - node_modules/decimal.js/**
+    - node_modules/html-encoding-sniffer/**
+    - node_modules/is-potential-custom-element-name/**
+    - node_modules/jsdom/**
+    - node_modules/mdn-data/**
+    - node_modules/punycode/**
+    - node_modules/require-from-string/**
+    - node_modules/saxes/**
+    - node_modules/source-map-js/**
+    - node_modules/symbol-tree/**
+    - node_modules/tr46/**
+    - node_modules/undici/**
+    - node_modules/w3c-xmlserializer/**
+    - node_modules/webidl-conversions/**
+    - node_modules/whatwg-mimetype/**
+    - node_modules/whatwg-url/**
+    - node_modules/xml-name-validator/**
+    - node_modules/xmlchars/**
 
 # Environment-specific configurations
 configValidationMode: error
