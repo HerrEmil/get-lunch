@@ -1,0 +1,33 @@
+name: Setup Custom Domain
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: eu-west-1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: yarn
+
+      - run: yarn install --frozen-lockfile
+
+      - name: Create custom domain
+        run: npx serverless create_domain --stage prod
+
+      - name: Deploy
+        run: npx serverless deploy --stage prod
+
+      - name: Summary
+        run: |
+          echo "### ✅ Domain setup complete" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** https://lunch.herremil.com" >> $GITHUB_STEP_SUMMARY
