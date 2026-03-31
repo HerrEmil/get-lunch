@@ -60,17 +60,17 @@ describe("UbatshallenParser", () => {
     expect(tuesday[0].description).toContain("Vegoburgare");
   });
 
-  it("extracts week number", () => {
+  it("uses current week regardless of site week number", () => {
     const dom = new JSDOM(`
       <div class="entry-content">
-        <h2 class="wp-block-heading">Vecka 13</h2>
+        <h2 class="wp-block-heading">Vecka 99</h2>
         <p>Måndag</p>
         <p>Det gröna: Pasta.Husman: Köttbullar.Internationell: Sushi.</p>
       </div>
     `);
 
     const lunches = parser.extractMenu(dom.window.document);
-    expect(lunches[0].week).toBe(13);
+    expect(lunches[0].week).toBe(parser._getCurrentWeek());
   });
 
   it("skips closed days", () => {

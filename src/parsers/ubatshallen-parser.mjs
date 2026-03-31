@@ -54,16 +54,8 @@ export class UbatshallenParser extends BaseParser {
   extractMenu(document) {
     const lunches = [];
 
-    // Extract week number
-    const weekEl = this.safeQuery(
-      document,
-      "h2.wp-block-heading, h2.entry-title",
-    );
-    let week = this._getCurrentWeek();
-    if (weekEl) {
-      const match = this.extractText(weekEl).match(/[Vv]ecka\s+(\d+)/);
-      if (match) week = parseInt(match[1]);
-    }
+    // Always use current week — Ubåtshallen's week number is often incorrect
+    const week = this._getCurrentWeek();
 
     // Extract price from page text
     const allText = document.body?.textContent || "";
