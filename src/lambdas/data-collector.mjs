@@ -79,6 +79,20 @@ const RESTAURANT_CONFIGS = [
     url: "https://www.freda49.se/lunch-malmo.html",
     active: true,
   },
+  {
+    id: "ubatshallen",
+    name: "Ubåtshallen",
+    parser: "ubatshallen",
+    url: "https://www.ubatshallen.se/",
+    active: true,
+  },
+  {
+    id: "miamarias",
+    name: "MiaMarias",
+    parser: "miamarias",
+    url: "https://miamarias.nu/lunch/",
+    active: true,
+  },
 ];
 
 /**
