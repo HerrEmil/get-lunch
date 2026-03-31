@@ -1,5 +1,28 @@
 import { build } from "esbuild";
-import { cpSync } from "fs";
+import { cpSync, readFileSync } from "fs";
+
+// Plugin to inline jsdom's default-stylesheet.css at build time
+// jsdom reads it via readFileSync at runtime, which breaks in bundled output
+const inlineJsdomCss = {
+  name: "inline-jsdom-css",
+  setup(build) {
+    build.onLoad(
+      { filter: /jsdom\/lib\/jsdom\/living\/css\/helpers\/computed-style\.js$/ },
+      async (args) => {
+        let contents = readFileSync(args.path, "utf8");
+        const cssPath =
+          "node_modules/jsdom/lib/jsdom/browser/default-stylesheet.css";
+        const css = readFileSync(cssPath, "utf8");
+        // Replace the readFileSync call with the inlined CSS string
+        contents = contents.replace(
+          /fs\.readFileSync\(\s*path\.resolve\(__dirname,\s*"[^"]*default-stylesheet\.css"\)\s*,\s*\{[^}]*\}\s*\)/,
+          JSON.stringify(css),
+        );
+        return { contents, loader: "js" };
+      },
+    );
+  },
+};
 
 const shared = {
   bundle: true,
@@ -16,6 +39,7 @@ await build({
   ...shared,
   entryPoints: ["src/lambdas/data-collector.mjs"],
   outfile: "dist/data-collector/index.js",
+  plugins: [inlineJsdomCss],
 });
 
 // Bundle api-server (lightweight, no jsdom)
