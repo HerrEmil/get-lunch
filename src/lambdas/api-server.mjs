@@ -23,10 +23,10 @@ let htmlTemplate = null;
 
 // Restaurant configurations (should match data-collector.mjs)
 const RESTAURANT_CONFIGS = [
-  { id: "niagara", name: "Niagara", url: "https://restaurangniagara.se/lunch/", active: true },
+  { id: "niagara", name: "Niagara", url: "https://restaurangniagara.se/lunch/#lunch", active: true },
   { id: "spill", name: "Spill", url: "https://www.restaurangspill.se/", active: true },
-  { id: "kontrast", name: "Kontrast", url: "https://www.kontrastrestaurang.se/vastra-hamnen/", active: true },
-  { id: "p2", name: "P2", url: "https://restaurangp2.se/", active: true },
+  { id: "kontrast", name: "Kontrast", url: "https://www.kontrastrestaurang.se/menu/vastra-hamnen?tab=lunch", active: true },
+  { id: "p2", name: "P2", url: "https://restaurangp2.se/#lunch", active: true },
   { id: "taste", name: "Taste", url: "https://www.tastebynordrest.se/17/6/taste-malmo/", active: true },
   { id: "varv", name: "Varv", url: "https://varvmalmo.com/menu", active: true },
   { id: "fonderie", name: "La Fonderie", url: "https://www.lafonderie.se/lelunch", active: true },
