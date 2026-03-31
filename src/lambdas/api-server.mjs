@@ -23,16 +23,16 @@ let htmlTemplate = null;
 
 // Restaurant configurations (should match data-collector.mjs)
 const RESTAURANT_CONFIGS = [
-  { id: "niagara", name: "Niagara", active: true },
-  { id: "spill", name: "Spill", active: true },
-  { id: "kontrast", name: "Kontrast", active: true },
-  { id: "p2", name: "P2", active: true },
-  { id: "taste", name: "Taste", active: true },
-  { id: "varv", name: "Varv", active: true },
-  { id: "fonderie", name: "La Fonderie", active: true },
-  { id: "laziza", name: "Laziza", active: true },
-  { id: "holygreens", name: "Holy Greens", active: true },
-  { id: "kockum", name: "Kockum Fritid", active: true },
+  { id: "niagara", name: "Niagara", url: "https://restaurangniagara.se/lunch/", active: true },
+  { id: "spill", name: "Spill", url: "https://www.restaurangspill.se/", active: true },
+  { id: "kontrast", name: "Kontrast", url: "https://www.kontrastrestaurang.se/vastra-hamnen/", active: true },
+  { id: "p2", name: "P2", url: "https://restaurangp2.se/", active: true },
+  { id: "taste", name: "Taste", url: "https://www.tastebynordrest.se/17/6/taste-malmo/", active: true },
+  { id: "varv", name: "Varv", url: "https://varvmalmo.com/menu", active: true },
+  { id: "fonderie", name: "La Fonderie", url: "https://www.lafonderie.se/lelunch", active: true },
+  { id: "laziza", name: "Laziza", url: "https://www.laziza.se/lunch/", active: true },
+  { id: "holygreens", name: "Holy Greens", url: "https://holygreens.se/meny/", active: true },
+  { id: "kockum", name: "Kockum Fritid", url: "https://kockumfritid.se/lunch/", active: true },
 ];
 
 // Swedish weekday mapping
@@ -217,6 +217,7 @@ async function fetchCachedData(week, logger) {
         const dataWithMeta = restaurantData.map((lunch) => ({
           ...lunch,
           place: config.name,
+          placeUrl: config.url,
           restaurant: config.id,
         }));
 

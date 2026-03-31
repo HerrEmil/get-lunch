@@ -40,6 +40,27 @@
                     ...defaultColumnOption,
                     header: "Plats",
                     name: "place",
+                    renderer: {
+                        type: class {
+                            constructor(props) {
+                                const el = document.createElement("a");
+                                this.el = el;
+                                this.render(props);
+                            }
+                            getElement() { return this.el; }
+                            render(props) {
+                                const url = props.grid.getValue(props.rowKey, "placeUrl");
+                                this.el.textContent = props.value || "";
+                                if (url) {
+                                    this.el.href = url;
+                                    this.el.target = "_blank";
+                                    this.el.rel = "noopener";
+                                } else {
+                                    this.el.removeAttribute("href");
+                                }
+                            }
+                        },
+                    },
                 },
                 {
                     ...defaultColumnOption,
