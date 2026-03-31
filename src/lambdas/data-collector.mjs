@@ -88,7 +88,7 @@ const RESTAURANT_CONFIGS = [
   },
   {
     id: "ica",
-    name: "ICA Maxi Västra Hamnen",
+    name: "ICA Maxi",
     parser: "ica",
     url: "https://www.ica.se/butiker/maxi/malmo/maxi-ica-stormarknad-vastra-hamnen-1003569/tjanster/dagens-lunch/",
     active: true,

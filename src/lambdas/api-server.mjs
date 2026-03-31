@@ -34,7 +34,7 @@ const RESTAURANT_CONFIGS = [
   { id: "kockum", name: "Kockum Fritid", url: "https://freda49.se/lunch-malmo.html", active: true },
   { id: "ubåtshallen", name: "Ubåtshallen", url: "https://www.ubatshallen.se/", active: true },
   { id: "miamarias", name: "MiaMarias", url: "https://miamarias.nu/lunch/", active: true },
-  { id: "ica", name: "ICA Maxi Västra Hamnen", url: "https://www.ica.se/butiker/maxi/malmo/maxi-ica-stormarknad-vastra-hamnen-1003569/tjanster/dagens-lunch/", active: true },
+  { id: "ica", name: "ICA Maxi", url: "https://www.ica.se/butiker/maxi/malmo/maxi-ica-stormarknad-vastra-hamnen-1003569/tjanster/dagens-lunch/", active: true },
 ];
 
 // Swedish weekday mapping

@@ -79,7 +79,7 @@ export class IcaParser extends BaseParser {
           price,
           weekday,
           week,
-          place: this.getName(),
+          place: "ICA Maxi",
         }),
       );
     }
