@@ -23,6 +23,19 @@ const fixRuntimeReads = {
       },
     );
 
+    // Stub out jsdom's xhr-sync-worker.js require.resolve (we don't use sync XHR)
+    ctx.onLoad(
+      { filter: /jsdom\/lib\/jsdom\/living\/xhr\/XMLHttpRequest-impl\.js$/ },
+      async (args) => {
+        let contents = readFileSync(args.path, "utf8");
+        contents = contents.replace(
+          /const syncWorkerFile = require\.resolve\("[^"]*xhr-sync-worker\.js"\);/,
+          'const syncWorkerFile = "";',
+        );
+        return { contents, loader: "js" };
+      },
+    );
+
     // Replace createRequire(import.meta.url) with plain require() in css-tree.
     // css-tree is ESM and uses createRequire to load JSON files. In CJS bundle
     // output, require() is already available and can resolve JSON natively.
