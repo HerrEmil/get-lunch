@@ -109,15 +109,15 @@ describe("NiagaraParser modern layout handling", () => {
     const lunches = await parser.extractFromModernStructure(container);
 
     expect(lunches.length).toBeGreaterThanOrEqual(2);
-    const green = lunches.find((l) => l.description === "Green");
-    const local = lunches.find((l) => l.description === "Local");
+    const green = lunches.find((l) => l.name === "Green");
+    const local = lunches.find((l) => l.name === "Local");
 
     expect(green).toBeDefined();
-    expect(green.name).toContain("Frittata");
+    expect(green.description).toContain("Frittata");
     expect(green.price).toBe(115);
 
     expect(local).toBeDefined();
-    expect(local.name).toContain("strömming");
+    expect(local.description).toContain("strömming");
   });
 
   it("detects closure messaging when no lunches exist", async () => {

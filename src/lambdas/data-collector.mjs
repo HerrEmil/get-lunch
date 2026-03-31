@@ -11,7 +11,7 @@ import { createRestaurantLogger } from "../../enhanced-logger.mjs";
 const RESTAURANT_CONFIGS = [
   {
     id: "niagara",
-    name: "Restaurang Niagara",
+    name: "Niagara",
     parser: "niagara",
     url: "https://restaurangniagara.se/lunch/",
     active: true,

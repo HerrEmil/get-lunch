@@ -23,7 +23,7 @@ let htmlTemplate = null;
 
 // Restaurant configurations (should match data-collector.mjs)
 const RESTAURANT_CONFIGS = [
-  { id: "niagara", name: "Restaurang Niagara", active: true },
+  { id: "niagara", name: "Niagara", active: true },
   { id: "spill", name: "Spill", active: true },
   { id: "kontrast", name: "Kontrast", active: true },
   { id: "p2", name: "P2", active: true },

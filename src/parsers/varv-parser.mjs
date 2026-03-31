@@ -142,8 +142,8 @@ export class VarvParser extends BaseParser {
         if (sibling.tagName.toLowerCase() === "h2") break;
 
         if (sibling.tagName.toLowerCase() === "p") {
-          const dishText = this.extractText(sibling);
-          if (dishText) {
+          const dishText = this.extractText(sibling).trim();
+          if (dishText && !/^(or|eller)$/i.test(dishText)) {
             dishes.push(dishText);
           }
         }

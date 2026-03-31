@@ -568,15 +568,13 @@ export class NiagaraParser extends BaseParser {
 
       // Niagara uses category headings (Green, Local, Asia, World Wide) as
       // .lunch_title while the actual dish text is in .lunch_desc.
-      // Detect this and swap so the dish name is in `name`.
+      // Keep the category as name (shown in Lunch column), use dish text as description.
       const NIAGARA_CATEGORIES = ["green", "local", "asia", "world wide", "veckans"];
       const looksLikeCategory = NIAGARA_CATEGORIES.some(
         (cat) => name.toLowerCase().trim() === cat,
       );
       if (looksLikeCategory && description) {
-        const category = name;
-        name = description.split("\n")[0].trim(); // Swedish line only
-        description = category;
+        description = description.split("\n")[0].trim(); // Swedish line only
       }
 
       // Try multiple selectors for price
