@@ -12,9 +12,11 @@ import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
-// Get the current file's directory
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// __dirname polyfill for ESM (in CJS/esbuild output, the global is used instead)
+const __mod_dirname =
+  typeof __dirname !== "undefined"
+    ? __dirname
+    : dirname(fileURLToPath(import.meta.url));
 
 // Cache the HTML template in memory for performance
 let htmlTemplate = null;
@@ -152,8 +154,8 @@ function getHtmlTemplate() {
   if (!htmlTemplate) {
     // Try bundled location first (same dir), then original source layout
     const candidates = [
-      join(__dirname, "index.html"),
-      join(__dirname, "..", "..", "index.html"),
+      join(__mod_dirname, "index.html"),
+      join(__mod_dirname, "..", "..", "index.html"),
     ];
     for (const htmlPath of candidates) {
       try {

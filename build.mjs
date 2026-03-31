@@ -1,11 +1,11 @@
 import { build } from "esbuild";
-import { cpSync, mkdirSync } from "fs";
+import { cpSync } from "fs";
 
 const shared = {
   bundle: true,
   platform: "node",
   target: "node20",
-  format: "esm",
+  format: "cjs",
   external: ["@aws-sdk/*"],
   minify: false,
   sourcemap: true,
@@ -15,14 +15,14 @@ const shared = {
 await build({
   ...shared,
   entryPoints: ["src/lambdas/data-collector.mjs"],
-  outfile: "dist/data-collector/index.mjs",
+  outfile: "dist/data-collector/index.js",
 });
 
 // Bundle api-server (lightweight, no jsdom)
 await build({
   ...shared,
   entryPoints: ["src/lambdas/api-server.mjs"],
-  outfile: "dist/api-server/index.mjs",
+  outfile: "dist/api-server/index.js",
 });
 
 // Copy index.html for api-server (read at runtime via readFileSync)
