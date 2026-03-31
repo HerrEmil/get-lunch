@@ -33,7 +33,7 @@ Serverless configurations live in `infrastructure/`.
 ### Required environment
 The deployed Lambdas expect:
 - `LUNCH_CACHE_TABLE`: DynamoDB table for cached lunches (injected via `serverless*.yml`).
-- `AWS_REGION`: AWS region (defaults to `eu-west-1`).
+- `AWS_REGION`: AWS region (defaults to `eu-north-1`).
 - Optional concurrency overrides: `MAX_CONCURRENCY`.
 
 ### Observability

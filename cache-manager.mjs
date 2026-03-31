@@ -15,7 +15,7 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 
 // Configuration
-const DEFAULT_REGION = process.env.AWS_REGION || "eu-west-1";
+const DEFAULT_REGION = process.env.AWS_REGION || "eu-north-1";
 const TABLE_NAME = process.env.LUNCH_CACHE_TABLE || "lunch-cache";
 const TTL_DAYS = parseInt(process.env.CACHE_TTL_DAYS || "14");
 

@@ -8,7 +8,7 @@
 
 ## Deployment steps (manual)
 
-- [ ] Request ACM certificate for `lunch.herremil.com` in `eu-west-1` (DNS validation via Route 53)
+- [x] Request ACM certificate for `lunch.herremil.com` in `eu-north-1` (DNS validation via Route 53)
 - [ ] Create custom domain: `npx serverless create_domain --stage prod`
 - [ ] Deploy: `npx serverless deploy --stage prod`
 - [ ] Trigger initial data collection: `aws lambda invoke --function-name enhanced-lunch-table-prod-dataCollector /tmp/out.json`

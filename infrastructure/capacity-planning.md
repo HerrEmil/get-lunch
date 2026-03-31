@@ -70,7 +70,7 @@ This document outlines the capacity planning strategy for the Enhanced Lunch Tab
 
 ### Cost Analysis (On-Demand)
 
-#### Monthly Cost Estimates (eu-west-1)
+#### Monthly Cost Estimates (eu-north-1)
 
 **Current Load (1 restaurant)**:
 - Reads: 3,000/month × $0.25/million = $0.0008
@@ -242,7 +242,7 @@ DailyCostAlarm:
 - **RPO**: Seconds (continuous backup)
 
 #### Cross-Region Considerations
-- **Current**: Single region (eu-west-1)
+- **Current**: Single region (eu-north-1)
 - **Future**: Consider Global Tables if multi-region needed
 - **Cost**: Monitor if cross-region replication justified
 

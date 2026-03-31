@@ -10,7 +10,7 @@ This document defines the DynamoDB table schema for caching lunch data from rest
 
 **Billing Mode**: On-Demand (Pay-per-request)
 
-**Region**: `eu-west-1` (Stockholm - closest to Swedish restaurants)
+**Region**: `eu-north-1` (Stockholm - closest to Swedish restaurants)
 
 ## Primary Key Design
 
@@ -179,8 +179,8 @@ const ttlTimestamp = Math.floor(Date.now() / 1000) + (14 * 24 * 60 * 60); // 14 
         "dynamodb:Scan"
       ],
       "Resource": [
-        "arn:aws:dynamodb:eu-west-1:*:table/lunch-cache-*",
-        "arn:aws:dynamodb:eu-west-1:*:table/lunch-cache-*/index/*"
+        "arn:aws:dynamodb:eu-north-1:*:table/lunch-cache-*",
+        "arn:aws:dynamodb:eu-north-1:*:table/lunch-cache-*/index/*"
       ]
     }
   ]

@@ -29,7 +29,7 @@ const LOG_LEVEL = process.env.LOG_LEVEL || (IS_LOCAL ? "DEBUG" : "INFO");
 const CURRENT_LOG_LEVEL = LOG_LEVELS[LOG_LEVEL.toUpperCase()] ?? LOG_LEVELS.INFO;
 
 // CloudWatch configuration
-const AWS_REGION = process.env.AWS_REGION || "eu-west-1";
+const AWS_REGION = process.env.AWS_REGION || "eu-north-1";
 const LOG_GROUP_NAME = process.env.LOG_GROUP_NAME || "/aws/lambda/enhanced-lunch-table";
 const SERVICE_NAME = process.env.SERVICE_NAME || "enhanced-lunch-table";
 const STAGE = process.env.STAGE || "dev";
