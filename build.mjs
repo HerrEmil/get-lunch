@@ -32,6 +32,13 @@ const shared = {
   external: ["@aws-sdk/*"],
   minify: false,
   sourcemap: true,
+  define: {
+    "import.meta.url": "importMetaUrl",
+  },
+  // Polyfill import.meta.url for ESM libs bundled as CJS (css-tree uses createRequire)
+  banner: {
+    js: 'var importMetaUrl = require("url").pathToFileURL(__filename).href;',
+  },
 };
 
 // Bundle data-collector (includes jsdom)
