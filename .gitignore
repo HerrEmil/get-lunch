@@ -1,3 +1,6 @@
 node_modules
+dist
+.esbuild
+.serverless
 .DS_Store
 test-results.json

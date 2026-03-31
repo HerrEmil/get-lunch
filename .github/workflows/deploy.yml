@@ -36,6 +36,9 @@ jobs:
 
       - run: yarn install --frozen-lockfile
 
+      - name: Build
+        run: yarn build
+
       - name: Deploy to AWS
         run: npx serverless deploy --stage prod
         env:

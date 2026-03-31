@@ -150,13 +150,20 @@ export async function handler(event, context) {
  */
 function getHtmlTemplate() {
   if (!htmlTemplate) {
-    try {
-      // Load HTML template from project root
-      const htmlPath = join(__dirname, "..", "..", "index.html");
-      htmlTemplate = readFileSync(htmlPath, "utf-8");
-    } catch (error) {
-      throw new Error(`Failed to load HTML template: ${error.message}`);
+    // Try bundled location first (same dir), then original source layout
+    const candidates = [
+      join(__dirname, "index.html"),
+      join(__dirname, "..", "..", "index.html"),
+    ];
+    for (const htmlPath of candidates) {
+      try {
+        htmlTemplate = readFileSync(htmlPath, "utf-8");
+        return htmlTemplate;
+      } catch {
+        // try next
+      }
     }
+    throw new Error("Failed to load HTML template from any candidate path");
   }
   return htmlTemplate;
 }
