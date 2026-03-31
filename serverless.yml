@@ -3,7 +3,7 @@ service: enhanced-lunch-table
 provider:
   name: aws
   runtime: nodejs20.x
-  region: eu-west-1
+  region: eu-north-1
   stage: ${opt:stage, 'dev'}
   environment:
     LUNCH_CACHE_TABLE: ${self:custom.tableName}

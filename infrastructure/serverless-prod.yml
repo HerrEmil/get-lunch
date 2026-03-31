@@ -6,7 +6,7 @@ service: ${file(./serverless.yml):service}
 provider:
   name: aws
   runtime: nodejs18.x
-  region: eu-west-1
+  region: eu-north-1
   stage: prod
   environment:
     LUNCH_CACHE_TABLE: ${self:custom.tableName}
