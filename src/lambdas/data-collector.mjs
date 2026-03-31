@@ -66,13 +66,6 @@ const RESTAURANT_CONFIGS = [
     active: true,
   },
   {
-    id: "holygreens",
-    name: "Holy Greens",
-    parser: "holygreens",
-    url: "https://holygreens.se/meny/",
-    active: true,
-  },
-  {
     id: "kockum",
     name: "Kockum Fritid",
     parser: "kockum",

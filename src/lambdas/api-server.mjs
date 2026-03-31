@@ -31,8 +31,7 @@ const RESTAURANT_CONFIGS = [
   { id: "varv", name: "Varv", url: "https://varvmalmo.com/menu", active: true },
   { id: "fonderie", name: "La Fonderie", url: "https://www.lafonderie.se/lelunch", active: true },
   { id: "laziza", name: "Laziza", url: "https://www.laziza.se/lunch/", active: true },
-  { id: "holygreens", name: "Holy Greens", url: "https://holygreens.se/meny/", active: true },
-  { id: "kockum", name: "Kockum Fritid", url: "https://kockumfritid.se/lunch/", active: true },
+  { id: "kockum", name: "Kockum Fritid", url: "https://freda49.se/lunch-malmo.html", active: true },
   { id: "ubåtshallen", name: "Ubåtshallen", url: "https://www.ubatshallen.se/", active: true },
   { id: "miamarias", name: "MiaMarias", url: "https://miamarias.nu/lunch/", active: true },
 ];
