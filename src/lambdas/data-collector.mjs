@@ -86,6 +86,13 @@ const RESTAURANT_CONFIGS = [
     url: "https://miamarias.nu/lunch/",
     active: true,
   },
+  {
+    id: "ica",
+    name: "ICA Maxi Västra Hamnen",
+    parser: "ica",
+    url: "https://www.ica.se/butiker/maxi/malmo/maxi-ica-stormarknad-vastra-hamnen-1003569/tjanster/dagens-lunch/",
+    active: true,
+  },
 ];
 
 /**

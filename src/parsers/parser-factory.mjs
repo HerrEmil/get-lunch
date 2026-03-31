@@ -16,6 +16,7 @@ import { HolyGreensParser } from "./holygreens-parser.mjs";
 import { KockumParser } from "./kockum-parser.mjs";
 import { UbatshallenParser } from "./ubatshallen-parser.mjs";
 import { MiaMariasParser } from "./miamarias-parser.mjs";
+import { IcaParser } from "./ica-parser.mjs";
 import { DEFAULT_PARSER_CONFIG } from "./parser-interfaces.mjs";
 
 /**
@@ -76,6 +77,7 @@ export class ParserFactory {
     this.registerParserClass("kockum", KockumParser);
     this.registerParserClass("ubatshallen", UbatshallenParser);
     this.registerParserClass("miamarias", MiaMariasParser);
+    this.registerParserClass("ica", IcaParser);
 
     // Initialize circuit breakers
     this.initializeCircuitBreakers();
