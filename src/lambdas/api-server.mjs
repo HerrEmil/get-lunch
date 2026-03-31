@@ -33,7 +33,7 @@ const RESTAURANT_CONFIGS = [
   { id: "laziza", name: "Laziza", url: "https://www.laziza.se/lunch/", active: true },
   { id: "holygreens", name: "Holy Greens", url: "https://holygreens.se/meny/", active: true },
   { id: "kockum", name: "Kockum Fritid", url: "https://kockumfritid.se/lunch/", active: true },
-  { id: "ubatshallen", name: "Ubåtshallen", url: "https://www.ubatshallen.se/", active: true },
+  { id: "ubåtshallen", name: "Ubåtshallen", url: "https://www.ubatshallen.se/", active: true },
   { id: "miamarias", name: "MiaMarias", url: "https://miamarias.nu/lunch/", active: true },
 ];
 
@@ -189,8 +189,8 @@ async function fetchCachedData(week, logger) {
     try {
       await logger.debug(`Fetching cache for ${config.id}`, { week });
 
-      // Try current week first
-      let cacheItem = await getCachedLunchData(config.id, week);
+      // Try current week first (cache key uses display name from parser)
+      let cacheItem = await getCachedLunchData(config.name, week);
       let restaurantData = cacheItem?.lunches;
 
       // Fallback to previous week if current week is empty
@@ -201,7 +201,7 @@ async function fetchCachedData(week, logger) {
           previousWeek,
         });
 
-        cacheItem = await getCachedLunchData(config.id, previousWeek);
+        cacheItem = await getCachedLunchData(config.name, previousWeek);
         restaurantData = cacheItem?.lunches;
 
         if (restaurantData && restaurantData.length > 0) {

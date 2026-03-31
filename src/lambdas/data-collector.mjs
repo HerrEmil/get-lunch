@@ -80,7 +80,7 @@ const RESTAURANT_CONFIGS = [
     active: true,
   },
   {
-    id: "ubatshallen",
+    id: "ubåtshallen",
     name: "Ubåtshallen",
     parser: "ubatshallen",
     url: "https://www.ubatshallen.se/",
