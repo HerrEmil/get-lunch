@@ -8,7 +8,7 @@ on:
         required: true
         type: choice
         options:
-          - "1-cert-and-deploy"
+          - "1-deploy"
           - "2-cleanup-eu-west-1"
 
 env:
@@ -19,8 +19,8 @@ env:
   OLD_REGION: eu-west-1
 
 jobs:
-  cert-and-deploy:
-    if: inputs.step == '1-cert-and-deploy'
+  deploy:
+    if: inputs.step == '1-deploy'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,98 +32,17 @@ jobs:
 
       - run: yarn install --frozen-lockfile
 
-      - name: Request ACM certificate in eu-north-1
-        id: cert
-        run: |
-          # Check if cert already exists
-          EXISTING=$(aws acm list-certificates \
-            --region $NEW_REGION \
-            --query "CertificateSummaryList[?DomainName=='$DOMAIN'].CertificateArn" \
-            --output text)
-
-          if [ -n "$EXISTING" ] && [ "$EXISTING" != "None" ]; then
-            echo "Certificate already exists: $EXISTING"
-            echo "cert_arn=$EXISTING" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          CERT_ARN=$(aws acm request-certificate \
-            --domain-name "$DOMAIN" \
-            --validation-method DNS \
-            --region $NEW_REGION \
-            --query CertificateArn \
-            --output text)
-
-          echo "cert_arn=$CERT_ARN" >> "$GITHUB_OUTPUT"
-          echo "Certificate ARN: $CERT_ARN"
-
-      - name: DNS-validate certificate
-        run: |
-          echo "Waiting for validation record to populate..."
-          sleep 15
-
-          CERT_ARN="${{ steps.cert.outputs.cert_arn }}"
-
-          # Check if already validated
-          STATUS=$(aws acm describe-certificate \
-            --certificate-arn "$CERT_ARN" \
-            --region $NEW_REGION \
-            --query 'Certificate.Status' \
-            --output text)
-
-          if [ "$STATUS" = "ISSUED" ]; then
-            echo "Certificate already issued."
-            exit 0
-          fi
-
-          VALIDATION=$(aws acm describe-certificate \
-            --certificate-arn "$CERT_ARN" \
-            --region $NEW_REGION \
-            --query 'Certificate.DomainValidationOptions[0].ResourceRecord')
-
-          VAL_NAME=$(echo "$VALIDATION" | jq -r '.Name')
-          VAL_VALUE=$(echo "$VALIDATION" | jq -r '.Value')
-
-          ROOT_DOMAIN=$(echo "$DOMAIN" | awk -F. '{print $(NF-1)"."$NF}')
-          ZONE_ID=$(aws route53 list-hosted-zones-by-name \
-            --dns-name "${ROOT_DOMAIN}." \
-            --query 'HostedZones[0].Id' \
-            --output text | sed 's|/hostedzone/||')
-
-          echo "Adding validation CNAME: $VAL_NAME -> $VAL_VALUE"
-          aws route53 change-resource-record-sets \
-            --hosted-zone-id "$ZONE_ID" \
-            --change-batch "{
-              \"Changes\": [{
-                \"Action\": \"UPSERT\",
-                \"ResourceRecordSet\": {
-                  \"Name\": \"$VAL_NAME\",
-                  \"Type\": \"CNAME\",
-                  \"TTL\": 300,
-                  \"ResourceRecords\": [{\"Value\": \"$VAL_VALUE\"}]
-                }
-              }]
-            }"
-
-          echo "Waiting for certificate validation..."
-          aws acm wait certificate-validated \
-            --certificate-arn "$CERT_ARN" \
-            --region $NEW_REGION
-
-          echo "Certificate issued."
-
       - name: Build
         run: yarn build
 
       - name: Create custom domain in eu-north-1
-        run: npx serverless create_domain --stage prod || true
+        run: npx serverless create_domain --stage prod
 
       - name: Deploy stack to eu-north-1
         run: npx serverless deploy --stage prod
 
       - name: Update Route53 to point to new API Gateway
         run: |
-          # Get the custom domain's target
           TARGET=$(aws apigateway get-domain-name \
             --domain-name "$DOMAIN" \
             --region $NEW_REGION \
@@ -181,7 +100,7 @@ jobs:
           npx serverless delete_domain --stage prod --region $OLD_REGION || true
 
       - name: Remove old stack from eu-west-1
-        run: npx serverless remove --stage prod --region $OLD_REGION
+        run: npx serverless remove --stage prod --region eu-west-1
 
       - name: Delete old ACM certificate in eu-west-1
         run: |
