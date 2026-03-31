@@ -76,7 +76,7 @@ export async function handler(event, context) {
 
     // Parse query parameters
     const queryParams = event.queryStringParameters || {};
-    const selectedDay = queryParams.day || getCurrentSwedishWeekday();
+    const selectedDay = queryParams.day || "all";
     const week = queryParams.week
       ? parseInt(queryParams.week)
       : getCurrentWeek();
