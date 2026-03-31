@@ -1,5 +1,5 @@
 /**
- * ICA Maxi Västra Hamnen Parser
+ * ICA Maxi Parser
  * Extracts lunch menu from ICA's daily lunch page.
  *
  * Structure: page contains "Dagens lunch v.XX" heading,
@@ -14,7 +14,7 @@ const WEEKDAYS = ["måndag", "tisdag", "onsdag", "torsdag", "fredag"];
 export class IcaParser extends BaseParser {
   constructor(config = {}) {
     super({
-      name: "ICA Maxi Västra Hamnen",
+      name: "ICA Maxi",
       url: "https://www.ica.se/butiker/maxi/malmo/maxi-ica-stormarknad-vastra-hamnen-1003569/tjanster/dagens-lunch/",
       timeout: 30000,
       retries: 3,
@@ -24,7 +24,7 @@ export class IcaParser extends BaseParser {
   }
 
   getName() {
-    return "ICA Maxi Västra Hamnen";
+    return "ICA Maxi";
   }
 
   getUrl() {
