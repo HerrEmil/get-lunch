@@ -8,13 +8,72 @@
         <script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
     </head>
     <body>
+        <div id="filters" style="padding:8px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;"></div>
         <div id="grid"></div>
     </body>
     <script>
         const lunches = [];
+        const allData = [...lunches];
 
-        const defaultColumnOption = {
-            filter: "select",
+        const today = new Intl.DateTimeFormat("sv-SE", {
+            weekday: "long",
+        }).format(Date.now());
+
+        let activeDay = today;
+        let searchName = "";
+        let searchDesc = "";
+
+        // Build filter controls
+        const filtersEl = document.getElementById("filters");
+
+        // Day dropdown
+        const dayLabel = document.createElement("label");
+        dayLabel.textContent = "Dag: ";
+        const daySelect = document.createElement("select");
+        daySelect.style.padding = "4px 8px";
+        const days = ["alla", "måndag", "tisdag", "onsdag", "torsdag", "fredag"];
+        days.forEach(d => {
+            const opt = document.createElement("option");
+            opt.value = d === "alla" ? "" : d;
+            opt.textContent = d.charAt(0).toUpperCase() + d.slice(1);
+            if (d === today) opt.selected = true;
+            daySelect.appendChild(opt);
+        });
+        daySelect.addEventListener("change", () => {
+            activeDay = daySelect.value;
+            filterData();
+        });
+        dayLabel.appendChild(daySelect);
+        filtersEl.appendChild(dayLabel);
+
+        // Search inputs
+        [["Lunch", "name"], ["Beskrivning", "description"]].forEach(([label, field]) => {
+            const wrap = document.createElement("label");
+            wrap.textContent = label + ": ";
+            const input = document.createElement("input");
+            input.type = "text";
+            input.placeholder = "Sök...";
+            input.style.padding = "4px 8px";
+            input.addEventListener("input", () => {
+                if (field === "name") searchName = input.value.toLowerCase();
+                else searchDesc = input.value.toLowerCase();
+                filterData();
+            });
+            wrap.appendChild(input);
+            filtersEl.appendChild(wrap);
+        });
+
+        function filterData() {
+            const filtered = allData.filter(l => {
+                if (activeDay && l.weekday !== activeDay) return false;
+                if (searchName && !String(l.name || "").toLowerCase().includes(searchName)) return false;
+                if (searchDesc && !String(l.description || "").toLowerCase().includes(searchDesc)) return false;
+                return true;
+            });
+            lunchTable.resetData(filtered);
+        }
+
+        const columnOption = {
             sortable: true,
             align: "center",
             resizable: true,
@@ -22,25 +81,25 @@
         };
 
         const Grid = tui.Grid;
-
         const lunchTable = new Grid({
             el: document.getElementById("grid"),
             columns: [
                 {
-                    ...defaultColumnOption,
+                    ...columnOption,
                     header: "Vecka",
                     name: "week",
                 },
                 {
-                    ...defaultColumnOption,
+                    ...columnOption,
                     header: "Dag",
                     name: "weekday",
                     width: 120,
                 },
                 {
-                    ...defaultColumnOption,
+                    ...columnOption,
                     header: "Plats",
                     name: "place",
+                    filter: "select",
                     renderer: {
                         type: class {
                             constructor(props) {
@@ -64,21 +123,19 @@
                     },
                 },
                 {
-                    ...defaultColumnOption,
+                    ...columnOption,
                     header: "Lunch",
                     name: "name",
                     width: 200,
-                    filter: { type: "text", showApplyBtn: false, showClearBtn: true },
                 },
                 {
-                    ...defaultColumnOption,
+                    ...columnOption,
                     header: "Beskrivning",
                     name: "description",
                     width: 300,
-                    filter: { type: "text", showApplyBtn: false, showClearBtn: true },
                 },
                 {
-                    ...defaultColumnOption,
+                    ...columnOption,
                     header: "Pris",
                     name: "price",
                 },
@@ -88,23 +145,6 @@
         });
         Grid.applyTheme("striped");
 
-        lunchTable.filter("weekday", [
-            {
-                code: "eq",
-                value: new Intl.DateTimeFormat("sv-SE", {
-                    weekday: "long",
-                }).format(Date.now()),
-            },
-        ]);
-
-        // Has CORS settings, need BE service:
-        // "https://www.ica.se/butiker/maxi/malmo/maxi-ica-stormarknad-vastra-hamnen-11981/butiken/veckans-matsedel/",
-        // "https://valfarden.nu/dagens-lunch/"
-        // "http://www.miamarias.nu/page/77/"
-        // "https://storavarvsgatan6.se/meny.html"
-        // "http://www.saltimporten.com/"
-        // "https://kolga.gastrogate.com/lunch/"
-        // https://www.ubatshallen.se/
-        // https://eatery.se/vastra-hamnen/lunchmeny
+        filterData();
     </script>
 </html>
