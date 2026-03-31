@@ -84,7 +84,7 @@ describe("API Server Lambda", () => {
   });
 
   it("should return HTML with injected lunch data", async () => {
-    getCachedLunchData.mockResolvedValue(mockLunchData);
+    getCachedLunchData.mockResolvedValue({ lunches: mockLunchData });
 
     const event = {
       httpMethod: "GET",

@@ -188,7 +188,8 @@ async function fetchCachedData(week, logger) {
       await logger.debug(`Fetching cache for ${config.id}`, { week });
 
       // Try current week first
-      let restaurantData = await getCachedLunchData(config.id, week);
+      let cacheItem = await getCachedLunchData(config.id, week);
+      let restaurantData = cacheItem?.lunches;
 
       // Fallback to previous week if current week is empty
       if (!restaurantData || restaurantData.length === 0) {
@@ -198,7 +199,8 @@ async function fetchCachedData(week, logger) {
           previousWeek,
         });
 
-        restaurantData = await getCachedLunchData(config.id, previousWeek);
+        cacheItem = await getCachedLunchData(config.id, previousWeek);
+        restaurantData = cacheItem?.lunches;
 
         if (restaurantData && restaurantData.length > 0) {
           cacheStats.fallbacks++;
