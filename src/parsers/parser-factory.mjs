@@ -17,6 +17,9 @@ import { UbatshallenParser } from "./ubatshallen-parser.mjs";
 import { MiaMariasParser } from "./miamarias-parser.mjs";
 import { IcaParser } from "./ica-parser.mjs";
 import { Lokal17Parser } from "./lokal17-parser.mjs";
+import { ComoParser } from "./como-parser.mjs";
+import { FiskyParser } from "./fisky-parser.mjs";
+import { PapiParser } from "./papi-parser.mjs";
 import { DEFAULT_PARSER_CONFIG } from "./parser-interfaces.mjs";
 
 /**
@@ -78,6 +81,9 @@ export class ParserFactory {
     this.registerParserClass("miamarias", MiaMariasParser);
     this.registerParserClass("ica", IcaParser);
     this.registerParserClass("lokal17", Lokal17Parser);
+    this.registerParserClass("como", ComoParser);
+    this.registerParserClass("fisky", FiskyParser);
+    this.registerParserClass("papi", PapiParser);
 
     // Initialize circuit breakers
     this.initializeCircuitBreakers();

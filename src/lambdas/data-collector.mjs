@@ -100,6 +100,27 @@ const RESTAURANT_CONFIGS = [
     url: "https://lokal17.se/",
     active: true,
   },
+  {
+    id: "como",
+    name: "COMO",
+    parser: "como",
+    url: "https://comomalmo.se/meny",
+    active: true,
+  },
+  {
+    id: "fisky",
+    name: "Fisky Business",
+    parser: "fisky",
+    url: "https://fiskybusiness.nu/dockan-malmouml.html",
+    active: true,
+  },
+  {
+    id: "papi",
+    name: "PAPI",
+    parser: "papi",
+    url: "https://www.papisaluhallen.se/",
+    active: true,
+  },
 ];
 
 /**

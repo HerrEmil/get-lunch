@@ -33,6 +33,9 @@ const RESTAURANT_CONFIGS = [
   { id: "miamarias", name: "MiaMarias", url: "https://miamarias.nu/lunch/", active: true },
   { id: "ica", name: "ICA Maxi", url: "https://www.ica.se/butiker/maxi/malmo/maxi-ica-stormarknad-vastra-hamnen-1003569/tjanster/dagens-lunch/", active: true },
   { id: "lokal17", name: "Lokal 17", url: "https://lokal17.se/", active: true },
+  { id: "como", name: "COMO", url: "https://comomalmo.se/meny", active: true },
+  { id: "fisky", name: "Fisky Business", url: "https://fiskybusiness.nu/dockan-malmouml.html", active: true },
+  { id: "papi", name: "PAPI", url: "https://www.papisaluhallen.se/", active: true },
 ];
 
 // Swedish weekday mapping
