@@ -91,7 +91,12 @@ const shared = {
   },
   // Polyfill import.meta.url for any remaining ESM libs
   banner: {
-    js: 'var importMetaUrl = require("url").pathToFileURL(__filename).href;',
+    js: [
+      'var importMetaUrl = require("url").pathToFileURL(__filename).href;',
+      // pdfjs-dist references DOMMatrix at load time (for canvas rendering).
+      // We only use text extraction, so a no-op stub is sufficient.
+      'if(typeof globalThis.DOMMatrix==="undefined"){globalThis.DOMMatrix=class DOMMatrix{constructor(){this.a=1;this.b=0;this.c=0;this.d=1;this.e=0;this.f=0;}}}',
+    ].join("\n"),
   },
 };
 
