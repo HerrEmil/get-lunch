@@ -118,4 +118,10 @@ await build({
 // Copy index.html for api-server (read at runtime via readFileSync)
 cpSync("src/lambdas/index.html", "dist/api-server/index.html");
 
+// Copy pdfjs worker for data-collector (pdfjs-dist dynamically imports it at runtime)
+cpSync(
+  "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
+  "dist/data-collector/pdf.worker.mjs",
+);
+
 console.log("Build complete");
