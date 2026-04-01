@@ -344,13 +344,7 @@ function injectDataIntoHtml(html, dataWithMetadata) {
   // Replace the line "const lunches = [];" with actual data
   const updatedHtml = html.replace(
     /const lunches = \[\];/,
-    `const lunches = ${lunchesJson};
-
-    // Cache metadata
-    const cacheMetadata = ${JSON.stringify(dataWithMetadata.metadata, null, 2)};
-
-    // Add cache info to console for debugging
-    console.log("Cache metadata:", cacheMetadata);`,
+    `const lunches = ${lunchesJson};`,
   );
 
   return updatedHtml;

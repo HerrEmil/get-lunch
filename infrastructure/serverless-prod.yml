@@ -134,7 +134,7 @@ functions:
           path: /
           method: get
           cors:
-            origin: "https://lunch.yourdomain.com" # Specific domain for production
+            origin: "https://lunch.herremil.com"
             headers:
               - Content-Type
               - X-Amz-Date
@@ -149,7 +149,7 @@ functions:
           path: /lunch
           method: get
           cors:
-            origin: "https://lunch.yourdomain.com"
+            origin: "https://lunch.herremil.com"
             headers:
               - Content-Type
               - X-Amz-Date
@@ -164,7 +164,7 @@ functions:
           path: /lunch/{day}
           method: get
           cors:
-            origin: "https://lunch.yourdomain.com"
+            origin: "https://lunch.herremil.com"
             headers:
               - Content-Type
               - X-Amz-Date
@@ -510,8 +510,6 @@ resources:
                 "properties": {
                   "metrics": [
                     [ "AWS/Lambda", "Invocations", "FunctionName", "${self:service}-prod-dataCollector" ],
-                    [ ".",
-
                     [ ".", "Errors", ".", "." ]
                   ],
                   "title": "Data Collector Metrics"

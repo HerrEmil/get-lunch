@@ -9,10 +9,22 @@ The Restaurant Parser Framework provides a standardized way to extract lunch men
 ```
 src/parsers/
 ├── base-parser.mjs           # Abstract base class
-├── parser-interfaces.mjs    # Data structures and schemas
-├── niagara-parser.mjs       # Niagara restaurant parser
-├── parser-factory.mjs       # Factory for managing parsers
-└── README.md               # This documentation
+├── parser-interfaces.mjs     # Data structures and schemas
+├── parser-factory.mjs        # Factory for managing parsers
+├── fonderie-parser.mjs       # La Fonderie
+├── holygreens-parser.mjs     # Holy Greens
+├── ica-parser.mjs            # ICA Maxi
+├── kockum-parser.mjs         # Kockum Fritid
+├── kontrast-parser.mjs       # Kontrast
+├── laziza-parser.mjs         # Laziza
+├── miamarias-parser.mjs      # MiaMarias
+├── niagara-parser.mjs        # Niagara
+├── p2-parser.mjs             # P2
+├── spill-parser.mjs          # Spill
+├── taste-parser.mjs          # Taste
+├── ubatshallen-parser.mjs    # Ubåtshallen
+├── varv-parser.mjs           # Varv
+└── README.md                 # This documentation
 ```
 
 ## Core Concepts
@@ -565,4 +577,4 @@ console.log('Parser health:', status);
 - `VALIDATION_ERROR`: Data validation failure
 - `SELECTOR_ERROR`: CSS selector not found
 
-For more help, check the logs or contact the development team.
+For more help, check the logs or open an issue.
