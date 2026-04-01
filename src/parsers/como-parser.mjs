@@ -80,113 +80,69 @@ export class ComoParser extends BaseParser {
 
   /**
    * Extract dishes from the lunch menu section.
-   * Looks for category names (Kött, Fisk, Veg, Sallad) followed by dish info and price.
+   * Structure: H2 "Lunchmeny V.XX" → UL → LI items, each with H3 category
+   * and text content like "category description price"
    */
   extractDishes(document) {
     const dishes = [];
+    const categories = ["kött", "fisk", "veg", "sallad"];
 
-    // Find the Lunchmeny heading to scope our search
-    const headings = this.safeQuery(document, "h1, h2, h3, h4", true);
+    // Find the Lunchmeny heading
+    const headings = this.safeQuery(document, "h2", true);
     if (!headings) return dishes;
 
-    let lunchSection = null;
+    let lunchHeading = null;
     for (const heading of headings) {
-      const text = this.extractText(heading);
-      if (text.toLowerCase().includes("lunchmeny")) {
-        lunchSection = heading;
+      if (this.extractText(heading).toLowerCase().includes("lunchmeny")) {
+        lunchHeading = heading;
         break;
       }
     }
 
-    if (!lunchSection) return dishes;
+    if (!lunchHeading) return dishes;
 
-    // Collect all elements after the lunchmeny heading until next major heading
-    const elements = [];
-    let sibling = lunchSection.nextElementSibling;
-    while (sibling) {
-      const tag = sibling.tagName.toLowerCase();
-      // Stop at a heading that isn't an h3 (h3 is used for dish names within the section)
-      if (tag === "h1" || tag === "h2") break;
-      elements.push(sibling);
-      sibling = sibling.nextElementSibling;
-    }
+    // The menu is in the UL immediately after the heading
+    const ul = lunchHeading.nextElementSibling;
+    if (!ul || ul.tagName.toLowerCase() !== "ul") return dishes;
 
-    const categories = ["kött", "fisk", "veg", "sallad"];
+    const items = this.safeQuery(ul, "li", true);
+    if (!items) return dishes;
 
-    for (let i = 0; i < elements.length; i++) {
-      const el = elements[i];
-      const text = this.extractText(el);
-      if (!text) continue;
+    for (const li of items) {
+      const h3 = this.safeQuery(li, "h3");
+      if (!h3) continue;
 
-      // Check if this element contains a category name
-      const textLower = text.toLowerCase();
-      const matchedCategory = categories.find((cat) =>
-        textLower.startsWith(cat),
-      );
+      const categoryName = this.extractText(h3).toLowerCase();
+      if (!categories.includes(categoryName)) continue;
 
-      if (matchedCategory) {
-        const dish = this.parseDishFromElements(elements, i, matchedCategory);
-        if (dish) {
-          dishes.push(dish);
-        }
-      }
+      // Full text is "category description price" (price is just a number)
+      const fullText = this.extractText(li).replace(/\s+/g, " ").trim();
+
+      // Remove the category prefix
+      const withoutCategory = fullText
+        .replace(new RegExp(`^${categoryName}\\s*`, "i"), "")
+        .trim();
+
+      // Price is the trailing number
+      const priceMatch = withoutCategory.match(/\s(\d{2,3})$/);
+      if (!priceMatch) continue;
+
+      const price = parseInt(priceMatch[1]);
+      const description = withoutCategory
+        .substring(0, priceMatch.index)
+        .trim();
+
+      const capitalizedCategory =
+        categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+
+      dishes.push({
+        name: capitalizedCategory,
+        description,
+        price,
+      });
     }
 
     return dishes;
-  }
-
-  /**
-   * Parse a dish starting from a category element.
-   * The category element or subsequent elements contain the dish name, description, and price.
-   */
-  parseDishFromElements(elements, categoryIndex, category) {
-    const categoryEl = elements[categoryIndex];
-    const categoryText = this.extractText(categoryEl);
-
-    // Try to extract price from the category element or nearby elements
-    let fullText = categoryText;
-
-    // Also look at the next element(s) for dish details
-    for (let j = categoryIndex + 1; j < elements.length && j <= categoryIndex + 2; j++) {
-      const nextText = this.extractText(elements[j]);
-      if (!nextText) continue;
-
-      // Stop if we hit another category
-      const nextLower = nextText.toLowerCase();
-      const categories = ["kött", "fisk", "veg", "sallad"];
-      if (categories.some((cat) => nextLower.startsWith(cat))) break;
-
-      fullText += " " + nextText;
-    }
-
-    // Extract price
-    const priceMatch = fullText.match(/(\d+)\s*kr/);
-    if (!priceMatch) return null;
-
-    const price = parseInt(priceMatch[1]);
-
-    // Remove category prefix and price from text to get the dish description
-    let dishText = fullText;
-
-    // Remove the category label (e.g., "Kött:" or "Kött -")
-    const categoryPattern = new RegExp(
-      `^${category}[:\\s–\\-]*`,
-      "i",
-    );
-    dishText = dishText.replace(categoryPattern, "").trim();
-
-    // Remove price suffix
-    dishText = dishText.replace(/\s*[-–]?\s*\d+\s*kr\s*$/, "").trim();
-
-    // Use category as the name, dish text as description
-    const capitalizedCategory =
-      category.charAt(0).toUpperCase() + category.slice(1);
-
-    return {
-      name: capitalizedCategory,
-      description: dishText,
-      price,
-    };
   }
 }
 

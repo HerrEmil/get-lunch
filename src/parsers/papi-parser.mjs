@@ -73,8 +73,9 @@ export class PapiParser extends BaseParser {
   }
 
   /**
-   * Extract dishes from the page by finding menu section headings (h2)
-   * and then scanning h4 dish names with prices in nearby text.
+   * Extract dishes from the page.
+   * Structure: H2 "Dagens" / "Varje vecka:" → UL → LI items with H4 name
+   * and full text like "name description XXXkr"
    */
   extractDishes(document) {
     const dishes = [];
@@ -87,56 +88,33 @@ export class PapiParser extends BaseParser {
       const sectionText = this.extractText(section);
       if (!/dagens|varje vecka/i.test(sectionText)) continue;
 
-      // Walk siblings after section heading until next h2
-      let sibling = section.nextElementSibling;
-      while (sibling) {
-        const tag = sibling.tagName.toLowerCase();
-        if (tag === "h1" || tag === "h2") break;
+      // The menu items are in the UL immediately after the heading
+      const ul = section.nextElementSibling;
+      if (!ul || ul.tagName.toLowerCase() !== "ul") continue;
 
-        // Dish names appear in h3/h4 headings
-        if (tag === "h3" || tag === "h4") {
-          const name = this.extractText(sibling);
-          if (name && !this._shouldSkip(name) && !seen.has(name.toLowerCase())) {
-            // Look for price in the heading text itself or following siblings
-            const price = this._findPrice(sibling);
-            if (price > 0) {
-              seen.add(name.toLowerCase());
-              dishes.push({ name, price });
-            }
-          }
+      const items = this.safeQuery(ul, "li", true);
+      if (!items) continue;
+
+      for (const li of items) {
+        const h4 = this.safeQuery(li, "h4");
+        if (!h4) continue;
+
+        const name = this.extractText(h4);
+        if (!name || this._shouldSkip(name) || seen.has(name.toLowerCase())) {
+          continue;
         }
 
-        sibling = sibling.nextElementSibling;
+        // Price is at the end of the li text: "...XXXkr"
+        const fullText = this.extractText(li).replace(/\s+/g, " ").trim();
+        const priceMatch = fullText.match(/(\d{2,3})\s*kr/);
+        if (!priceMatch) continue;
+
+        seen.add(name.toLowerCase());
+        dishes.push({ name, price: parseInt(priceMatch[1]) });
       }
     }
 
     return dishes;
-  }
-
-  /**
-   * Find a price (XXX kr) starting from an element.
-   * Checks the element text first, then walks following siblings
-   * until a heading or another dish is found.
-   */
-  _findPrice(element) {
-    // Check element itself
-    const selfMatch = this.extractText(element).match(/(\d{2,3})\s*kr/);
-    if (selfMatch) return parseInt(selfMatch[1]);
-
-    // Check following siblings
-    let sibling = element.nextElementSibling;
-    while (sibling) {
-      const tag = sibling.tagName.toLowerCase();
-      if (tag === "h1" || tag === "h2" || tag === "h3" || tag === "h4") break;
-
-      const text = this.extractText(sibling);
-      const priceMatch = text.match(/(\d{2,3})\s*kr/);
-      if (priceMatch) return parseInt(priceMatch[1]);
-
-      sibling = sibling.nextElementSibling;
-    }
-
-    return 0;
   }
 
   /**

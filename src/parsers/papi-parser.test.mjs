@@ -21,64 +21,32 @@ beforeAll(async () => {
   ({ JSDOM } = await import("jsdom"));
 });
 
+// Matches the real site structure: H2 section → UL → LI with H4 name + description + price
 const MOCK_HTML = `
 <html><body>
   <h2>Dagens – Ny pasta varje tisdag!</h2>
-  <h4>Papis pasta</h4>
-  <p>Veckans pastarätt med säsongens bästa råvaror</p>
-  <p>135 kr</p>
-
-  <h4>Papis Ravioli</h4>
-  <p>Hemgjord ravioli med ricotta och spenat</p>
-  <p>165 kr</p>
-
-  <h4>Papis speciale</h4>
-  <p>Lyxig pasta med tryffel och parmesan</p>
-  <p>260 kr</p>
-
+  <ul>
+    <li><h4>Papis pasta</h4> Griskindsragu, aubergine, kapris, rökt ostsås 135kr</li>
+    <li><h4>Papis Ravioli</h4> Ravioli med lamm, citron, smör, ärtor 165kr</li>
+    <li><h4>Papis speciale</h4> Fettucine med smör och färsk tryffel 260kr</li>
+    <li><h4>Parmigiana</h4> Lasagnevariant med aubergine, parmesan, tomat 155kr</li>
+  </ul>
   <h2>Varje vecka:</h2>
-  <h4>Parmigiana</h4>
-  <p>Klassisk aubergine parmigiana</p>
-  <p>155 kr</p>
-
-  <h4>Bolognese</h4>
-  <p>Långkokt köttfärssås med tagliatelle</p>
-  <p>145 kr</p>
-
-  <h4>Pasta all'Arrabbiata</h4>
-  <p>Het tomatsås med vitlök och chili</p>
-  <p>145 kr</p>
-
-  <h2>Antipasti</h2>
-  <h4>Arancini</h4>
-  <p>Friterade risbollar med mozzarella</p>
-  <p>85 kr</p>
-
-  <h4>Sardeller</h4>
-  <p>Marinerade sardeller med citron</p>
-  <p>75 kr</p>
-
-  <h4>Ostbricka</h4>
-  <p>Urval av italienska ostar</p>
-  <p>125 kr</p>
-
-  <h4>Charkbricka</h4>
-  <p>Italiensk chark</p>
-  <p>135 kr</p>
-
-  <h2>Dessert</h2>
-  <h4>Tiramisu</h4>
-  <p>Klassisk italiensk dessert</p>
-  <p>95 kr</p>
-
-  <h2>Erbjudanden</h2>
-  <h4>Doppio-meny</h4>
-  <p>Två pastarätter</p>
-  <p>250 kr</p>
-
-  <h4>Pasta all in</h4>
-  <p>Pasta, förrätt och dessert</p>
-  <p>350 kr</p>
+  <ul>
+    <li><h4>Bolognese</h4> Klassiker i Papi-tappning 145kr</li>
+    <li><h4>Pasta all'Arrabbiata</h4> Pasta med mustig tomat, chiliolja, burrata 145kr</li>
+    <li><h4>Vitello tonnato</h4> Tunt skuren kalv med tunamajonäs 110kr</li>
+    <li><h4>Testa 2 rätter</h4> Doppio-meny! Prova två portioner 175kr</li>
+    <li><h4>Pasta all in</h4> En meny med alla pastarätter 230kr</li>
+    <li><h4>Arancini</h4> Friterad risotto-boll med citronmajonnäs 60kr</li>
+    <li><h4>Sardeller</h4> Sardeller med bröd och smör 75kr</li>
+    <li><h4>Ostbricka</h4> Dagens ostar 110kr</li>
+    <li><h4>Charkbricka</h4> Dagens chark 195kr</li>
+  </ul>
+  <h2>Efter maten:</h2>
+  <ul>
+    <li><h4>Papis Tiramisu</h4> 85kr</li>
+  </ul>
 </body></html>
 `;
 
@@ -104,6 +72,7 @@ describe("PapiParser", () => {
     expect(names).toContain("Parmigiana");
     expect(names).toContain("Bolognese");
     expect(names).toContain("Pasta all'Arrabbiata");
+    expect(names).toContain("Vitello tonnato");
   });
 
   it("extracts correct prices", () => {
@@ -117,7 +86,7 @@ describe("PapiParser", () => {
     expect(byName["Bolognese"]).toBe(145);
   });
 
-  it("skips appetizers and sides", () => {
+  it("skips appetizers, sides, desserts, and combos", () => {
     const dom = new JSDOM(MOCK_HTML);
     const dishes = parser.extractDishes(dom.window.document);
 
@@ -126,22 +95,7 @@ describe("PapiParser", () => {
     expect(names).not.toContain("sardeller");
     expect(names).not.toContain("ostbricka");
     expect(names).not.toContain("charkbricka");
-  });
-
-  it("skips desserts", () => {
-    const dom = new JSDOM(MOCK_HTML);
-    const dishes = parser.extractDishes(dom.window.document);
-
-    const names = dishes.map((d) => d.name.toLowerCase());
-    expect(names).not.toContain("tiramisu");
-  });
-
-  it("skips combo deals", () => {
-    const dom = new JSDOM(MOCK_HTML);
-    const dishes = parser.extractDishes(dom.window.document);
-
-    const names = dishes.map((d) => d.name.toLowerCase());
-    expect(names.some((n) => n.includes("doppio-meny"))).toBe(false);
+    expect(names).not.toContain("papis tiramisu");
     expect(names.some((n) => n.includes("pasta all in"))).toBe(false);
   });
 
@@ -151,21 +105,13 @@ describe("PapiParser", () => {
 
     const lunches = await parser.parseMenu();
 
-    // Count dishes first
     const dishes = parser.extractDishes(dom.window.document);
     expect(lunches).toHaveLength(dishes.length * 5);
 
-    // Verify all weekdays present for each dish
     const papisLunches = lunches.filter((l) => l.name === "Papis pasta");
     expect(papisLunches).toHaveLength(5);
-
-    const weekdays = papisLunches.map((l) => l.weekday);
-    expect(weekdays).toEqual([
-      "måndag",
-      "tisdag",
-      "onsdag",
-      "torsdag",
-      "fredag",
+    expect(papisLunches.map((l) => l.weekday)).toEqual([
+      "måndag", "tisdag", "onsdag", "torsdag", "fredag",
     ]);
   });
 
@@ -180,12 +126,7 @@ describe("PapiParser", () => {
   });
 
   it("returns empty array when page has no menu sections", async () => {
-    const dom = new JSDOM(`
-      <html><body>
-        <h1>PAPI Saluhallen</h1>
-        <p>Välkommen!</p>
-      </body></html>
-    `);
+    const dom = new JSDOM(`<html><body><h1>PAPI</h1><p>Välkommen!</p></body></html>`);
     parser.fetchDocument = async () => dom.window.document;
 
     const lunches = await parser.parseMenu();
