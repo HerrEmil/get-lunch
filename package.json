@@ -29,16 +29,16 @@
     "jsdom": "^29.0.1"
   },
   "devDependencies": {
-    "@vitest/ui": "^4.1.1",
+    "@vitest/ui": "^4.1.2",
     "esbuild": "^0.27.4",
     "eslint": "^10.1.0",
     "prettier": "^3.8.1",
     "serverless": "^3.38.0",
-    "serverless-domain-manager": "^10.0.0",
-    "serverless-dynamodb": "^0.2.56",
+    "serverless-domain-manager": "^10.1.0",
+    "serverless-dynamodb": "^0.2.58",
     "serverless-offline": "^13.3.0",
     "serverless-plugin-warmup": "^8.4.1",
-    "vitest": "^4.1.1"
+    "vitest": "^4.1.2"
   },
   "engines": {
     "node": ">=18.0.0"
