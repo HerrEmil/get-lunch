@@ -6,11 +6,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { handler } from "./api-server.mjs";
 
 // Mock dependencies
-vi.mock("../../cache-manager.mjs", () => ({
+vi.mock("../lib/cache-manager.mjs", () => ({
   getCachedLunchData: vi.fn(),
 }));
 
-vi.mock("../../enhanced-logger.mjs", () => ({
+vi.mock("../lib/enhanced-logger.mjs", () => ({
   createRestaurantLogger: vi.fn(() => ({
     info: vi.fn(),
     debug: vi.fn(),
@@ -23,8 +23,8 @@ vi.mock("fs", () => ({
   readFileSync: vi.fn(),
 }));
 
-import { getCachedLunchData } from "../../cache-manager.mjs";
-import { createRestaurantLogger } from "../../enhanced-logger.mjs";
+import { getCachedLunchData } from "../lib/cache-manager.mjs";
+import { createRestaurantLogger } from "../lib/enhanced-logger.mjs";
 import { readFileSync } from "fs";
 
 // Sample test data

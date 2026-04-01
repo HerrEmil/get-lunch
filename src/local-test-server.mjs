@@ -8,7 +8,7 @@ import { URL } from "url";
 import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-import { ParserFactory } from "./src/parsers/parser-factory.mjs";
+import { ParserFactory } from "./parsers/parser-factory.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -83,7 +83,7 @@ async function fetchAllLunchData() {
 }
 
 function getHtmlTemplate() {
-  return readFileSync(join(__dirname, "index.html"), "utf-8");
+  return readFileSync(join(__dirname, "lambdas", "index.html"), "utf-8");
 }
 
 function filterDataByDay(data, selectedDay) {

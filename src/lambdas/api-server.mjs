@@ -3,8 +3,8 @@
  * Serves HTML with cached lunch data injected from DynamoDB
  */
 
-import { getCachedLunchData } from "../../cache-manager.mjs";
-import { createRestaurantLogger } from "../../enhanced-logger.mjs";
+import { getCachedLunchData } from "../lib/cache-manager.mjs";
+import { createRestaurantLogger } from "../lib/enhanced-logger.mjs";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";

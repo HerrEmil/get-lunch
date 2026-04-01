@@ -4,8 +4,8 @@
  */
 
 import { ParserFactory } from "../parsers/parser-factory.mjs";
-import { cacheLunchData } from "../../cache-manager.mjs";
-import { createRestaurantLogger } from "../../enhanced-logger.mjs";
+import { cacheLunchData } from "../lib/cache-manager.mjs";
+import { createRestaurantLogger } from "../lib/enhanced-logger.mjs";
 
 // Restaurant configurations
 const RESTAURANT_CONFIGS = [

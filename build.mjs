@@ -111,6 +111,6 @@ await build({
 });
 
 // Copy index.html for api-server (read at runtime via readFileSync)
-cpSync("index.html", "dist/api-server/index.html");
+cpSync("src/lambdas/index.html", "dist/api-server/index.html");
 
 console.log("Build complete");

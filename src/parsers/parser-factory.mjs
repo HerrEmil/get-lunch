@@ -3,7 +3,7 @@
  * Provides centralized parser management, registration, and health monitoring
  */
 
-import { createRestaurantLogger } from "../../enhanced-logger.mjs";
+import { createRestaurantLogger } from "../lib/enhanced-logger.mjs";
 import { NiagaraParser } from "./niagara-parser.mjs";
 import { SpillParser } from "./spill-parser.mjs";
 import { KontrastParser } from "./kontrast-parser.mjs";

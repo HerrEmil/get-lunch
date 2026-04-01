@@ -3,8 +3,8 @@
  * Provides common functionality and defines interface for all restaurant parsers
  */
 
-import { createRestaurantLogger } from "../../enhanced-logger.mjs";
-import { validateLunches } from "../../data-validator.mjs";
+import { createRestaurantLogger } from "../lib/enhanced-logger.mjs";
+import { validateLunches } from "../lib/data-validator.mjs";
 import { JSDOM } from "jsdom";
 
 /**
