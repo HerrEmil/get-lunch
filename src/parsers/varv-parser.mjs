@@ -136,10 +136,14 @@ export class VarvParser extends BaseParser {
       const swedishDay = ENGLISH_TO_SWEDISH[dayName];
       const dishes = [];
 
-      // Collect following <p> elements until next <h2>
+      // Collect following <p> elements until next non-empty <h2>
       let sibling = h2.nextElementSibling;
       while (sibling) {
-        if (sibling.tagName.toLowerCase() === "h2") break;
+        if (
+          sibling.tagName.toLowerCase() === "h2" &&
+          this.extractText(sibling).trim().length > 0
+        )
+          break;
 
         if (sibling.tagName.toLowerCase() === "p") {
           const dishText = this.extractText(sibling).trim();
