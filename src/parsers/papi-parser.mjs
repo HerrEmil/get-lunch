@@ -14,6 +14,8 @@ const SKIP_ITEMS = [
   "tiramisu",
   "doppio-meny",
   "pasta all in",
+  "testa 2 rätter",
+  "ost- och charkbricka",
 ];
 
 export class PapiParser extends BaseParser {
