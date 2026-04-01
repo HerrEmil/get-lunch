@@ -535,56 +535,6 @@ export function createRestaurantLogger(restaurantName, additionalContext = {}) {
   });
 }
 
-/**
- * Create weekday-specific logger
- */
-export function createWeekdayLogger(restaurantName, weekday, additionalContext = {}) {
-  return createLogger({
-    restaurant: restaurantName,
-    weekday: weekday,
-    ...additionalContext,
-  });
-}
-
-/**
- * Create Lambda function logger
- */
-export function createLambdaLogger(event, context, additionalContext = {}) {
-  return createLogger({
-    lambda: {
-      functionName: context.functionName,
-      functionVersion: context.functionVersion,
-      requestId: context.awsRequestId,
-      remainingTimeMs: context.getRemainingTimeInMillis(),
-    },
-    event: {
-      source: event.source,
-      httpMethod: event.httpMethod,
-      path: event.path,
-    },
-    ...additionalContext,
-  });
-}
-
-/**
- * Global error handler with logging
- */
-export function setupGlobalErrorHandling() {
-  const logger = createLogger({ component: "global-error-handler" });
-
-  process.on("uncaughtException", async (error) => {
-    await logger.error("Uncaught exception", {}, error);
-    process.exit(1);
-  });
-
-  process.on("unhandledRejection", async (reason, promise) => {
-    await logger.error("Unhandled promise rejection", {
-      promise: promise.toString(),
-      reason: reason?.toString(),
-    }, reason instanceof Error ? reason : new Error(String(reason)));
-  });
-}
-
 // Export configuration for testing and debugging
 export const config = {
   LOG_LEVELS,
@@ -602,9 +552,6 @@ export const config = {
 export default {
   createLogger,
   createRestaurantLogger,
-  createWeekdayLogger,
-  createLambdaLogger,
-  setupGlobalErrorHandling,
   LOG_LEVELS,
   config,
 };

@@ -12,7 +12,6 @@ import { TasteParser } from "./taste-parser.mjs";
 import { VarvParser } from "./varv-parser.mjs";
 import { FonderieParser } from "./fonderie-parser.mjs";
 import { LazizaParser } from "./laziza-parser.mjs";
-import { HolyGreensParser } from "./holygreens-parser.mjs";
 import { KockumParser } from "./kockum-parser.mjs";
 import { UbatshallenParser } from "./ubatshallen-parser.mjs";
 import { MiaMariasParser } from "./miamarias-parser.mjs";
@@ -73,7 +72,6 @@ export class ParserFactory {
     this.registerParserClass("varv", VarvParser);
     this.registerParserClass("fonderie", FonderieParser);
     this.registerParserClass("laziza", LazizaParser);
-    this.registerParserClass("holygreens", HolyGreensParser);
     this.registerParserClass("kockum", KockumParser);
     this.registerParserClass("ubatshallen", UbatshallenParser);
     this.registerParserClass("miamarias", MiaMariasParser);

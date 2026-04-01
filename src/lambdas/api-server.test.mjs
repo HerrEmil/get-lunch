@@ -8,7 +8,6 @@ import { handler } from "./api-server.mjs";
 // Mock dependencies
 vi.mock("../../cache-manager.mjs", () => ({
   getCachedLunchData: vi.fn(),
-  getRestaurantCache: vi.fn(),
 }));
 
 vi.mock("../../enhanced-logger.mjs", () => ({

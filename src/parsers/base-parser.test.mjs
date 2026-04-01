@@ -55,19 +55,6 @@ describe("BaseParser Core", () => {
     expect(parser).toBeInstanceOf(BaseParser);
   });
 
-  it("configuration is properly set", () => {
-    const parser = new MockParser({
-      name: "Test Restaurant",
-      url: "https://test.se/lunch/",
-      timeout: 15000,
-      retries: 5,
-    });
-    const config = parser.getConfig();
-    expect(config.name).toBe("Test Restaurant");
-    expect(config.timeout).toBe(15000);
-    expect(config.retries).toBe(5);
-  });
-
   it("validates abstract methods", () => {
     // BaseParser defines the methods (they throw when called), so subclasses
     // that don't override them pass the typeof check but fail at runtime.
@@ -92,16 +79,6 @@ describe("BaseParser Core", () => {
     expect(health.consecutiveFailures).toBe(0);
   });
 
-  it("resets state", () => {
-    const parser = new MockParser();
-    parser.state.consecutiveFailures = 5;
-    parser.state.isHealthy = false;
-    parser.resetState();
-    const health = parser.getHealthStatus();
-    expect(health.isHealthy).toBe(true);
-    expect(health.consecutiveFailures).toBe(0);
-  });
-
   it("extracts text and numbers correctly", () => {
     const parser = new MockParser();
     expect(parser.extractText({ textContent: "  Test Text  " })).toBe("Test Text");
@@ -114,11 +91,6 @@ describe("BaseParser Core", () => {
     expect(parser.isValidUrl("not-a-url")).toBe(false);
   });
 
-  it("canHandle matches hostname", () => {
-    const parser = new MockParser();
-    expect(parser.canHandle("https://mock-restaurant.se/menu/")).toBe(true);
-    expect(parser.canHandle("https://other-restaurant.se/menu/")).toBe(false);
-  });
 });
 
 describe("BaseParser HTTP", () => {
@@ -151,15 +123,6 @@ describe("BaseParser HTTP", () => {
     await expect(parser.fetchDocument()).rejects.toThrow("Network error");
   });
 
-  it("getHtmlNodeFromUrl finds elements", async () => {
-    const parser = new MockParser();
-    parser.fetchDocument = async () => {
-      const dom = new JSDOM('<div class="test">Found it!</div>');
-      return dom.window.document;
-    };
-    const element = await parser.getHtmlNodeFromUrl("https://test.se", ".test");
-    expect(element.textContent).toBe("Found it!");
-  });
 });
 
 describe("NiagaraParser", () => {

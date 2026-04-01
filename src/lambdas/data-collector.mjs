@@ -4,7 +4,7 @@
  */
 
 import { ParserFactory } from "../parsers/parser-factory.mjs";
-import { cacheLunchData, createCacheKey } from "../../cache-manager.mjs";
+import { cacheLunchData } from "../../cache-manager.mjs";
 import { createRestaurantLogger } from "../../enhanced-logger.mjs";
 
 // Restaurant configurations
@@ -128,9 +128,6 @@ export async function handler(event, context) {
         timeout: 10000,
       },
     });
-
-    // Cache configuration
-    const cacheConfig = resolveCacheConfig();
 
     // Register and create parsers for active restaurants
     const activeParsers = await setupParsers(factory, logger);
@@ -324,15 +321,6 @@ async function cacheData(results, logger) {
       const weekGroups = groupLunchesByWeek(result.lunches);
 
       for (const [week, lunches] of Object.entries(weekGroups)) {
-        const cacheKey = `${result.restaurant}-week-${week}`;
-        const cacheData = {
-          restaurant: result.restaurant,
-          week: parseInt(week),
-          lunches: lunches,
-          lastUpdated: new Date().toISOString(),
-          metadata: result.metadata,
-        };
-
         await cacheLunchData(
           result.restaurant,
           parseInt(week),

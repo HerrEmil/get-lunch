@@ -61,8 +61,6 @@ functions:
           rate: cron(0 8 ? * MON-FRI *)  # Every weekday at 08:00 UTC
           description: "Daily lunch data collection from restaurants"
           enabled: true
-    environment:
-      FUNCTION_TYPE: data_collector
 
   # HTML Serving Lambda (API Gateway)
   apiServer:
@@ -86,8 +84,6 @@ functions:
           path: /lunch/{day}
           method: get
           cors: true
-    environment:
-      FUNCTION_TYPE: api_server
 
 resources:
   Resources:

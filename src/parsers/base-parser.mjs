@@ -7,11 +7,6 @@ import { createRestaurantLogger } from "../../enhanced-logger.mjs";
 import { validateLunches } from "../../data-validator.mjs";
 import { JSDOM } from "jsdom";
 
-// HTTP request timeout configuration
-const DEFAULT_TIMEOUT = 30000;
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000;
-
 /**
  * Abstract base class for restaurant parsers
  * All restaurant-specific parsers should extend this class
@@ -242,39 +237,6 @@ export class BaseParser {
   }
 
   /**
-   * Reset parser state (useful for testing or recovery)
-   */
-  resetState() {
-    this.state = {
-      lastSuccessful: null,
-      lastError: null,
-      consecutiveFailures: 0,
-      isHealthy: true,
-      totalRequests: 0,
-      successfulRequests: 0,
-    };
-
-    this.logger.info("Parser state reset");
-  }
-
-  /**
-   * Get parser configuration
-   * @returns {Object} Parser configuration
-   */
-  getConfig() {
-    return { ...this.config };
-  }
-
-  /**
-   * Update parser configuration
-   * @param {Object} newConfig - New configuration values
-   */
-  updateConfig(newConfig = {}) {
-    this.config = { ...this.config, ...newConfig };
-    this.logger.info("Parser configuration updated", { newConfig });
-  }
-
-  /**
    * Create a standardized lunch object
    * @param {Object} lunchData - Raw lunch data
    * @returns {Object} Standardized lunch object
@@ -374,14 +336,6 @@ export class BaseParser {
       });
       return null;
     }
-  }
-
-  /**
-   * String representation of the parser
-   * @returns {string} Parser description
-   */
-  toString() {
-    return `${this.constructor.name}(${this.getName()})`;
   }
 
   /**
@@ -503,46 +457,6 @@ export class BaseParser {
   }
 
   /**
-   * Get HTML element from URL using CSS selector
-   * @param {string} url - URL to fetch
-   * @param {string} selector - CSS selector
-   * @returns {Promise<Element|null>} Selected element
-   */
-  async getHtmlNodeFromUrl(url, selector) {
-    try {
-      const document = await this.fetchDocument(url);
-      const element = this.safeQuery(document, selector);
-
-      if (!element) {
-        await this.logger.warn("Element not found with selector", {
-          url,
-          selector,
-        });
-        return null;
-      }
-
-      await this.logger.debug("Element found with selector", {
-        url,
-        selector,
-        elementTag: element.tagName,
-      });
-
-      return element;
-    } catch (error) {
-      await this.logger.error(
-        "Failed to get HTML node from URL",
-        {
-          url,
-          selector,
-          error: error.message,
-        },
-        error,
-      );
-      return null;
-    }
-  }
-
-  /**
    * Sleep for specified milliseconds
    * @param {number} ms - Milliseconds to sleep
    * @returns {Promise<void>}
@@ -565,55 +479,6 @@ export class BaseParser {
     }
   }
 
-  /**
-   * Handle network-related errors with specific error types
-   * @param {Error} error - Original error
-   * @returns {Error} Enhanced error with specific type
-   */
-  handleNetworkError(error) {
-    if (error.name === "AbortError") {
-      return new Error(`Request timeout after ${this.config.timeout}ms`);
-    }
-
-    if (error.message.includes("fetch")) {
-      return new Error(`Network error: ${error.message}`);
-    }
-
-    if (error.message.includes("ENOTFOUND")) {
-      return new Error(`DNS resolution failed: ${error.message}`);
-    }
-
-    if (error.message.includes("ECONNREFUSED")) {
-      return new Error(`Connection refused: ${error.message}`);
-    }
-
-    return error;
-  }
-
-  /**
-   * Check if parser can handle a given URL
-   * @param {string} url - URL to check
-   * @returns {boolean} True if parser can handle the URL
-   */
-  canHandle(url) {
-    if (!this.isValidUrl(url)) {
-      return false;
-    }
-
-    const parserUrl = this.getUrl();
-    if (!parserUrl) {
-      return false;
-    }
-
-    try {
-      const urlObj = new URL(url);
-      const parserUrlObj = new URL(parserUrl);
-
-      return urlObj.hostname === parserUrlObj.hostname;
-    } catch {
-      return false;
-    }
-  }
 }
 
 export default BaseParser;

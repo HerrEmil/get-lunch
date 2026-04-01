@@ -3,10 +3,7 @@
  * Serves HTML with cached lunch data injected from DynamoDB
  */
 
-import {
-  getCachedLunchData,
-  getRestaurantCache,
-} from "../../cache-manager.mjs";
+import { getCachedLunchData } from "../../cache-manager.mjs";
 import { createRestaurantLogger } from "../../enhanced-logger.mjs";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
@@ -396,17 +393,6 @@ function getErrorHtml(errorMessage) {
     </div>
 </body>
 </html>`;
-}
-
-/**
- * Get current Swedish weekday name
- */
-function getCurrentSwedishWeekday() {
-  const now = new Date();
-  const englishDay = now
-    .toLocaleDateString("en-US", { weekday: "long" })
-    .toLowerCase();
-  return ENGLISH_WEEKDAYS[englishDay] || "måndag";
 }
 
 /**

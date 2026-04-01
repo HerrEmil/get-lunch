@@ -186,104 +186,6 @@ export function validateLunches(lunches) {
   };
 }
 
-/**
- * Validates lunch data specifically for restaurant closure scenarios
- * @param {any} data - Data to check for closure indicators
- * @returns {object} - Information about restaurant status
- */
-export function validateRestaurantStatus(data) {
-  if (!data) {
-    return {
-      isOpen: false,
-      reason: 'No data provided',
-      closureIndicators: []
-    };
-  }
-
-  const text = typeof data === 'string' ? data : (data.textContent || '');
-  const lowercaseText = text.toLowerCase();
-
-  const closureIndicators = [];
-
-  // Check for common Swedish closure keywords
-  const closureKeywords = [
-    'semesterstängt',
-    'semester',
-    'stängt',
-    'closed',
-    'vacation',
-    'uppehåll',
-    'paus',
-    'tillfälligt stängt',
-    'sommarstängt'
-  ];
-
-  for (const keyword of closureKeywords) {
-    if (lowercaseText.includes(keyword)) {
-      closureIndicators.push(keyword);
-    }
-  }
-
-  // Check for vacation week patterns (V.XX-XX or similar)
-  const vacationPattern = /v\.?\s*\d+\s*[-–]\s*\d+/i;
-  if (vacationPattern.test(text)) {
-    closureIndicators.push('vacation week pattern detected');
-  }
-
-  // Check if only limited service information is present
-  const limitedServiceKeywords = [
-    'studentlunch',
-    'endast',
-    'bara',
-    'begränsad'
-  ];
-
-  const hasLimitedService = limitedServiceKeywords.some(keyword =>
-    lowercaseText.includes(keyword)
-  );
-
-  if (hasLimitedService && closureIndicators.length === 0) {
-    closureIndicators.push('limited service detected');
-  }
-
-  const isOpen = closureIndicators.length === 0;
-  const reason = isOpen
-    ? 'Restaurant appears to be open'
-    : `Restaurant appears closed: ${closureIndicators.join(', ')}`;
-
-  return {
-    isOpen: isOpen,
-    reason: reason,
-    closureIndicators: closureIndicators
-  };
-}
-
-/**
- * Helper function to log validation results in a structured way
- * @param {object} validationResult - Result from validateLunches
- * @param {string} restaurantName - Name of the restaurant
- */
-export function logValidationResults(validationResult, restaurantName = 'Unknown') {
-  const { validLunches, validationErrors, totalCount, validCount, invalidCount } = validationResult;
-
-  console.log(`=== Validation Results for ${restaurantName} ===`);
-  console.log(`Total lunches processed: ${totalCount}`);
-  console.log(`Valid lunches: ${validCount}`);
-  console.log(`Invalid lunches: ${invalidCount}`);
-
-  if (invalidCount > 0) {
-    console.warn(`Found ${invalidCount} invalid lunch objects:`);
-    validationErrors.forEach((error, index) => {
-      console.warn(`  Error ${index + 1} (index ${error.index}):`);
-      error.errors.forEach(err => console.warn(`    - ${err}`));
-    });
-  }
-
-  if (validCount > 0) {
-    console.log(`Successfully validated ${validCount} lunch objects`);
-  }
-}
-
 export default {
   isValidSwedishWeekday,
   normalizeSwedishWeekday,
@@ -293,6 +195,4 @@ export default {
   isValidPlace,
   validateLunch,
   validateLunches,
-  validateRestaurantStatus,
-  logValidationResults
 };

@@ -495,7 +495,8 @@ export async function batchCacheLunchData(entries) {
     let successCount = 0;
     let failureCount = 0;
 
-    for (const batch of batches) {
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
       try {
         const command = new BatchWriteCommand({
           RequestItems: {
@@ -505,7 +506,7 @@ export async function batchCacheLunchData(entries) {
 
         const response = await executeWithRetry(
           () => docClient.send(command),
-          `batchCacheLunchData(batch ${Math.floor(index / 25) + 1})`,
+          `batchCacheLunchData(batch ${batchIndex + 1})`,
         );
         successCount +=
           batch.length - (response.UnprocessedItems?.[TABLE_NAME]?.length || 0);
@@ -696,7 +697,7 @@ export async function healthCheck() {
       status: "healthy",
       table: TABLE_NAME,
       region: DEFAULT_REGION,
-      testSuccessful: !!response.Item,
+      testSuccessful: !!getResponse.Item,
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
