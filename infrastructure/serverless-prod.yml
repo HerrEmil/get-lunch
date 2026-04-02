@@ -5,7 +5,7 @@ service: ${file(./serverless.yml):service}
 
 provider:
   name: aws
-  runtime: nodejs18.x
+  runtime: nodejs22.x
   region: eu-north-1
   stage: prod
   environment:

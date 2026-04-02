@@ -81,7 +81,7 @@ const fixRuntimeReads = {
 const shared = {
   bundle: true,
   platform: "node",
-  target: "node20",
+  target: "node22",
   format: "cjs",
   external: ["@aws-sdk/*"],
   minify: false,
