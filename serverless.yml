@@ -251,11 +251,5 @@ custom:
       port: 8000
       inMemory: true
       migrate: true
-      seed: true
       convertEmptyValues: true
-    seed:
-      development:
-        sources:
-          - table: ${self:custom.tableName}
-            sources: [./test-fixtures/sample-cache-data.json]
 

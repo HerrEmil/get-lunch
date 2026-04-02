@@ -14,7 +14,6 @@
     "dev:collection": "node -e \"import('./src/lambdas/data-collector.mjs').then(m => m.handler({}, {awsRequestId: 'dev-test'}))\"",
     "build": "node build.mjs",
     "deploy": "yarn build && serverless deploy",
-    "deploy:dev": "yarn build && serverless deploy --stage dev",
     "deploy:prod": "yarn build && serverless deploy --stage prod",
     "logs": "serverless logs -f apiServer --tail",
     "logs:collector": "serverless logs -f dataCollector --tail",

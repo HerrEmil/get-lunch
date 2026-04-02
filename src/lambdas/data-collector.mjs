@@ -228,14 +228,8 @@ function detectEventSource(event) {
   if (event.source === "aws.events") {
     return "scheduled";
   }
-  if (event.source === "serverless-plugin-warmup") {
-    return "warmup";
-  }
   if (event.httpMethod) {
     return "manual-http";
-  }
-  if (event.Records) {
-    return "sqs";
   }
   return "manual";
 }
