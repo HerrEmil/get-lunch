@@ -90,12 +90,11 @@ export class MiaMariasParser extends BaseParser {
         continue;
       }
 
-      // After a category heading, next <p> is the dish, then <p> is the price
+      // After a category heading, collect <p> tags as dish description until
+      // we hit a price line. Descriptions may span multiple <p> tags.
       if (tag === "p" && pendingCategory) {
-        if (!pendingDish) {
-          pendingDish = text;
-        } else {
-          // This is the price line
+        if (pendingDish && this._looksLikePrice(text)) {
+          // Price line — finalize the dish
           const price = this.extractNumber(text);
           const weekday = WEEKDAYS[dayIndex] || "måndag";
 
@@ -117,11 +116,21 @@ export class MiaMariasParser extends BaseParser {
 
           pendingCategory = null;
           pendingDish = null;
+        } else if (!pendingDish) {
+          pendingDish = text;
+        } else {
+          // Continuation of multi-paragraph description
+          pendingDish = `${pendingDish} ${text}`;
         }
       }
     }
 
     return lunches;
+  }
+
+  _looksLikePrice(text) {
+    // MiaMarias formats prices as "130:-" or "130 kr"
+    return /\d+\s*(:-|kr\b)/i.test(text);
   }
 }
 

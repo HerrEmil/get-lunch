@@ -92,6 +92,31 @@ describe("MiaMariasParser", () => {
     expect(lunches[0].week).toBe(13);
   });
 
+  it("joins multi-paragraph dish descriptions before the price", () => {
+    const dom = new JSDOM(`
+      <div>
+        <h2>Vecka 15</h2>
+        <h2>Fisk</h2>
+        <p>Röd currygryta med limemarinerad torsk</p>
+        <p>130:-</p>
+        <h2>Kött</h2>
+        <p>Lasagne på nötfärs med</p>
+        <p>tomat och mozzarellasallad</p>
+        <p>125:-</p>
+        <h2>Vegetariskt</h2>
+        <p>Krämig sötpotatisdahl</p>
+        <p>120:-</p>
+      </div>
+    `);
+
+    const lunches = parser.extractMenu(dom.window.document);
+    const kott = lunches.find((l) => l.name === "Kött");
+    expect(kott.description).toBe(
+      "Lasagne på nötfärs med tomat och mozzarellasallad",
+    );
+    expect(kott.price).toBe(125);
+  });
+
   it("skips closed day headings", () => {
     const dom = new JSDOM(`
       <div>

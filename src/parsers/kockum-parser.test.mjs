@@ -101,6 +101,33 @@ describe("KockumParser", () => {
     expect(names).not.toContain("Rostbiff");
   });
 
+  it("stops at affärslunch/catering section", () => {
+    const html = `
+      <html><body>
+        <p class="mobile-undersized-upper">Lunch vecka 15/2026</p>
+        <p class="mobile-undersized-upper">Onsdag</p>
+        <p class="mobile-undersized-upper">Crispy chicken/papaya & morots sallad</p>
+        <p class="mobile-undersized-upper">Veckans vegetariska</p>
+        <p class="mobile-undersized-upper">Grillad haloumi/ratatouille/aioli/rostade fröer</p>
+        <p class="mobile-undersized-upper">Vårens affärsluncher i Malmö</p>
+        <p class="mobile-undersized-upper">1. Fläskfilé med kålfrikassé</p>
+        <p class="mobile-undersized-upper">Affärslunchen kostar 195kr / person</p>
+        <p class="mobile-undersized-upper">*Lunch Malmö är i Sverige den måltid...</p>
+      </body></html>
+    `;
+    const doc = new JSDOM(html).window.document;
+    const lunches = parser.extractMenu(doc);
+    const names = lunches.map((l) => l.name).join(" | ");
+    expect(names).not.toContain("affärslunch");
+    expect(names).not.toContain("Affärslunchen");
+    expect(names).not.toContain("Fläskfilé");
+    expect(names).not.toContain("Wikipedia");
+    expect(names).not.toContain("Lunch Malmö är");
+    // Legitimate dishes still present
+    expect(names).toContain("Crispy chicken");
+    expect(names).toContain("Grillad haloumi");
+  });
+
   it("returns empty for page with no menu", () => {
     const doc = new JSDOM("<html><body><p>Stängt</p></body></html>").window.document;
     const lunches = parser.extractMenu(doc);

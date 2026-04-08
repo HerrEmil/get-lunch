@@ -100,7 +100,8 @@ export class KockumParser extends BaseParser {
         skipRest = true;
         continue;
       }
-      if (/^smörrebröd/i.test(text)) break;
+      // Break at start of catering/smörrebröd section — everything after is noise
+      if (/^smörrebröd|affärslunch/i.test(text)) break;
       if (skipRest) continue;
 
       // Skip very short text or non-dish content
