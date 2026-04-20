@@ -1,150 +1,518 @@
 <!doctype html>
-<html>
-    <head>
-        <link
-            rel="stylesheet"
-            href="https://uicdn.toast.com/grid/latest/tui-grid.css"
-        />
-        <script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
-    </head>
-    <body>
-        <div id="filters" style="padding:8px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;"></div>
-        <div id="grid"></div>
-    </body>
-    <script>
-        const lunches = [];
-        const allData = [...lunches];
+<html lang="sv">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lunch — GetAccept Malmö</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --base-blue: #2c3b4e;
+  --gray-30: #374a62;
+  --gray-39: #4b607c;
+  --gray-70: #9eb0c7;
+  --gray-80: #bccadc;
+  --gray-92: #e4eaf1;
+  --gray-94: #ebeff5;
+  --gray-96: #f1f4f9;
+  --gray-98: #f8fafc;
+  --gray-bg: #fcfcfc;
+  --white: #fff;
+  --brand-orange: hsl(32deg 100% 50%);
+  --brand-orange-light: #fff1e0;
+  --signature-gradient: linear-gradient(90deg, hsl(32deg 100% 50%) 0%, #ffa033 100%);
+  --text-dark: var(--base-blue);
+  --text-gray: var(--gray-39);
+  --link-blue: #0c65da;
+  --default-font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --branding-heading-font-family: 'DM Sans', 'Inter', sans-serif;
+  --radius-medium: 8px;
+  --radius-large: 20px;
+  --shadow-1: 0 1px 4px rgb(44 59 78 / 20%);
+  --shadow-3: 0 3px 12px rgb(44 59 78 / 20%);
+}
+html, body, #root { margin: 0; height: 100%; background: var(--gray-bg); }
+* { box-sizing: border-box; }
+body {
+  font-family: var(--default-font-family);
+  color: var(--text-dark);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+a { color: inherit; }
+button { font-family: inherit; }
+::selection { background: var(--brand-orange-light); }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="env,react">
+const lunches = [];
 
-        const today = new Intl.DateTimeFormat("sv-SE", {
-            weekday: "long",
-        }).format(Date.now());
+const { useState, useEffect, useMemo } = React;
 
-        let activeDay = today;
-        let searchName = "";
-        let searchDesc = "";
+const DAYS_SV = ['Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag'];
 
-        // Build filter controls
-        const filtersEl = document.getElementById("filters");
+function currentDaySv() {
+  const d = new Intl.DateTimeFormat('sv-SE', { weekday: 'long' })
+    .format(Date.now()).toLowerCase();
+  const cap = d.charAt(0).toUpperCase() + d.slice(1);
+  return DAYS_SV.includes(cap) ? cap : 'Måndag';
+}
 
-        // Day dropdown
-        const dayLabel = document.createElement("label");
-        dayLabel.textContent = "Dag: ";
-        const daySelect = document.createElement("select");
-        daySelect.style.padding = "4px 8px";
-        const days = ["alla", "måndag", "tisdag", "onsdag", "torsdag", "fredag"];
-        days.forEach(d => {
-            const opt = document.createElement("option");
-            opt.value = d === "alla" ? "" : d;
-            opt.textContent = d.charAt(0).toUpperCase() + d.slice(1);
-            if (d === today) opt.selected = true;
-            daySelect.appendChild(opt);
-        });
-        daySelect.addEventListener("change", () => {
-            activeDay = daySelect.value;
-            filterData();
-        });
-        dayLabel.appendChild(daySelect);
-        filtersEl.appendChild(dayLabel);
+function normaliseDay(d) {
+  if (!d) return '';
+  const s = String(d).toLowerCase();
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
-        // Search inputs
-        [["Lunch", "name"], ["Beskrivning", "description"]].forEach(([label, field]) => {
-            const wrap = document.createElement("label");
-            wrap.textContent = label + ": ";
-            const input = document.createElement("input");
-            input.type = "text";
-            input.placeholder = "Sök...";
-            input.style.padding = "4px 8px";
-            input.addEventListener("input", () => {
-                if (field === "name") searchName = input.value.toLowerCase();
-                else searchDesc = input.value.toLowerCase();
-                filterData();
-            });
-            wrap.appendChild(input);
-            filtersEl.appendChild(wrap);
-        });
+const ROWS = (lunches || []).map(l => ({
+  week: l.week,
+  day: normaliseDay(l.weekday),
+  place: l.place || '',
+  placeUrl: l.placeUrl || '',
+  lunch: l.name || '',
+  desc: l.description || '',
+  price: typeof l.price === 'number' ? l.price : parseFloat(l.price) || 0,
+}));
 
-        function filterData() {
-            const filtered = allData.filter(l => {
-                if (activeDay && l.weekday !== activeDay) return false;
-                if (searchName && !String(l.name || "").toLowerCase().includes(searchName)) return false;
-                if (searchDesc && !String(l.description || "").toLowerCase().includes(searchDesc)) return false;
-                return true;
-            });
-            lunchTable.resetData(filtered);
-        }
+const ChevronDown = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+       style={{ display: 'inline-block', flexShrink: 0 }}>
+    <polyline points="6 9 12 15 18 9" />
+  </svg>
+);
 
-        const columnOption = {
-            sortable: true,
-            align: "center",
-            resizable: true,
-            width: 80,
-        };
+const SearchIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+       style={{ display: 'inline-block', flexShrink: 0, color: 'var(--text-gray)' }}>
+    <circle cx="11" cy="11" r="7" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+);
 
-        const Grid = tui.Grid;
-        const lunchTable = new Grid({
-            el: document.getElementById("grid"),
-            columns: [
-                {
-                    ...columnOption,
-                    header: "Vecka",
-                    name: "week",
-                },
-                {
-                    ...columnOption,
-                    header: "Dag",
-                    name: "weekday",
-                    width: 120,
-                },
-                {
-                    ...columnOption,
-                    header: "Plats",
-                    name: "place",
-                    filter: "select",
-                    renderer: {
-                        type: class {
-                            constructor(props) {
-                                const el = document.createElement("a");
-                                this.el = el;
-                                this.render(props);
-                            }
-                            getElement() { return this.el; }
-                            render(props) {
-                                const url = props.grid.getValue(props.rowKey, "placeUrl");
-                                this.el.textContent = props.value || "";
-                                if (url) {
-                                    this.el.href = url;
-                                    this.el.target = "_blank";
-                                    this.el.rel = "noopener";
-                                } else {
-                                    this.el.removeAttribute("href");
-                                }
-                            }
-                        },
-                    },
-                },
-                {
-                    ...columnOption,
-                    header: "Lunch",
-                    name: "name",
-                    width: 200,
-                },
-                {
-                    ...columnOption,
-                    header: "Beskrivning",
-                    name: "description",
-                    width: 300,
-                },
-                {
-                    ...columnOption,
-                    header: "Pris",
-                    name: "price",
-                },
-            ],
-            data: lunches,
-            usageStatistics: false,
-        });
-        Grid.applyTheme("striped");
+function highlight(text, query) {
+  if (!query || !text) return text;
+  const q = query.trim();
+  if (!q) return text;
+  const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig');
+  const parts = String(text).split(re);
+  return parts.map((p, i) =>
+    i % 2 === 1
+      ? <mark key={i} style={{
+          background: 'var(--brand-orange-light)',
+          color: 'var(--text-dark)',
+          padding: '0 2px', borderRadius: 2,
+        }}>{p}</mark>
+      : <React.Fragment key={i}>{p}</React.Fragment>
+  );
+}
 
-        filterData();
-    </script>
+function useIsMobile(breakpoint = 720) {
+  const [mobile, setMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth < breakpoint : false
+  );
+  useEffect(() => {
+    const on = () => setMobile(window.innerWidth < breakpoint);
+    window.addEventListener('resize', on);
+    return () => window.removeEventListener('resize', on);
+  }, [breakpoint]);
+  return mobile;
+}
+
+function FilterField({ label, children }) {
+  return (
+    <label style={{ display: 'block' }}>
+      <div style={{
+        fontSize: 11, fontWeight: 600, color: 'var(--text-gray)',
+        textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6,
+        paddingLeft: 4,
+      }}>{label}</div>
+      {children}
+    </label>
+  );
+}
+
+function DaySelect({ value, onChange, options, today }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        style={{
+          width: '100%', height: 40, padding: '0 12px',
+          border: `1px solid ${open ? 'var(--base-blue)' : 'var(--gray-80)'}`,
+          borderRadius: 'var(--radius-medium)',
+          background: 'var(--white)', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          fontSize: 14, color: 'var(--text-dark)', fontFamily: 'inherit', fontWeight: 500,
+        }}
+      >
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          {value}
+          {value === today && (
+            <span style={{
+              fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+              letterSpacing: '0.06em', padding: '2px 6px', borderRadius: 4,
+              background: 'var(--signature-gradient)', color: 'var(--white)',
+            }}>Idag</span>
+          )}
+        </span>
+        <ChevronDown size={16} />
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute', top: 44, left: 0, right: 0, zIndex: 20,
+          background: 'var(--white)', borderRadius: 'var(--radius-medium)',
+          boxShadow: 'var(--shadow-3)', border: '1px solid var(--gray-92)',
+          padding: 4,
+        }}>
+          {options.map(opt => (
+            <button
+              key={opt}
+              onMouseDown={e => { e.preventDefault(); onChange(opt); setOpen(false); }}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                width: '100%', padding: '8px 10px', border: 0,
+                background: value === opt ? 'var(--gray-96)' : 'transparent',
+                borderRadius: 6, cursor: 'pointer', fontSize: 14, fontFamily: 'inherit',
+                color: 'var(--text-dark)', fontWeight: value === opt ? 600 : 500,
+                textAlign: 'left',
+              }}
+            >
+              <span>{opt}</span>
+              {opt === today && (
+                <span style={{
+                  fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                  letterSpacing: '0.06em', padding: '2px 6px', borderRadius: 4,
+                  background: 'var(--signature-gradient)', color: 'var(--white)',
+                }}>Idag</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SearchInput({ value, onChange, placeholder }) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 8,
+      height: 40, padding: '0 12px',
+      border: `1px solid ${focused ? 'var(--base-blue)' : 'var(--gray-80)'}`,
+      borderRadius: 'var(--radius-medium)',
+      background: 'var(--white)',
+    }}>
+      <SearchIcon size={16} />
+      <input
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        placeholder={placeholder}
+        style={{
+          flex: 1, border: 0, outline: 0, background: 'transparent',
+          fontSize: 14, color: 'var(--text-dark)', fontFamily: 'inherit',
+          minWidth: 0,
+        }}
+      />
+      {value && (
+        <button
+          onClick={() => onChange('')}
+          aria-label="Rensa"
+          style={{
+            width: 20, height: 20, border: 0, padding: 0,
+            background: 'var(--gray-92)', color: 'var(--text-gray)',
+            borderRadius: '50%', cursor: 'pointer',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 11, fontWeight: 700,
+          }}
+        >×</button>
+      )}
+    </div>
+  );
+}
+
+function TopBar({ day, setDay, lunchQ, setLunchQ, descQ, setDescQ, isMobile }) {
+  const today = currentDaySv();
+  const dayOptions = ['Alla', ...DAYS_SV];
+  return (
+    <header style={{
+      padding: isMobile ? '16px 12px 0' : '24px 32px 0', background: 'var(--white)',
+      borderBottom: '1px solid var(--gray-92)',
+    }}>
+      <h1 style={{
+        margin: '0 0 16px', fontSize: isMobile ? 22 : 28, fontWeight: 700, letterSpacing: '-0.025em',
+        color: 'var(--text-dark)',
+        fontFamily: 'var(--branding-heading-font-family)',
+      }}>
+        GetLunch
+      </h1>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : '180px 1fr 1fr',
+        gap: isMobile ? 8 : 12, paddingBottom: 16,
+      }}>
+        <FilterField label="Dag">
+          <DaySelect value={day} onChange={setDay} options={dayOptions} today={today} />
+        </FilterField>
+        <FilterField label="Lunch">
+          <SearchInput value={lunchQ} onChange={setLunchQ} placeholder="Sök…" />
+        </FilterField>
+        <FilterField label="Beskrivning">
+          <SearchInput value={descQ} onChange={setDescQ} placeholder="Sök…" />
+        </FilterField>
+      </div>
+    </header>
+  );
+}
+
+function Th({ children, sortKey, sort, setSort, style, width }) {
+  const active = !!sort && sort.key === sortKey;
+  const dir = active ? sort.dir : null;
+  return (
+    <th style={{
+      textAlign: 'left', padding: '10px 16px',
+      fontSize: 11, fontWeight: 700, color: 'var(--text-gray)',
+      textTransform: 'uppercase', letterSpacing: '0.06em',
+      borderBottom: '1px solid var(--gray-92)',
+      background: 'var(--gray-98)', whiteSpace: 'nowrap',
+      position: 'sticky', top: 0, zIndex: 1,
+      width, ...style,
+    }}>
+      {sortKey ? (
+        <button
+          onClick={() => setSort(s => ({ key: sortKey, dir: s.key === sortKey && s.dir === 'asc' ? 'desc' : 'asc' }))}
+          style={{
+            border: 0, background: 'transparent', padding: 0, cursor: 'pointer',
+            color: active ? 'var(--text-dark)' : 'var(--text-gray)',
+            fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
+            fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4,
+          }}
+        >
+          {children}
+          <span style={{ fontSize: 10, opacity: active ? 1 : 0.4 }}>
+            {active ? (dir === 'asc' ? '▲' : '▼') : '↕'}
+          </span>
+        </button>
+      ) : children}
+    </th>
+  );
+}
+
+function PlaceLink({ name, url }) {
+  const style = {
+    color: 'var(--link-blue, #0c65da)',
+    fontWeight: 500, textDecoration: 'underline',
+  };
+  if (url) {
+    return <a href={url} target="_blank" rel="noopener" style={style}>{name}</a>;
+  }
+  return <span style={{ ...style, color: 'var(--text-dark)', textDecoration: 'none' }}>{name}</span>;
+}
+
+function DishCards({ rows, lunchQ, descQ }) {
+  if (rows.length === 0) {
+    return (
+      <div style={{
+        padding: '48px 16px', textAlign: 'center',
+        color: 'var(--text-gray)', fontSize: 14,
+        background: 'var(--white)', boxShadow: 'var(--shadow-1)',
+        borderRadius: 'var(--radius-medium)',
+      }}>
+        Inga rätter matchar filtren. Testa att rensa sökningen.
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: 'grid', gap: 10 }}>
+      {rows.map((r, i) => (
+        <div key={i} style={{
+          background: 'var(--white)', boxShadow: 'var(--shadow-1)',
+          borderRadius: 'var(--radius-medium)',
+          padding: '14px 16px',
+        }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            gap: 8, marginBottom: 6,
+          }}>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              fontSize: 11, color: 'var(--text-gray)',
+              textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600,
+            }}>
+              <span>v.{r.week}</span>
+              <span style={{ color: 'var(--gray-80)' }}>·</span>
+              <span>{r.day}</span>
+              <span style={{ color: 'var(--gray-80)' }}>·</span>
+              <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 600 }}>
+                <PlaceLink name={r.place} url={r.placeUrl} />
+              </span>
+            </div>
+            <div style={{
+              fontSize: 14, fontWeight: 700, color: 'var(--text-dark)',
+              fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
+            }}>
+              {r.price} <span style={{ color: 'var(--text-gray)', fontWeight: 500, fontSize: 12 }}>kr</span>
+            </div>
+          </div>
+          <div style={{
+            fontSize: 15, fontWeight: 600, color: 'var(--text-dark)',
+            letterSpacing: '-0.01em', lineHeight: '20px',
+          }}>
+            {highlight(r.lunch, lunchQ)}
+          </div>
+          {r.desc && (
+            <div style={{
+              fontSize: 13, color: 'var(--text-gray)',
+              marginTop: 4, lineHeight: '18px', textWrap: 'pretty',
+            }}>
+              {highlight(r.desc, descQ)}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DishTable({ rows, sort, setSort, lunchQ, descQ }) {
+  const padding = '12px 16px';
+  const fontSize = 14;
+  return (
+    <div style={{
+      background: 'var(--white)',
+      boxShadow: 'var(--shadow-1)',
+      borderRadius: 'var(--radius-medium)',
+      overflow: 'hidden',
+    }}>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize }}>
+          <colgroup>
+            <col style={{ width: 72 }}/>
+            <col style={{ width: 110 }}/>
+            <col style={{ width: 170 }}/>
+            <col style={{ width: '32%' }}/>
+            <col />
+            <col style={{ width: 90 }}/>
+          </colgroup>
+          <thead>
+            <tr>
+              <Th sortKey="week" sort={sort} setSort={setSort}>Vecka</Th>
+              <Th sortKey="day" sort={sort} setSort={setSort}>Dag</Th>
+              <Th sortKey="place" sort={sort} setSort={setSort}>Plats</Th>
+              <Th sortKey="lunch" sort={sort} setSort={setSort}>Lunch</Th>
+              <Th>Beskrivning</Th>
+              <Th sortKey="price" sort={sort} setSort={setSort} style={{ textAlign: 'right' }}>Pris</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={i} style={{
+                borderBottom: '1px solid var(--gray-94)',
+                transition: 'background .1s ease-in-out',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--gray-98)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <td style={{ padding, color: 'var(--text-gray)', fontVariantNumeric: 'tabular-nums' }}>{r.week}</td>
+                <td style={{ padding, color: 'var(--text-gray)', textTransform: 'lowercase' }}>{r.day}</td>
+                <td style={{ padding }}>
+                  <PlaceLink name={r.place} url={r.placeUrl} />
+                </td>
+                <td style={{ padding, color: 'var(--text-dark)', fontWeight: 500 }}>
+                  {highlight(r.lunch, lunchQ)}
+                </td>
+                <td style={{ padding, color: 'var(--text-gray)', lineHeight: '20px' }}>
+                  {r.desc
+                    ? highlight(r.desc, descQ)
+                    : <span style={{ color: 'var(--gray-70)', fontStyle: 'italic' }}>—</span>}
+                </td>
+                <td style={{ padding, textAlign: 'right', fontWeight: 600, color: 'var(--text-dark)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+                  {r.price} <span style={{ color: 'var(--text-gray)', fontWeight: 500, fontSize: 12 }}>kr</span>
+                </td>
+              </tr>
+            ))}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={6} style={{
+                  padding: '48px 16px', textAlign: 'center',
+                  color: 'var(--text-gray)', fontSize: 14,
+                }}>
+                  Inga rätter matchar filtren. Testa att rensa sökningen.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function LunchScreen() {
+  const [day, setDay] = useState(() => currentDaySv());
+  const [lunchQ, setLunchQ] = useState('');
+  const [descQ, setDescQ] = useState('');
+  const [sort, setSort] = useState({ key: null, dir: 'asc' });
+
+  const filtered = useMemo(() => {
+    const lq = lunchQ.trim().toLowerCase();
+    const dq = descQ.trim().toLowerCase();
+    let rows = ROWS.filter(r => {
+      if (day !== 'Alla' && r.day !== day) return false;
+      if (lq && !r.lunch.toLowerCase().includes(lq)) return false;
+      if (dq && !(r.desc || '').toLowerCase().includes(dq)) return false;
+      return true;
+    });
+    if (sort.key) {
+      const mul = sort.dir === 'asc' ? 1 : -1;
+      const dayOrder = DAYS_SV.reduce((m, d, i) => (m[d] = i, m), {});
+      rows = [...rows].sort((a, b) => {
+        let av = a[sort.key], bv = b[sort.key];
+        if (sort.key === 'day') { av = dayOrder[av]; bv = dayOrder[bv]; }
+        if (typeof av === 'string') return av.localeCompare(bv, 'sv') * mul;
+        return (av - bv) * mul;
+      });
+    }
+    return rows;
+  }, [day, lunchQ, descQ, sort]);
+
+  const isMobile = useIsMobile();
+
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--gray-bg)', display: 'flex', flexDirection: 'column' }}>
+      <TopBar
+        day={day} setDay={setDay}
+        lunchQ={lunchQ} setLunchQ={setLunchQ}
+        descQ={descQ} setDescQ={setDescQ}
+        isMobile={isMobile}
+      />
+      <main style={{
+        padding: isMobile ? '16px 12px 60px' : '24px 32px 80px',
+        maxWidth: 1280, width: '100%', margin: '0 auto', flex: 1,
+      }}>
+        {isMobile
+          ? <DishCards rows={filtered} lunchQ={lunchQ} descQ={descQ} />
+          : <DishTable rows={filtered} sort={sort} setSort={setSort} lunchQ={lunchQ} descQ={descQ} />}
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<LunchScreen />);
+</script>
+</body>
 </html>

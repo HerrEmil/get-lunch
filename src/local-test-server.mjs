@@ -65,10 +65,24 @@ async function fetchAllLunchData() {
     continueOnError: true,
   });
 
+  const findConfig = (key) => {
+    const k = String(key || "").toLowerCase();
+    return RESTAURANT_CONFIGS.find(c =>
+      c.id.toLowerCase() === k ||
+      c.name.toLowerCase() === k ||
+      c.parser.toLowerCase() === k);
+  };
   const allData = [];
   for (const result of results) {
     if (result.success && result.lunches.length > 0) {
-      allData.push(...result.lunches);
+      const cfg = findConfig(result.restaurant);
+      const withMeta = result.lunches.map(l => ({
+        ...l,
+        place: cfg?.name || l.place,
+        placeUrl: cfg?.url || "",
+        restaurant: result.restaurant,
+      }));
+      allData.push(...withMeta);
       console.log(`  ${result.restaurant}: ${result.lunches.length} items`);
     } else if (!result.success) {
       console.log(`  ${result.restaurant}: FAILED - ${result.error?.message}`);
