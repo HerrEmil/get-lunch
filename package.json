@@ -19,7 +19,12 @@
     "logs:collector": "serverless logs -f dataCollector --tail",
     "remove": "serverless remove",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "prepare": "husky || true"
+  },
+  "lint-staged": {
+    "*.html": "html-validate",
+    "*.{png,jpg,jpeg,webp,avif}": "node tools/check-image-size.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch-logs": "^3.1038.0",
@@ -31,6 +36,9 @@
   "devDependencies": {
     "esbuild": "^0.28.0",
     "eslint": "^10.2.1",
+    "html-validate": "^9.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.10",
     "osls": "^3.66.0",
     "prettier": "^3.8.3",
     "serverless-api-gateway-caching": "^1.11.0",
