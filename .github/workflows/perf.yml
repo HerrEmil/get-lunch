@@ -1,0 +1,38 @@
+name: perf
+
+on:
+  pull_request:
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - ".github/ISSUE_TEMPLATE/**"
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+
+# Backend tier: no Lighthouse. Two checks:
+#   1. Lambda bundle size cap (target 5 MB; current baseline gated by .perf-budgets.json).
+#   2. (cold-start p95 ≤700 ms is enforced by the synthetic TTFB cron in ttfb.yml.)
+# Tightening to 5 MB happens once task #33 (AWS SDK tree-shake + lazy jsdom/pdfjs)
+# brings the data-collector bundle below cap.
+
+jobs:
+  bundle-size:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: yarn
+
+      - run: yarn install --frozen-lockfile
+
+      - name: Build
+        run: yarn build
+
+      - name: Lambda bundle size budget
+        run: node scripts/check-bundle-size.mjs

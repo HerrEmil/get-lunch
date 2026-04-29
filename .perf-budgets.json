@@ -1,0 +1,11 @@
+{
+  "$comment": "Backend tier perf budgets (Lambda). Final target is 5 MB per bundle. data-collector currently exceeds this; tightened by task #33 (AWS SDK tree-shake + lazy jsdom/pdfjs).",
+  "bundles": [
+    { "path": "dist/api-server/index.js", "maxBytes": 5242880 },
+    { "path": "dist/data-collector/index.js", "maxBytes": 15728640 }
+  ],
+  "ttfb": {
+    "warmMs": 200,
+    "coldMs": 700
+  }
+}
