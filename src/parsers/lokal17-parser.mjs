@@ -5,7 +5,14 @@
 
 import { BaseParser } from "./base-parser.mjs";
 import { SWEDISH_WEEKDAYS } from "./parser-interfaces.mjs";
-import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+
+let _getDocument;
+async function loadGetDocument() {
+  if (!_getDocument) {
+    ({ getDocument: _getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs"));
+  }
+  return _getDocument;
+}
 
 const SITE_URL = "https://lokal17.se/";
 
@@ -95,6 +102,7 @@ export class Lokal17Parser extends BaseParser {
     const arrayBuffer = await response.arrayBuffer();
     const data = new Uint8Array(arrayBuffer);
 
+    const getDocument = await loadGetDocument();
     const pdf = await getDocument({ data, useSystemFonts: true }).promise;
     const lines = [];
 

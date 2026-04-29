@@ -1,127 +1,38 @@
 import { build } from "esbuild";
-import { cpSync, readFileSync } from "fs";
-import { dirname, resolve } from "path";
+import { cpSync } from "fs";
 
-// Plugin to fix runtime file reads that break in bundled output.
-// Rewrites source files at load time so esbuild can statically resolve them.
-const fixRuntimeReads = {
-  name: "fix-runtime-reads",
-  setup(ctx) {
-    // Inline jsdom's default-stylesheet.css (readFileSync at runtime)
-    ctx.onLoad(
-      { filter: /jsdom\/lib\/jsdom\/living\/css\/helpers\/computed-style\.js$/ },
-      async (args) => {
-        let contents = readFileSync(args.path, "utf8");
-        const cssPath =
-          "node_modules/jsdom/lib/jsdom/browser/default-stylesheet.css";
-        const css = readFileSync(cssPath, "utf8");
-        contents = contents.replace(
-          /fs\.readFileSync\(\s*path\.resolve\(__dirname,\s*"[^"]*default-stylesheet\.css"\)\s*,\s*\{[^}]*\}\s*\)/,
-          JSON.stringify(css),
-        );
-        return { contents, loader: "js" };
-      },
-    );
-
-    // Stub out jsdom's xhr-sync-worker.js require.resolve (we don't use sync XHR)
-    ctx.onLoad(
-      { filter: /jsdom\/lib\/jsdom\/living\/xhr\/XMLHttpRequest-impl\.js$/ },
-      async (args) => {
-        let contents = readFileSync(args.path, "utf8");
-        contents = contents.replace(
-          /const syncWorkerFile = require\.resolve\("[^"]*xhr-sync-worker\.js"\);/,
-          'const syncWorkerFile = "";',
-        );
-        return { contents, loader: "js" };
-      },
-    );
-
-    // Replace createRequire(import.meta.url) with plain require() in css-tree.
-    // css-tree is ESM and uses createRequire to load JSON files. In CJS bundle
-    // output, require() is already available and can resolve JSON natively.
-    ctx.onLoad({ filter: /css-tree\/lib\/(data-patch|data|version)\.js$/ }, async (args) => {
-      let contents = readFileSync(args.path, "utf8");
-      // Remove the createRequire setup
-      contents = contents.replace(
-        /import\s*\{\s*createRequire\s*\}\s*from\s*['"]module['"];?\s*/g,
-        "",
-      );
-      contents = contents.replace(
-        /const\s+require\s*=\s*createRequire\(import\.meta\.url\);?\s*/g,
-        "",
-      );
-      // Convert remaining ESM-style require() calls to static imports that
-      // esbuild can resolve. We read the JSON files and inline them.
-      contents = contents.replace(
-        /require\(['"]([^'"]+\.json)['"]\)/g,
-        (match, jsonPath) => {
-          const resolved = resolve(dirname(args.path), jsonPath);
-          try {
-            const json = readFileSync(resolved, "utf8");
-            return json.trim();
-          } catch {
-            // If resolution fails, try from node_modules
-            try {
-              const json = readFileSync(
-                resolve("node_modules", jsonPath),
-                "utf8",
-              );
-              return json.trim();
-            } catch {
-              return match; // keep original if both fail
-            }
-          }
-        },
-      );
-      return { contents, loader: "js" };
-    });
-  },
-};
-
+// jsdom + pdfjs-dist are kept external and lazy-loaded at parser call sites.
+// They ship to Lambda via serverless.yml package.patterns and resolve from
+// node_modules at runtime — keeps the Lambda bundle far below the 5 MB cap.
 const shared = {
   bundle: true,
   platform: "node",
   target: "node22",
   format: "cjs",
-  external: ["@aws-sdk/*"],
-  minify: false,
-  sourcemap: true,
+  external: ["@aws-sdk/*", "jsdom", "pdfjs-dist", "pdfjs-dist/legacy/build/pdf.mjs"],
+  minify: true,
+  sourcemap: false,
+  banner: {
+    js: 'var importMetaUrl = require("url").pathToFileURL(__filename).href;',
+  },
   define: {
     "import.meta.url": "importMetaUrl",
   },
-  // Polyfill import.meta.url for any remaining ESM libs
-  banner: {
-    js: [
-      'var importMetaUrl = require("url").pathToFileURL(__filename).href;',
-      // pdfjs-dist references DOMMatrix at load time (for canvas rendering).
-      // We only use text extraction, so a no-op stub is sufficient.
-      'if(typeof globalThis.DOMMatrix==="undefined"){globalThis.DOMMatrix=class DOMMatrix{constructor(){this.a=1;this.b=0;this.c=0;this.d=1;this.e=0;this.f=0;}}}',
-    ].join("\n"),
-  },
 };
 
-// Bundle data-collector (includes jsdom)
 await build({
   ...shared,
   entryPoints: ["src/lambdas/data-collector.mjs"],
   outfile: "dist/data-collector/index.js",
-  plugins: [fixRuntimeReads],
 });
 
-// Bundle api-server (lightweight, no jsdom)
 await build({
   ...shared,
   entryPoints: ["src/lambdas/api-server.mjs"],
   outfile: "dist/api-server/index.js",
 });
 
-// Copy index.html for api-server (read at runtime via readFileSync)
+// index.html is read by api-server at runtime via readFileSync.
 cpSync("src/lambdas/index.html", "dist/api-server/index.html");
-
-// Copy pdfjs worker for data-collector (pdfjs-dist dynamically imports it at runtime)
-cpSync(
-  "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
-  "dist/data-collector/pdf.worker.mjs",
-);
 
 console.log("Build complete");

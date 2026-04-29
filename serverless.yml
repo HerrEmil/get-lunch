@@ -12,6 +12,9 @@ provider:
     LOG_GROUP_NAME: /aws/lambda/${self:service}-${self:provider.stage}
     SERVICE_NAME: ${self:service}
     LOG_LEVEL: ${opt:log-level, 'INFO'}
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+  apiGateway:
+    minimumCompressionSize: 1024
   iam:
     role:
       statements:
@@ -47,7 +50,9 @@ provider:
           Resource: "*"
 
 functions:
-  # Data Collection Lambda (weekly scheduled)
+  # Data Collection Lambda (weekly scheduled).
+  # jsdom + pdfjs-dist are kept external to the bundle and shipped via
+  # node_modules patterns below (lazy-imported at parser call sites).
   dataCollector:
     handler: dist/data-collector/index.handler
     timeout: 300
@@ -56,17 +61,102 @@ functions:
       patterns:
         - '!**'
         - dist/data-collector/**
+        - node_modules/jsdom/**
+        - node_modules/pdfjs-dist/legacy/build/pdf.mjs
+        - node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs
+        - node_modules/pdfjs-dist/package.json
+        # jsdom transitive deps (resolved by Node at runtime)
+        - node_modules/cssstyle/**
+        - node_modules/data-urls/**
+        - node_modules/decimal.js/**
+        - node_modules/entities/**
+        - node_modules/html-encoding-sniffer/**
+        - node_modules/http-proxy-agent/**
+        - node_modules/https-proxy-agent/**
+        - node_modules/is-potential-custom-element-name/**
+        - node_modules/nwsapi/**
+        - node_modules/parse5/**
+        - node_modules/rrweb-cssom/**
+        - node_modules/saxes/**
+        - node_modules/symbol-tree/**
+        - node_modules/tough-cookie/**
+        - node_modules/tr46/**
+        - node_modules/w3c-xmlserializer/**
+        - node_modules/webidl-conversions/**
+        - node_modules/whatwg-encoding/**
+        - node_modules/whatwg-mimetype/**
+        - node_modules/whatwg-url/**
+        - node_modules/ws/**
+        - node_modules/xml-name-validator/**
+        - node_modules/punycode/**
+        - node_modules/iconv-lite/**
+        - node_modules/safer-buffer/**
+        - node_modules/agent-base/**
+        - node_modules/debug/**
+        - node_modules/ms/**
+        - node_modules/css-tree/**
+        - node_modules/mdn-data/**
+        - node_modules/source-map-js/**
+        - node_modules/undici/**
+        - node_modules/@asamuzakjp/**
+        - node_modules/@csstools/**
+        - node_modules/@exodus/**
+        - node_modules/tldts/**
+        - node_modules/tldts-core/**
+        - node_modules/bidi-js/**
+        - node_modules/require-from-string/**
+        - node_modules/lru-cache/**
+        # Excludes (last patterns win) — strip metadata, sourcemaps, type defs.
+        - '!**/*.md'
+        - '!**/*.markdown'
+        - '!**/*.map'
+        - '!**/*.ts'
+        - '!**/*.d.ts'
+        - '!**/*.d.mts'
+        - '!**/*.flow'
+        - '!**/LICENSE'
+        - '!**/LICENSE.txt'
+        - '!**/LICENSE.md'
+        - '!**/CHANGELOG.md'
+        - '!**/CHANGELOG'
+        - '!**/test/**'
+        - '!**/tests/**'
+        - '!**/__tests__/**'
+        - '!**/types/**'
+        - '!**/.github/**'
+        - '!**/example/**'
+        - '!**/examples/**'
+        - '!**/docs/**'
+        # pdfjs-dist heavy directories we don't use
+        - '!node_modules/pdfjs-dist/build/**'
+        - '!node_modules/pdfjs-dist/web/**'
+        - '!node_modules/pdfjs-dist/legacy/web/**'
+        - '!node_modules/pdfjs-dist/legacy/image_decoders/**'
+        - '!node_modules/pdfjs-dist/image_decoders/**'
+        - '!node_modules/pdfjs-dist/cmaps/**'
+        - '!node_modules/pdfjs-dist/standard_fonts/**'
+        - '!node_modules/pdfjs-dist/wasm/**'
+        - '!node_modules/pdfjs-dist/iccs/**'
+        - '!node_modules/pdfjs-dist/legacy/build/pdf.sandbox*'
+        - '!node_modules/pdfjs-dist/legacy/build/pdf.min.mjs'
+        - '!node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs'
+        # tldts ships ESM/UMD/CJS minified variants — keep CJS only
+        - '!node_modules/tldts/dist/index.esm*'
+        - '!node_modules/tldts/dist/index.umd*'
+        - '!node_modules/tldts/dist/es6/**'
     events:
       - schedule:
-          rate: cron(0 8 ? * MON-FRI *)  # Every weekday at 08:00 UTC
+          rate: cron(0 8 ? * MON-FRI *)
           description: "Daily lunch data collection from restaurants"
           enabled: true
 
-  # HTML Serving Lambda (API Gateway)
+  # HTML Serving Lambda (API Gateway).
+  # SnapStart enabled — published versions get a snapshot to cut cold-start.
   apiServer:
     handler: dist/api-server/index.handler
     timeout: 30
     memorySize: 512
+    snapStart: true
     package:
       patterns:
         - '!**'
@@ -76,14 +166,25 @@ functions:
           path: /
           method: get
           cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 300
       - http:
           path: /lunch
           method: get
           cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 300
       - http:
           path: /lunch/{day}
           method: get
           cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 300
+            cacheKeyParameters:
+              - name: request.path.day
 
 resources:
   Resources:
@@ -216,9 +317,30 @@ plugins:
   - serverless-domain-manager
   - serverless-offline
   - serverless-dynamodb
+  - serverless-api-gateway-caching
 
 package:
   individually: true
+  patterns:
+    # Global excludes applied to every function package.
+    - '!**/*.md'
+    - '!**/*.markdown'
+    - '!**/*.map'
+    - '!**/*.ts'
+    - '!**/*.d.ts'
+    - '!**/*.d.mts'
+    - '!**/LICENSE'
+    - '!**/LICENSE.txt'
+    - '!**/LICENSE.md'
+    - '!**/CHANGELOG.md'
+    - '!**/CHANGELOG'
+    - '!**/test/**'
+    - '!**/tests/**'
+    - '!**/__tests__/**'
+    - '!**/types/**'
+    - '!**/.github/**'
+    - '!**/example/**'
+    - '!**/examples/**'
 
 # Environment-specific configurations
 configValidationMode: error
@@ -252,4 +374,15 @@ custom:
       inMemory: true
       migrate: true
       convertEmptyValues: true
+
+  # API Gateway response caching (cluster only enabled in prod).
+  # Cluster size 0.5 GB is the minimum and cheapest tier.
+  apiGatewayCaching:
+    enabled: ${self:custom.apiGatewayCachingEnabled.${self:provider.stage}, false}
+    clusterSize: '0.5'
+    ttlInSeconds: 300
+
+  apiGatewayCachingEnabled:
+    prod: true
+    dev: false
 

@@ -5,7 +5,14 @@
 
 import { createRestaurantLogger } from "../lib/enhanced-logger.mjs";
 import { validateLunches } from "../lib/data-validator.mjs";
-import { JSDOM } from "jsdom";
+
+let _JSDOM;
+async function loadJSDOM() {
+  if (!_JSDOM) {
+    ({ JSDOM: _JSDOM } = await import("jsdom"));
+  }
+  return _JSDOM;
+}
 
 /**
  * Abstract base class for restaurant parsers
@@ -433,6 +440,7 @@ export class BaseParser {
         throw new Error("Received empty HTML response");
       }
 
+      const JSDOM = await loadJSDOM();
       const dom = new JSDOM(html);
       const document = dom.window.document;
 

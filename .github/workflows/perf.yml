@@ -13,10 +13,11 @@ on:
       - "docs/**"
 
 # Backend tier: no Lighthouse. Two checks:
-#   1. Lambda bundle size cap (target 5 MB; current baseline gated by .perf-budgets.json).
-#   2. (cold-start p95 ≤700 ms is enforced by the synthetic TTFB cron in ttfb.yml.)
-# Tightening to 5 MB happens once task #33 (AWS SDK tree-shake + lazy jsdom/pdfjs)
-# brings the data-collector bundle below cap.
+#   1. Lambda zip size cap (5 MB per function — gated by .perf-budgets.json).
+#   2. Cold-start p95 ≤700 ms — enforced by ttfb.yml synthetic cron.
+# Packaging runs without AWS credentials (no deploy). serverless-domain-manager
+# does its work at deploy time, not package time, so DOMAIN_ROUTE53_HOSTED_ZONE_ID
+# is not required here.
 
 jobs:
   bundle-size:
@@ -34,5 +35,13 @@ jobs:
       - name: Build
         run: yarn build
 
-      - name: Lambda bundle size budget
+      - name: Package Lambdas (no deploy)
+        run: npx serverless package --stage prod
+        env:
+          # Dummy credentials — `package` doesn't call AWS but config validation
+          # may complain without them on some serverless versions.
+          AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
+          AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+      - name: Lambda zip size budget
         run: node scripts/check-bundle-size.mjs
