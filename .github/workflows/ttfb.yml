@@ -1,0 +1,32 @@
+name: ttfb
+
+# Synthetic TTFB monitor for lunch.herremil.com.
+# Runs every 15 minutes. Fails the workflow run on TTFB regression — no Slack,
+# no external webhook. Failures surface as a failed run on the Actions tab.
+#
+# Thresholds: regional perf-rollout-plan budgets (warm 200 / cold 700 ms) measure
+# server-side TTFB. This probe runs from GitHub-hosted runners (typically US),
+# so observed values include ~100-150 ms of trans-Atlantic RTT to the eu-north-1
+# Lambda. Budgets here are runner-realistic and tuned to catch regressions
+# without flapping on RTT noise:
+#   - warm budget: 800 ms (server-side ~200 ms + RTT/jitter buffer)
+#   - cold budget: 2000 ms (server-side ~700 ms + RTT/jitter buffer)
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Probe TTFB
+        env:
+          TARGET_URL: https://lunch.herremil.com/
+          WARM_BUDGET_MS: "800"
+          COLD_BUDGET_MS: "2000"
+        run: node scripts/ttfb-probe.mjs
