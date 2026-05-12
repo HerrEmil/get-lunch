@@ -44,7 +44,7 @@
     "serverless-api-gateway-caching": "^1.11.0",
     "serverless-domain-manager": "^10.1.0",
     "serverless-dynamodb": "^0.2.58",
-    "serverless-offline": "^13.3.0",
+    "serverless-offline": "^14.6.0",
     "vitest": "^4.1.6"
   },
   "engines": {
