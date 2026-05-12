@@ -4058,10 +4058,10 @@ html-encoding-sniffer@^6.0.0:
   dependencies:
     "@exodus/bytes" "^1.6.0"
 
-html-validate@^10.15.0:
-  version "10.15.0"
-  resolved "https://registry.yarnpkg.com/html-validate/-/html-validate-10.15.0.tgz#edcfae3b2383fedf114dff06b049b7860e8bcc1d"
-  integrity sha512-Z1m3b//U2cFFq98BrpfHLzUwU9KlSiXn6AqOdQ42y9HIOf+k8/mL5AoTx77WxcEXZQJh/Hd2DHDfDH7nPo6wdQ==
+html-validate@^11.0.0:
+  version "11.0.0"
+  resolved "https://registry.yarnpkg.com/html-validate/-/html-validate-11.0.0.tgz#d5c47321de7481200b6d970a000d751326b837e7"
+  integrity sha512-7VYVH0dTv9cbXQdl3XuChkBdRmmuueVPE9kOW2m8QG6ndkLXT5hN6Qcmmng/PsuwcmWVybq7tAp55JlgCYd0Ew==
   dependencies:
     "@html-validate/stylish" "^5.2.0"
     "@sidvind/better-ajv-errors" "5.0.0"
