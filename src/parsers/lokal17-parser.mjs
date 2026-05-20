@@ -9,6 +9,9 @@ import { SWEDISH_WEEKDAYS } from "./parser-interfaces.mjs";
 let _getDocument;
 async function loadGetDocument() {
   if (!_getDocument) {
+    // Install DOMMatrix/ImageData/Path2D before pdfjs loads — Lambda has no
+    // @napi-rs/canvas to polyfill them. See src/lib/pdf-globals.mjs.
+    await import("../lib/pdf-globals.mjs");
     ({ getDocument: _getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs"));
   }
   return _getDocument;
