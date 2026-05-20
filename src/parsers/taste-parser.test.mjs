@@ -21,6 +21,38 @@ beforeAll(async () => {
   ({ JSDOM } = await import("jsdom"));
 });
 
+/** Mirrors the castit-menus plugin markup: week panel -> days -> dishes. */
+function castitDish(name, desc) {
+  return `
+    <div class="castit-dish">
+      <div class="castit-dish__left">
+        <div class="castit-dish__title"><span class="castit-i18n">${name}</span></div>
+        <div class="castit-dish__desc"><span class="castit-i18n">${desc}</span></div>
+      </div>
+      <div class="castit-dish__right"></div>
+    </div>`;
+}
+
+function castitDay(title, dishes) {
+  return `
+    <div class="castit-day">
+      <h3 class="castit-day__title">${title}</h3>
+      <div class="castit-day__list">${dishes.join("")}</div>
+    </div>`;
+}
+
+function castitPage({ week = 21, index = "0", activeIndex = "0", days } = {}) {
+  return `
+    <div data-active-week-index="${activeIndex}">
+      <div data-week-panel="1" data-week="${week}" data-week-index="${index}">
+        <div class="castit-lunch-header">Lunch v. ${week}</div>
+        ${days
+          .map((d) => castitDay(d.title, d.dishes.map((x) => castitDish(x.name, x.desc))))
+          .join("")}
+      </div>
+    </div>`;
+}
+
 describe("TasteParser", () => {
   let parser;
 
@@ -28,116 +60,122 @@ describe("TasteParser", () => {
     parser = createParser();
   });
 
-  it("extracts lunches from current section", () => {
-    const dom = new JSDOM(`
-      <div id="wrapper">
-        <div id="previous"><h2>Vecka 12</h2></div>
-        <div id="current">
-          <h2>Dagens lunch vecka 13</h2>
-          <p>Pris: 135kr</p>
-          <h6>Måndag</h6>
-          <p>Kycklingfilé med dragonsås</p>
-          <p class="eng-meny">Chicken fillet with tarragon sauce</p>
-          <p>Vegansk bowl med tofu</p>
-          <p class="eng-meny">Vegan bowl with tofu</p>
-          <p>Fish and chips</p>
-          <p class="eng-meny">Fish and chips</p>
-          <h6>Tisdag</h6>
-          <p>Köttbullar med potatismos</p>
-          <p class="eng-meny">Meatballs with mashed potatoes</p>
-          <p>Grönsakscurry med ris</p>
-          <p class="eng-meny">Vegetable curry with rice</p>
-          <p>Laxpasta med dill</p>
-          <p class="eng-meny">Salmon pasta with dill</p>
-        </div>
-        <div id="next"><h2>Vecka 14</h2></div>
-      </div>
-    `);
+  it("extracts lunches from the active castit week panel", () => {
+    const dom = new JSDOM(
+      castitPage({
+        week: 21,
+        days: [
+          {
+            title: "Måndag",
+            dishes: [
+              { name: "Kycklingfilé med dragonsås", desc: "Serveras med ris" },
+              { name: "Vegansk bowl med tofu", desc: "Med chilikräm" },
+            ],
+          },
+          {
+            title: "Tisdag",
+            dishes: [
+              { name: "Köttbullar med potatismos", desc: "Med lingon" },
+            ],
+          },
+        ],
+      }),
+    );
+    const document = dom.window.document;
+    const panel = parser.findCurrentWeekPanel(document);
+    const weekNumber = parser.extractWeekNumber(panel);
+    const lunches = parser.extractLunches(panel, weekNumber);
 
-    const currentSection = dom.window.document.querySelector("#current");
-    const weekNumber = parser.extractWeekNumber(currentSection);
-    const price = parser.extractPrice(currentSection);
-    const lunches = parser.extractLunches(currentSection, weekNumber, price);
-
-    expect(weekNumber).toBe(13);
-    expect(price).toBe(135);
-    expect(lunches).toHaveLength(6);
-
+    expect(weekNumber).toBe(21);
+    expect(lunches).toHaveLength(3);
     expect(lunches[0]).toMatchObject({
       name: "Kycklingfilé med dragonsås",
-      description: "Chicken fillet with tarragon sauce",
+      description: "Serveras med ris",
       price: 135,
       weekday: "måndag",
-      week: 13,
+      week: 21,
       place: "Taste",
     });
-
-    expect(lunches[3]).toMatchObject({
+    expect(lunches[2]).toMatchObject({
       name: "Köttbullar med potatismos",
       weekday: "tisdag",
       place: "Taste",
     });
   });
 
-  it("extracts week number from section text", () => {
-    const dom = new JSDOM(`<div id="s"><h2>Dagens lunch vecka 47</h2></div>`);
-    const section = dom.window.document.querySelector("#s");
-    expect(parser.extractWeekNumber(section)).toBe(47);
+  it("matches a day title that carries extra text (e.g. an 'Idag' badge)", () => {
+    const dom = new JSDOM(
+      castitPage({
+        week: 21,
+        days: [
+          {
+            title: "Onsdag <span>Idag</span>",
+            dishes: [{ name: "Champinjoncrepes", desc: "Med spenat" }],
+          },
+        ],
+      }),
+    );
+    const panel = parser.findCurrentWeekPanel(dom.window.document);
+    const lunches = parser.extractLunches(panel, 21);
+    expect(lunches).toHaveLength(1);
+    expect(lunches[0].weekday).toBe("onsdag");
   });
 
-  it("extracts week number case insensitive", () => {
-    const dom = new JSDOM(`<div id="s"><p>Vecka 5</p></div>`);
-    const section = dom.window.document.querySelector("#s");
-    expect(parser.extractWeekNumber(section)).toBe(5);
+  it("picks the panel matching the active week index", () => {
+    const dom = new JSDOM(`
+      <div data-active-week-index="1">
+        <div data-week-panel="1" data-week="20" data-week-index="0">
+          ${castitDay("Måndag", [castitDish("Old dish", "")])}
+        </div>
+        <div data-week-panel="1" data-week="21" data-week-index="1">
+          ${castitDay("Måndag", [castitDish("Current dish", "")])}
+        </div>
+      </div>
+    `);
+    const panel = parser.findCurrentWeekPanel(dom.window.document);
+    expect(parser.extractWeekNumber(panel)).toBe(21);
+    expect(parser.extractLunches(panel, 21)[0].name).toBe("Current dish");
   });
 
-  it("falls back to current week when no week found", () => {
-    const dom = new JSDOM(`<div id="s"><p>Lunchmeny</p></div>`);
-    const section = dom.window.document.querySelector("#s");
-    const week = parser.extractWeekNumber(section);
+  it("extracts week number from the data-week attribute", () => {
+    const dom = new JSDOM(
+      `<div data-week-panel="1" data-week="47"></div>`,
+    );
+    const panel = dom.window.document.querySelector("[data-week-panel]");
+    expect(parser.extractWeekNumber(panel)).toBe(47);
+  });
+
+  it("falls back to current week when data-week is missing", () => {
+    const dom = new JSDOM(`<div data-week-panel="1"></div>`);
+    const panel = dom.window.document.querySelector("[data-week-panel]");
+    const week = parser.extractWeekNumber(panel);
     expect(week).toBeGreaterThanOrEqual(1);
     expect(week).toBeLessThanOrEqual(53);
   });
 
-  it("extracts price from text", () => {
-    const dom = new JSDOM(`<div id="s"><p>Pris: 135kr</p></div>`);
-    const section = dom.window.document.querySelector("#s");
-    expect(parser.extractPrice(section)).toBe(135);
+  it("returns null when no week panel is present", () => {
+    const dom = new JSDOM(`<div><p>No menu</p></div>`);
+    expect(parser.findCurrentWeekPanel(dom.window.document)).toBeNull();
   });
 
-  it("extracts price with space before kr", () => {
-    const dom = new JSDOM(`<div id="s"><p>145 kr</p></div>`);
-    const section = dom.window.document.querySelector("#s");
-    expect(parser.extractPrice(section)).toBe(145);
+  it("returns no lunches for a panel with no castit-day blocks", () => {
+    const dom = new JSDOM(`<div data-week-panel="1" data-week="21"></div>`);
+    const panel = dom.window.document.querySelector("[data-week-panel]");
+    expect(parser.extractLunches(panel, 21)).toHaveLength(0);
   });
 
-  it("falls back to 135 when no price found", () => {
-    const dom = new JSDOM(`<div id="s"><p>Lunch</p></div>`);
-    const section = dom.window.document.querySelector("#s");
-    expect(parser.extractPrice(section)).toBe(135);
-  });
-
-  it("handles section with no h6 elements", () => {
-    const dom = new JSDOM(`<div id="current"><p>No menu today</p></div>`);
-    const section = dom.window.document.querySelector("#current");
-    const lunches = parser.extractLunches(section, 13, 135);
-    expect(lunches).toHaveLength(0);
-  });
-
-  it("skips h6 elements that are not weekdays", () => {
-    const dom = new JSDOM(`
-      <div id="current">
-        <h6>Special</h6>
-        <p>Something</p>
-        <p class="eng-meny">Something in English</p>
-        <h6>Måndag</h6>
-        <p>Grillad lax</p>
-        <p class="eng-meny">Grilled salmon</p>
-      </div>
-    `);
-
-    const section = dom.window.document.querySelector("#current");
-    const lunches = parser.extractLunches(section, 13, 135);
+  it("skips day blocks whose title is not a weekday", () => {
+    const dom = new JSDOM(
+      castitPage({
+        week: 21,
+        days: [
+          { title: "Stängt", dishes: [{ name: "Inget", desc: "" }] },
+          { title: "Fredag", dishes: [{ name: "Grillad lax", desc: "Med dill" }] },
+        ],
+      }),
+    );
+    const panel = parser.findCurrentWeekPanel(dom.window.document);
+    const lunches = parser.extractLunches(panel, 21);
     expect(lunches).toHaveLength(1);
     expect(lunches[0].name).toBe("Grillad lax");
   });

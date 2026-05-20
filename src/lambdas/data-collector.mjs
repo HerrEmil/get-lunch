@@ -108,13 +108,6 @@ const RESTAURANT_CONFIGS = [
     active: true,
   },
   {
-    id: "fisky",
-    name: "Fisky Business",
-    parser: "fisky",
-    url: "https://fiskybusiness.nu/dockan-malmouml.html",
-    active: true,
-  },
-  {
     id: "papi",
     name: "PAPI",
     parser: "papi",

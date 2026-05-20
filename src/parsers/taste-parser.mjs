@@ -1,18 +1,24 @@
 /**
  * Taste by Nordrest Malmö Parser
- * Extends BaseParser to extract lunch menu data from Taste by Nordrest
- * Server-rendered HTML with #previous, #current, #next week sections
+ *
+ * The site moved to WordPress + the castit-menus plugin, which server-renders
+ * the weekly lunch into `[data-week-panel]` blocks. Each `.castit-day` holds a
+ * `.castit-day__title` (weekday) and several `.castit-dish` entries, each with
+ * a `.castit-dish__title` (name) and `.castit-dish__desc` (description). No
+ * price is shown on the page, so we fall back to a default.
  */
 
 import { BaseParser } from "./base-parser.mjs";
 
 const WEEKDAYS = ["måndag", "tisdag", "onsdag", "torsdag", "fredag"];
+const DEFAULT_PRICE = 135;
+const SITE_URL = "https://www.tastebynordrest.se/17/6/taste-malmo/";
 
 export class TasteParser extends BaseParser {
   constructor(config = {}) {
     super({
       name: "Taste",
-      url: "https://www.tastebynordrest.se/17/6/taste-malmo/",
+      url: SITE_URL,
       timeout: 30000,
       retries: 3,
       retryDelay: 1000,
@@ -25,7 +31,7 @@ export class TasteParser extends BaseParser {
   }
 
   getUrl() {
-    return "https://www.tastebynordrest.se/17/6/taste-malmo/";
+    return SITE_URL;
   }
 
   async parseMenu() {
@@ -33,15 +39,14 @@ export class TasteParser extends BaseParser {
       await this.logger.info("Starting Taste menu parsing");
 
       const document = await this.fetchDocument();
-      const currentSection = this.safeQuery(document, "#current");
+      const panel = this.findCurrentWeekPanel(document);
 
-      if (!currentSection) {
-        throw new Error("Could not find #current section");
+      if (!panel) {
+        throw new Error("Could not find castit week panel");
       }
 
-      const weekNumber = this.extractWeekNumber(currentSection);
-      const price = this.extractPrice(currentSection);
-      const lunches = this.extractLunches(currentSection, weekNumber, price);
+      const weekNumber = this.extractWeekNumber(panel);
+      const lunches = this.extractLunches(panel, weekNumber);
 
       await this.logger.info("Taste parsing completed", {
         totalLunches: lunches.length,
@@ -56,89 +61,84 @@ export class TasteParser extends BaseParser {
   }
 
   /**
-   * Extract week number from section text
+   * Find the currently-active week panel. The plugin marks the active index on
+   * a root element; fall back to the first rendered panel.
    */
-  extractWeekNumber(section) {
-    try {
-      const text = this.extractText(section);
-      const match = text.match(/vecka\s*(\d+)/i);
-      if (match) {
-        const week = parseInt(match[1]);
-        if (week >= 1 && week <= 53) {
-          this.logger.debug(`Found week number: ${week}`);
-          return week;
-        }
-      }
-    } catch (error) {
-      this.logger.warn("Error extracting week number", { error: error.message });
+  findCurrentWeekPanel(document) {
+    const panels = this.safeQuery(document, "[data-week-panel]", true);
+    if (!panels || panels.length === 0) {
+      return null;
     }
 
-    const fallback = this._getCurrentWeek();
-    this.logger.debug(`Using current week as fallback: ${fallback}`);
-    return fallback;
+    const root = this.safeQuery(document, "[data-active-week-index]");
+    const activeIndex = root?.getAttribute("data-active-week-index");
+    if (activeIndex != null) {
+      const active = [...panels].find(
+        (p) => p.getAttribute("data-week-index") === activeIndex,
+      );
+      if (active) return active;
+    }
+
+    return panels[0];
   }
 
   /**
-   * Extract price from section text
+   * Extract week number from the panel's data-week attribute (with text fallback)
    */
-  extractPrice(section) {
-    try {
-      const text = this.extractText(section);
-      const match = text.match(/(\d{2,3})\s*kr/i);
-      if (match) {
-        return parseInt(match[1]);
-      }
-    } catch (error) {
-      this.logger.warn("Error extracting price", { error: error.message });
+  extractWeekNumber(panel) {
+    const attr = parseInt(panel.getAttribute("data-week"), 10);
+    if (attr >= 1 && attr <= 53) {
+      return attr;
     }
-    return 135;
+
+    const match = this.extractText(panel).match(/v(?:ecka|\.)?\s*(\d+)/i);
+    if (match) {
+      const week = parseInt(match[1], 10);
+      if (week >= 1 && week <= 53) return week;
+    }
+
+    return this._getCurrentWeek();
   }
 
   /**
-   * Extract lunches from the current section
+   * Extract lunches from the week panel's castit-day blocks
    */
-  extractLunches(section, weekNumber, price) {
+  extractLunches(panel, weekNumber) {
     const lunches = [];
-    const h6Elements = this.safeQuery(section, "h6", true);
+    const days = this.safeQuery(panel, ".castit-day", true);
 
-    if (!h6Elements) {
-      this.logger.warn("No h6 day headers found in current section");
+    if (!days || days.length === 0) {
+      this.logger.warn("No castit-day blocks found in week panel");
       return lunches;
     }
 
-    for (const h6 of h6Elements) {
-      const dayText = this.extractText(h6).toLowerCase().trim();
+    for (const day of days) {
+      const dayText = this.extractText(
+        this.safeQuery(day, ".castit-day__title") || day,
+      )
+        .toLowerCase()
+        .trim();
       const weekday = WEEKDAYS.find((wd) => dayText.includes(wd));
 
       if (!weekday) {
         continue;
       }
 
-      // Collect <p> elements following this <h6> until next <h6>
-      const pElements = [];
-      let sibling = h6.nextElementSibling;
-      while (sibling && sibling.tagName !== "H6") {
-        if (sibling.tagName === "P") {
-          pElements.push(sibling);
-        }
-        sibling = sibling.nextElementSibling;
-      }
-
-      // Pair elements: odd index = dish name, even index = description (eng-meny)
-      for (let i = 0; i < pElements.length - 1; i += 2) {
-        const nameEl = pElements[i];
-        const descEl = pElements[i + 1];
-
-        const name = this.extractText(nameEl);
+      const dishes = this.safeQuery(day, ".castit-dish", true) || [];
+      for (const dish of dishes) {
+        const name = this.extractText(
+          this.safeQuery(dish, ".castit-dish__title") || dish,
+        );
         if (!name) continue;
 
-        const description = this.extractText(descEl);
+        const descEl = this.safeQuery(dish, ".castit-dish__desc");
+        const description = descEl ? this.extractText(descEl) : "";
 
         lunches.push(
           this.createLunchObject({
             name,
             description,
-            price,
+            price: DEFAULT_PRICE,
             weekday,
             week: weekNumber,
             place: this.getName(),
