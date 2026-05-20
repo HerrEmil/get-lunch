@@ -62,94 +62,11 @@ functions:
     timeout: 300
     memorySize: 1024
     package:
-      patterns:
-        - '!**'
-        - dist/data-collector/**
-        - node_modules/jsdom/**
-        - node_modules/pdfjs-dist/legacy/build/pdf.mjs
-        - node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs
-        - node_modules/pdfjs-dist/package.json
-        # jsdom transitive deps (resolved by Node at runtime)
-        - node_modules/cssstyle/**
-        - node_modules/data-urls/**
-        - node_modules/decimal.js/**
-        - node_modules/entities/**
-        - node_modules/html-encoding-sniffer/**
-        - node_modules/http-proxy-agent/**
-        - node_modules/https-proxy-agent/**
-        - node_modules/is-potential-custom-element-name/**
-        - node_modules/nwsapi/**
-        - node_modules/parse5/**
-        - node_modules/rrweb-cssom/**
-        - node_modules/saxes/**
-        - node_modules/xmlchars/**
-        - node_modules/symbol-tree/**
-        - node_modules/tough-cookie/**
-        - node_modules/tr46/**
-        - node_modules/w3c-xmlserializer/**
-        - node_modules/webidl-conversions/**
-        - node_modules/whatwg-encoding/**
-        - node_modules/whatwg-mimetype/**
-        - node_modules/whatwg-url/**
-        - node_modules/ws/**
-        - node_modules/xml-name-validator/**
-        - node_modules/punycode/**
-        - node_modules/iconv-lite/**
-        - node_modules/safer-buffer/**
-        - node_modules/agent-base/**
-        - node_modules/debug/**
-        - node_modules/ms/**
-        - node_modules/css-tree/**
-        - node_modules/mdn-data/**
-        - node_modules/source-map-js/**
-        - node_modules/undici/**
-        - node_modules/@asamuzakjp/**
-        - node_modules/@bramus/**
-        - node_modules/@csstools/**
-        - node_modules/@exodus/**
-        - node_modules/tldts/**
-        - node_modules/tldts-core/**
-        - node_modules/bidi-js/**
-        - node_modules/require-from-string/**
-        - node_modules/lru-cache/**
-        # Excludes (last patterns win) — strip metadata, sourcemaps, type defs.
-        - '!**/*.md'
-        - '!**/*.markdown'
-        - '!**/*.map'
-        - '!**/*.ts'
-        - '!**/*.d.ts'
-        - '!**/*.d.mts'
-        - '!**/*.flow'
-        - '!**/LICENSE'
-        - '!**/LICENSE.txt'
-        - '!**/LICENSE.md'
-        - '!**/CHANGELOG.md'
-        - '!**/CHANGELOG'
-        - '!**/test/**'
-        - '!**/tests/**'
-        - '!**/__tests__/**'
-        - '!**/types/**'
-        - '!**/.github/**'
-        - '!**/example/**'
-        - '!**/examples/**'
-        - '!**/docs/**'
-        # pdfjs-dist heavy directories we don't use
-        - '!node_modules/pdfjs-dist/build/**'
-        - '!node_modules/pdfjs-dist/web/**'
-        - '!node_modules/pdfjs-dist/legacy/web/**'
-        - '!node_modules/pdfjs-dist/legacy/image_decoders/**'
-        - '!node_modules/pdfjs-dist/image_decoders/**'
-        - '!node_modules/pdfjs-dist/cmaps/**'
-        - '!node_modules/pdfjs-dist/standard_fonts/**'
-        - '!node_modules/pdfjs-dist/wasm/**'
-        - '!node_modules/pdfjs-dist/iccs/**'
-        - '!node_modules/pdfjs-dist/legacy/build/pdf.sandbox*'
-        - '!node_modules/pdfjs-dist/legacy/build/pdf.min.mjs'
-        - '!node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs'
-        # tldts ships ESM/UMD/CJS minified variants — keep CJS only
-        - '!node_modules/tldts/dist/index.esm*'
-        - '!node_modules/tldts/dist/index.umd*'
-        - '!node_modules/tldts/dist/es6/**'
+      # Auto-derived from jsdom's dependency closure at build time and written to
+      # dist/collector-package-patterns.json by build.mjs (so dependabot bumps to
+      # jsdom's transitive tree can't silently break collection).
+      # See tools/collector-package-patterns.mjs. Requires `yarn build` first.
+      patterns: ${file(./dist/collector-package-patterns.json)}
     events:
       - schedule:
           rate: cron(0 8 ? * MON-FRI *)

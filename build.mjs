@@ -1,5 +1,7 @@
 import { build } from "esbuild";
-import { cpSync } from "fs";
+import { cpSync, writeFileSync } from "fs";
+import path from "path";
+import { computeCollectorPatterns } from "./tools/collector-package-patterns.mjs";
 
 // jsdom + pdfjs-dist are kept external and lazy-loaded at parser call sites.
 // They ship to Lambda via serverless.yml package.patterns and resolve from
@@ -34,5 +36,15 @@ await build({
 
 // index.html is read by api-server at runtime via readFileSync.
 cpSync("src/lambdas/index.html", "dist/api-server/index.html");
+
+// Derive the dataCollector Lambda's package.patterns from jsdom's dependency
+// closure; serverless.yml reads this via ${file(...)}. See tools/collector-package-patterns.mjs.
+const collectorPatterns = computeCollectorPatterns(
+  path.join(process.cwd(), "node_modules"),
+);
+writeFileSync(
+  "dist/collector-package-patterns.json",
+  JSON.stringify(collectorPatterns, null, 2),
+);
 
 console.log("Build complete");
