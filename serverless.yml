@@ -13,6 +13,10 @@ provider:
     SERVICE_NAME: ${self:service}
     LOG_LEVEL: ${opt:log-level, 'INFO'}
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+    # jsdom's html-encoding-sniffer (CJS) require()s @exodus/bytes, which is
+    # ESM-only. require(ESM) is default-on in Node >=22.12/24 but off in the
+    # Lambda nodejs22.x runtime, so enable it explicitly.
+    NODE_OPTIONS: "--experimental-require-module"
   apiGateway:
     minimumCompressionSize: 1024
   iam:
