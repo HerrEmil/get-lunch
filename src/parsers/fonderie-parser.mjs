@@ -10,7 +10,7 @@ export class FonderieParser extends BaseParser {
   constructor(config = {}) {
     super({
       name: "La Fonderie",
-      url: "https://www.lafonderie.se/lelunch",
+      url: "https://www.lafonderie.se/lunch",
       timeout: 30000,
       retries: 3,
       retryDelay: 1000,
@@ -23,7 +23,7 @@ export class FonderieParser extends BaseParser {
   }
 
   getUrl() {
-    return "https://www.lafonderie.se/lelunch";
+    return "https://www.lafonderie.se/lunch";
   }
 
   async parseMenu() {
@@ -126,13 +126,15 @@ export class FonderieParser extends BaseParser {
       const nameLine = paragraphs[i];
       const descLine = paragraphs[i + 1];
 
-      // Check if the description line contains a price
-      const priceMatch = descLine.match(/–\s*(\d+)\s*kr/);
+      // Check if the description line ends with a price.
+      // Format is a dash (hyphen/en/em) + amount, with an optional "kr"
+      // suffix (the site dropped "kr" at some point), e.g. "… – 195" or "… - 195 kr".
+      const priceMatch = descLine.match(/[-–—]\s*(\d+)\s*(?:kr)?\s*$/);
 
       if (priceMatch) {
         dishes.push({
           name: nameLine,
-          description: descLine.replace(/\s*–\s*\d+\s*kr\s*$/, "").trim(),
+          description: descLine.replace(/\s*[-–—]\s*\d+\s*(?:kr)?\s*$/, "").trim(),
           price: parseInt(priceMatch[1]),
         });
         i += 2;

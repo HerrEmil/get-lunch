@@ -7,7 +7,7 @@ import { cpSync } from "fs";
 const shared = {
   bundle: true,
   platform: "node",
-  target: "node22",
+  target: "node24",
   format: "cjs",
   external: ["@aws-sdk/*", "jsdom", "pdfjs-dist", "pdfjs-dist/legacy/build/pdf.mjs"],
   minify: true,

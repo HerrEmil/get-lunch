@@ -173,6 +173,6 @@ describe("FonderieParser", () => {
 
   it("returns correct getName and getUrl", () => {
     expect(parser.getName()).toBe("La Fonderie");
-    expect(parser.getUrl()).toBe("https://www.lafonderie.se/lelunch");
+    expect(parser.getUrl()).toBe("https://www.lafonderie.se/lunch");
   });
 });
