@@ -78,6 +78,7 @@ functions:
         - node_modules/parse5/**
         - node_modules/rrweb-cssom/**
         - node_modules/saxes/**
+        - node_modules/xmlchars/**
         - node_modules/symbol-tree/**
         - node_modules/tough-cookie/**
         - node_modules/tr46/**
@@ -99,6 +100,7 @@ functions:
         - node_modules/source-map-js/**
         - node_modules/undici/**
         - node_modules/@asamuzakjp/**
+        - node_modules/@bramus/**
         - node_modules/@csstools/**
         - node_modules/@exodus/**
         - node_modules/tldts/**
