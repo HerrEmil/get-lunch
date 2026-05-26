@@ -9,3 +9,7 @@ Four files must be updated:
 5. **`src/lambdas/api-server.mjs`** — Add entry to `RESTAURANT_CONFIGS` (separate list, easy to forget!)
 
 Both `data-collector.mjs` and `api-server.mjs` have their own `RESTAURANT_CONFIGS` arrays. The collector writes to DynamoDB, the API server reads from it. Missing either one means data won't be collected or won't be displayed.
+
+# Pushing directly to main
+
+Run `yarn test` before any direct push to `main` and abort the push if tests fail. CI no longer runs tests on push-to-main, so local tests are the only gate.
