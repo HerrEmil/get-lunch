@@ -13,17 +13,6 @@ vi.mock('fs', () => ({
   mkdirSync: vi.fn(),
 }));
 
-// Mock AWS SDK
-vi.mock('@aws-sdk/client-cloudwatch-logs', () => ({
-  CloudWatchLogsClient: vi.fn(() => ({
-    send: vi.fn(),
-    destroy: vi.fn(),
-  })),
-  CreateLogGroupCommand: vi.fn(),
-  CreateLogStreamCommand: vi.fn(),
-  PutLogEventsCommand: vi.fn(),
-}));
-
 // Setup console mocking for cleaner test output
 const originalConsole = global.console;
 global.console = {

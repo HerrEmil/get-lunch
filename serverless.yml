@@ -9,7 +9,6 @@ provider:
     LUNCH_CACHE_TABLE: ${self:custom.tableName}
     CACHE_TTL_DAYS: 14
     STAGE: ${self:provider.stage}
-    LOG_GROUP_NAME: /aws/lambda/${self:service}-${self:provider.stage}
     SERVICE_NAME: ${self:service}
     LOG_LEVEL: ${opt:log-level, 'INFO'}
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"

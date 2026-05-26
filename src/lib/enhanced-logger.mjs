@@ -1,17 +1,9 @@
 /**
- * Enhanced Logger with CloudWatch Integration
- * Provides structured logging with CloudWatch Logs support, local development features,
- * and comprehensive error tracking for the Enhanced Lunch Table application
+ * Enhanced Logger
+ * Provides structured logging with local development features and comprehensive
+ * error tracking for the Enhanced Lunch Table application. In Lambda, all console
+ * output is shipped to CloudWatch Logs automatically by the runtime.
  */
-
-import {
-  CloudWatchLogsClient,
-  CreateLogGroupCommand,
-  CreateLogStreamCommand,
-  PutLogEventsCommand,
-  DescribeLogGroupsCommand,
-  DescribeLogStreamsCommand,
-} from "@aws-sdk/client-cloudwatch-logs";
 
 // Log levels with numeric values for filtering
 export const LOG_LEVELS = {
@@ -28,15 +20,12 @@ const IS_LOCAL = process.env.NODE_ENV === "development" || !IS_LAMBDA;
 const LOG_LEVEL = process.env.LOG_LEVEL || (IS_LOCAL ? "DEBUG" : "INFO");
 const CURRENT_LOG_LEVEL = LOG_LEVELS[LOG_LEVEL.toUpperCase()] ?? LOG_LEVELS.INFO;
 
-// CloudWatch configuration
-const AWS_REGION = process.env.AWS_REGION || "eu-north-1";
-const LOG_GROUP_NAME = process.env.LOG_GROUP_NAME || "/aws/lambda/enhanced-lunch-table";
+// Service identity (included in structured log entries)
 const SERVICE_NAME = process.env.SERVICE_NAME || "enhanced-lunch-table";
 const STAGE = process.env.STAGE || "dev";
 
-// Local logging configuration
+// Console logging configuration
 const ENABLE_COLORS = process.env.ENABLE_COLORS !== "false" && IS_LOCAL;
-const ENABLE_CLOUDWATCH = process.env.ENABLE_CLOUDWATCH !== "false" && !IS_LOCAL;
 
 // Colors for local console output
 const COLORS = {
@@ -49,64 +38,6 @@ const COLORS = {
   gray: "\x1b[90m",
   magenta: "\x1b[35m",
 };
-
-// CloudWatch client (lazy initialization)
-let cloudWatchClient = null;
-let logStreamName = null;
-let sequenceToken = null;
-
-/**
- * Initialize CloudWatch Logs client
- */
-function initializeCloudWatch() {
-  if (!ENABLE_CLOUDWATCH || cloudWatchClient) return;
-
-  cloudWatchClient = new CloudWatchLogsClient({
-    region: AWS_REGION,
-    maxAttempts: 3,
-  });
-
-  // Generate unique log stream name
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const randomId = Math.random().toString(36).substring(2, 8);
-  logStreamName = `${STAGE}/${SERVICE_NAME}/${timestamp}-${randomId}`;
-}
-
-/**
- * Ensure log group and stream exist in CloudWatch
- */
-async function ensureLogGroup() {
-  if (!cloudWatchClient) return;
-
-  try {
-    // Check if log group exists
-    const describeGroupsCommand = new DescribeLogGroupsCommand({
-      logGroupNamePrefix: LOG_GROUP_NAME,
-    });
-    const groupsResponse = await cloudWatchClient.send(describeGroupsCommand);
-
-    const groupExists = groupsResponse.logGroups?.some(
-      (group) => group.logGroupName === LOG_GROUP_NAME
-    );
-
-    // Create log group if it doesn't exist
-    if (!groupExists) {
-      const createGroupCommand = new CreateLogGroupCommand({
-        logGroupName: LOG_GROUP_NAME,
-      });
-      await cloudWatchClient.send(createGroupCommand);
-    }
-
-    // Create log stream
-    const createStreamCommand = new CreateLogStreamCommand({
-      logGroupName: LOG_GROUP_NAME,
-      logStreamName: logStreamName,
-    });
-    await cloudWatchClient.send(createStreamCommand);
-  } catch (error) {
-    console.error("Failed to ensure CloudWatch log group:", error.message);
-  }
-}
 
 /**
  * Generate correlation ID for request tracking
@@ -146,14 +77,6 @@ class EnhancedLogger {
       operations: 0,
       startTime: Date.now(),
     };
-
-    // Initialize CloudWatch if enabled
-    if (ENABLE_CLOUDWATCH && !cloudWatchClient) {
-      initializeCloudWatch();
-      ensureLogGroup().catch((error) => {
-        console.error("Failed to initialize CloudWatch logging:", error);
-      });
-    }
   }
 
   /**
@@ -227,15 +150,9 @@ class EnhancedLogger {
       };
     }
 
-    // Local console logging
-    if (IS_LOCAL) {
-      this._logToConsole(level, message, logEntry, error);
-    }
-
-    // CloudWatch logging
-    if (ENABLE_CLOUDWATCH && cloudWatchClient) {
-      await this._logToCloudWatch(logEntry);
-    }
+    // Console logging. In Lambda this is captured by the runtime and shipped
+    // to CloudWatch Logs automatically.
+    this._logToConsole(level, message, logEntry, error);
   }
 
   /**
@@ -268,33 +185,6 @@ class EnhancedLogger {
         const stackPrefix = ENABLE_COLORS ? `${COLORS.gray}  Stack:${resetColor}` : "  Stack:";
         console.log(stackPrefix, error.stack);
       }
-    }
-  }
-
-  /**
-   * Log to CloudWatch Logs
-   */
-  async _logToCloudWatch(logEntry) {
-    try {
-      if (!cloudWatchClient || !logStreamName) return;
-
-      const logEvent = {
-        timestamp: Date.now(),
-        message: JSON.stringify(logEntry),
-      };
-
-      const command = new PutLogEventsCommand({
-        logGroupName: LOG_GROUP_NAME,
-        logStreamName: logStreamName,
-        logEvents: [logEvent],
-        sequenceToken: sequenceToken,
-      });
-
-      const response = await cloudWatchClient.send(command);
-      sequenceToken = response.nextSequenceToken;
-    } catch (error) {
-      // Fallback to console if CloudWatch fails
-      console.error("Failed to log to CloudWatch:", error.message);
     }
   }
 
@@ -542,9 +432,7 @@ export const config = {
   LOG_LEVEL,
   IS_LAMBDA,
   IS_LOCAL,
-  ENABLE_CLOUDWATCH,
   ENABLE_COLORS,
-  LOG_GROUP_NAME,
   SERVICE_NAME,
   STAGE,
 };

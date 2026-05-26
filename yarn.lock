@@ -294,22 +294,6 @@
     "@smithy/util-waiter" "^4.2.14"
     tslib "^2.6.2"
 
-"@aws-sdk/client-cloudwatch-logs@^3.1053.0":
-  version "3.1053.0"
-  resolved "https://registry.yarnpkg.com/@aws-sdk/client-cloudwatch-logs/-/client-cloudwatch-logs-3.1053.0.tgz#4d7784bb94df18475606c88ab7dc7fa8c38dee59"
-  integrity sha512-M8AVDGPxzYHgJM7YfAefYOd+qAbo3tKs7Sw5S13kaDvk0A6nALtrroUNtvJI+ZXdy4Ys2j5icUYqGp+4PzAZmg==
-  dependencies:
-    "@aws-crypto/sha256-browser" "5.2.0"
-    "@aws-crypto/sha256-js" "5.2.0"
-    "@aws-sdk/core" "^3.974.13"
-    "@aws-sdk/credential-provider-node" "^3.972.44"
-    "@aws-sdk/types" "^3.973.9"
-    "@smithy/core" "^3.24.3"
-    "@smithy/fetch-http-handler" "^5.4.3"
-    "@smithy/node-http-handler" "^4.7.3"
-    "@smithy/types" "^4.14.2"
-    tslib "^2.6.2"
-
 "@aws-sdk/client-cognito-identity-provider@^3.975.0":
   version "3.1022.0"
   resolved "https://registry.yarnpkg.com/@aws-sdk/client-cognito-identity-provider/-/client-cognito-identity-provider-3.1022.0.tgz#19a2836fa450eec7ef03f0b8507bdcf536d1145d"

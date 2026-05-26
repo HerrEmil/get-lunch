@@ -106,7 +106,7 @@ export class Lokal17Parser extends BaseParser {
     const data = new Uint8Array(arrayBuffer);
 
     const getDocument = await loadGetDocument();
-    const pdf = await getDocument({ data, useSystemFonts: true }).promise;
+    const pdf = await getDocument({ data, useSystemFonts: true, verbosity: 0 }).promise;
     const lines = [];
 
     for (let i = 1; i <= pdf.numPages; i++) {
