@@ -1,5 +1,5 @@
-import { build } from "esbuild";
-import { cpSync, writeFileSync } from "fs";
+import { build, transform } from "esbuild";
+import { readFileSync, writeFileSync } from "fs";
 import path from "path";
 import { computeCollectorPatterns } from "./tools/collector-package-patterns.mjs";
 
@@ -34,8 +34,22 @@ await build({
   outfile: "dist/api-server/index.js",
 });
 
-// index.html is read by api-server at runtime via readFileSync.
-cpSync("src/lambdas/index.html", "dist/api-server/index.html");
+// index.html ships JSX compiled in-browser by @babel/standalone for dev. For
+// production we precompile that inline script with esbuild (classic JSX ->
+// React.createElement, matching the UMD React global) and drop the Babel CDN
+// script, so browsers don't run the in-browser transformer. Target es2020 so
+// `const lunches = [];` survives verbatim — api-server string-replaces that
+// exact line to inject data at runtime.
+const html = readFileSync("src/lambdas/index.html", "utf-8");
+const scriptRe = /<script type="text\/babel"[^>]*>([\s\S]*?)<\/script>/;
+const jsx = html.match(scriptRe);
+if (!jsx) throw new Error("Could not find inline text/babel script in index.html");
+const { code } = await transform(jsx[1], { loader: "jsx", target: "es2020" });
+// Function replacers avoid `$&`/`$1` being interpreted in the compiled code.
+const compiledHtml = html
+  .replace(/[ \t]*<script src="https:\/\/unpkg\.com\/@babel\/standalone[^>]*><\/script>\n?/, "")
+  .replace(scriptRe, () => `<script>\n${code}</script>`);
+writeFileSync("dist/api-server/index.html", compiledHtml);
 
 // Derive the dataCollector Lambda's package.patterns from jsdom's dependency
 // closure; serverless.yml reads this via ${file(...)}. See tools/collector-package-patterns.mjs.
