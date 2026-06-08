@@ -3675,10 +3675,10 @@ html-encoding-sniffer@^6.0.0:
   dependencies:
     "@exodus/bytes" "^1.6.0"
 
-html-validate@^11.5.0:
-  version "11.5.0"
-  resolved "https://registry.yarnpkg.com/html-validate/-/html-validate-11.5.0.tgz#e1e0c1ef6595fc86e8fa822406d8e50c476f24a9"
-  integrity sha512-iStfh5BbAn0Q0flg/7RtHhwNXR8zSfcuLUh2tulQfQelZiG+Uvbri4CCr/UfXAjbFxIXbyqnFbHzcgjYM23/Bw==
+html-validate@^11.5.3:
+  version "11.5.3"
+  resolved "https://registry.yarnpkg.com/html-validate/-/html-validate-11.5.3.tgz#ed3e02b64e50c27ad43fe9b03490d234b51b2e98"
+  integrity sha512-YJAqUomHuND2ppz4QoRoWMm4tLHFxGTkqoBDiMjBm9pzictNkEB78q0yT3U9s6oiy9XoEmVC2QEQcube+fMw5g==
   dependencies:
     "@html-validate/stylish" "^6.0.0"
     "@sidvind/better-ajv-errors" "7.0.0"
@@ -4417,10 +4417,10 @@ optionator@^0.9.3:
     type-check "^0.4.0"
     word-wrap "^1.2.5"
 
-osls@^3.73.0:
-  version "3.73.0"
-  resolved "https://registry.yarnpkg.com/osls/-/osls-3.73.0.tgz#9037396796e61269936e1b642ec2d763f87cd39a"
-  integrity sha512-OmTRSyW4jtiw25B/BjlyUPoURqrJsIjFmLYcLxm2q/DByANskAorY6REMfA9DhDP8DDIZZ33VgGv1mTylNHpxQ==
+osls@^3.74.0:
+  version "3.74.0"
+  resolved "https://registry.yarnpkg.com/osls/-/osls-3.74.0.tgz#980610f98271a2dcd05efab85df38f45e450221a"
+  integrity sha512-EAAmg9ZPZBlwY8csJZDwDPCofLSrS4zo6WSRODslZ8ShkWDjb0gpZxmWrZj6VkQEz+mWxxq5rsB5BO4c94kcQQ==
   dependencies:
     "@apidevtools/json-schema-ref-parser" "^15.3.5"
     "@aws-sdk/client-api-gateway" "^3.975.0"
@@ -4799,10 +4799,10 @@ serverless-dynamodb@^0.2.58:
     "@aws-sdk/lib-dynamodb" "^3.474.0"
     aws-dynamodb-local "^0.0.14"
 
-serverless-offline@^14.7.1:
-  version "14.7.1"
-  resolved "https://registry.yarnpkg.com/serverless-offline/-/serverless-offline-14.7.1.tgz#3513d3c1880c9f11720247a5a27b7b20bd0c1777"
-  integrity sha512-bpTX+5tWFODy4bkvhJmugCiv2dPH8i7SkpG/5DAtPZWiuuwFQuAltrMHaGYOF4OolpeD57JftJwfpHt5w1TtKA==
+serverless-offline@^14.7.2:
+  version "14.7.2"
+  resolved "https://registry.yarnpkg.com/serverless-offline/-/serverless-offline-14.7.2.tgz#5022b820b10aa4de24b7f3ad412b046d5e09b3b5"
+  integrity sha512-VSkveRkBojtVkfCHrW19mWZGnpCE78EL6yQK4zyLrdPF9ONVI0yAPdaCGWUt/1+LyN8AE6jEyWf9EUfEYDuPuA==
   dependencies:
     "@aws-sdk/client-lambda" "^3.1052.0"
     "@hapi/boom" "^10.0.1"
