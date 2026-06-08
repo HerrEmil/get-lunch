@@ -89,25 +89,14 @@ functions:
           path: /
           method: get
           cors: true
-          caching:
-            enabled: true
-            ttlInSeconds: 300
       - http:
           path: /lunch
           method: get
           cors: true
-          caching:
-            enabled: true
-            ttlInSeconds: 300
       - http:
           path: /lunch/{day}
           method: get
           cors: true
-          caching:
-            enabled: true
-            ttlInSeconds: 300
-            cacheKeyParameters:
-              - name: request.path.day
 
 resources:
   Resources:
@@ -240,7 +229,6 @@ plugins:
   - serverless-domain-manager
   - serverless-offline
   - serverless-dynamodb
-  - serverless-api-gateway-caching
 
 package:
   individually: true
@@ -297,15 +285,4 @@ custom:
       inMemory: true
       migrate: true
       convertEmptyValues: true
-
-  # API Gateway response caching (cluster only enabled in prod).
-  # Cluster size 0.5 GB is the minimum and cheapest tier.
-  apiGatewayCaching:
-    enabled: ${self:custom.apiGatewayCachingEnabled.${self:provider.stage}, false}
-    clusterSize: '0.5'
-    ttlInSeconds: 300
-
-  apiGatewayCachingEnabled:
-    prod: true
-    dev: false
 

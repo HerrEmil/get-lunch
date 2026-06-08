@@ -40,7 +40,6 @@
     "lint-staged": "^17.0.7",
     "osls": "^3.73.0",
     "prettier": "^3.8.3",
-    "serverless-api-gateway-caching": "^1.11.0",
     "serverless-domain-manager": "^10.1.0",
     "serverless-dynamodb": "^0.2.58",
     "serverless-offline": "^14.7.1",
