@@ -50,7 +50,7 @@
     "node": ">=22.0.0"
   },
   "resolutions": {
-    "js-yaml": "^4.1.1",
+    "js-yaml": "^4.2.0",
     "whatwg-url": "^14.0.0",
     "tr46": "^5.0.0",
     "cross-spawn": "^7.0.6",
@@ -62,7 +62,7 @@
     "@smithy/config-resolver": "^4.4.0"
   },
   "overrides": {
-    "js-yaml": "^4.1.1",
+    "js-yaml": "^4.2.0",
     "whatwg-url": "^14.0.0",
     "node-fetch>whatwg-url": "^14.0.0",
     "node-fetch>whatwg-url>tr46": "^5.0.0",
