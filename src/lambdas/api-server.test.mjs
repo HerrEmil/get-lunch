@@ -98,6 +98,34 @@ describe("API Server Lambda", () => {
     expect(result.body).toContain("Grillad kyckling");
   });
 
+  it("should not serve previous-week data when current week is empty", async () => {
+    const currentWeek = 47;
+    // Only week-1 has data; current week is empty.
+    getCachedLunchData.mockImplementation(async (_name, week) => {
+      if (week === currentWeek - 1) {
+        return { lunches: mockLunchData };
+      }
+      return { lunches: [] };
+    });
+
+    const event = {
+      httpMethod: "GET",
+      path: "/",
+      queryStringParameters: { day: "all", week: String(currentWeek) },
+    };
+
+    const result = await handler(event, mockContext);
+
+    expect(result.statusCode).toBe(200);
+    // Previous-week data must never be served.
+    expect(result.body).not.toContain("Grillad kyckling");
+
+    // The previous week must never even be queried.
+    const queriedWeeks = getCachedLunchData.mock.calls.map((call) => call[1]);
+    expect(queriedWeeks).not.toContain(currentWeek - 1);
+    expect(queriedWeeks.every((week) => week === currentWeek)).toBe(true);
+  });
+
   it("should handle cache errors gracefully with 200", async () => {
     getCachedLunchData.mockRejectedValue(new Error("Test error"));
 

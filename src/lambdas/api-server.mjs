@@ -180,7 +180,6 @@ async function fetchCachedData(week, logger) {
   const cacheStats = {
     successful: 0,
     failed: 0,
-    fallbacks: 0,
   };
 
   for (const config of RESTAURANT_CONFIGS) {
@@ -189,30 +188,9 @@ async function fetchCachedData(week, logger) {
     try {
       await logger.debug(`Fetching cache for ${config.id}`, { week });
 
-      // Try current week first (cache key uses display name from parser)
-      let cacheItem = await getCachedLunchData(config.name, week);
-      let restaurantData = cacheItem?.lunches;
-
-      // Fallback to previous week if current week is empty
-      if (!restaurantData || restaurantData.length === 0) {
-        const previousWeek = week - 1;
-        await logger.debug(`Trying fallback to previous week`, {
-          restaurant: config.id,
-          previousWeek,
-        });
-
-        cacheItem = await getCachedLunchData(config.name, previousWeek);
-        restaurantData = cacheItem?.lunches;
-
-        if (restaurantData && restaurantData.length > 0) {
-          cacheStats.fallbacks++;
-          await logger.info(`Using fallback data`, {
-            restaurant: config.id,
-            week: previousWeek,
-            items: restaurantData.length,
-          });
-        }
-      }
+      // Fetch current week only (cache key uses display name from parser)
+      const cacheItem = await getCachedLunchData(config.name, week);
+      const restaurantData = cacheItem?.lunches;
 
       if (restaurantData && restaurantData.length > 0) {
         // Add restaurant metadata to each lunch item
