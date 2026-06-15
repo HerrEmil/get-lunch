@@ -121,6 +121,33 @@ describe("Lokal17Parser", () => {
     expect(lunches).toHaveLength(0);
   });
 
+  it("repairs umlaut glyphs mangled by PDF extraction", () => {
+    // The PDF font emits capital "Ä" as the pair "A=" (and "Ö" as "O=").
+    expect(parser._fixUmlautGlyphs("A=gg-potatis")).toBe("Ägg-potatis");
+    expect(parser._fixUmlautGlyphs("O=l och a=pple")).toBe("Öl och äpple");
+    // Correctly decoded text must be left untouched.
+    expect(parser._fixUmlautGlyphs("ostkräm-räka")).toBe("ostkräm-räka");
+  });
+
+  it("parses a vegetarian dish whose Ä was mangled to A=", () => {
+    const text =
+      "LUNCH VECKA 25 " +
+      "Måndag/Monday 150kr " +
+      "Köttfärslimpa-svampsås-gurka " +
+      "Meatloaf-mushroom-cucumber " +
+      "Vegetarisk/Vegetarian 150kr " +
+      "A=gg-potatis-ostkräm-kapris-oliver-sallad " +
+      "Egg-potato-cheese cream-capers-olives-salad " +
+      "Alltid hos Lokal 17";
+
+    // Simulate the extraction repair the real flow applies before parsing.
+    const lunches = parser.parseMenuText(parser._fixUmlautGlyphs(text));
+
+    const veg = lunches.find((l) => l.dietary?.includes("vegetarian"));
+    expect(veg.name).toContain("Ägg-potatis");
+    expect(veg.name).not.toContain("A=gg");
+  });
+
   it("finds PDF URL from HTML", async () => {
     const mockHtml = `
       <html><body>

@@ -1,28 +1,34 @@
 /**
  * Kontrast Restaurant Parser (Västra Hamnen)
- * Fetches lunch menu data from Kontrast's REST API
+ * Fetches the current day's lunch menu from Kontrast's REST API.
+ *
+ * The site only exposes today's resolved menu publicly via
+ * /api/lunch-display/<location> (the weekly templates require auth), so this
+ * parser returns a single weekday's dishes per run. The data-collector runs
+ * daily, accumulating the week as it goes.
  */
 
 import { BaseParser } from "./base-parser.mjs";
 
 const API_BASE = "https://www.kontrastrestaurang.se";
-const LOCATION = "vastrahamnen";
+const LOCATION = "vastra-hamnen";
 
-const WEEKDAY_MAP = [
-  "söndag",
-  "måndag",
-  "tisdag",
-  "onsdag",
-  "torsdag",
-  "fredag",
-  "lördag",
-];
+// /api/lunch-display reports weekday as ISO day number (1 = Monday ... 7 = Sunday)
+const WEEKDAY_MAP = {
+  1: "måndag",
+  2: "tisdag",
+  3: "onsdag",
+  4: "torsdag",
+  5: "fredag",
+  6: "lördag",
+  7: "söndag",
+};
 
 export class KontrastParser extends BaseParser {
   constructor(config = {}) {
     super({
       name: "Kontrast",
-      url: `${API_BASE}/api/daily-menus`,
+      url: `${API_BASE}/api/lunch-display/${LOCATION}`,
       timeout: 30000,
       retries: 3,
       retryDelay: 1000,
@@ -35,65 +41,57 @@ export class KontrastParser extends BaseParser {
   }
 
   getUrl() {
-    return `${API_BASE}/vastra-hamnen/`;
+    return `${API_BASE}/menu/vastra-hamnen?tab=lunch`;
   }
 
   async parseMenu() {
     try {
       await this.logger.info("Starting Kontrast menu parsing");
 
-      // Fetch daily menus, categories, and dishes in parallel
-      const [menus, categories] = await Promise.all([
-        this.fetchJson("/api/daily-menus"),
+      // Fetch today's resolved lunch menu and the category lookup in parallel
+      const [display, categories] = await Promise.all([
+        this.fetchJson(`/api/lunch-display/${LOCATION}`),
         this.fetchJson("/api/lunch-categories"),
       ]);
+
+      if (!display || !Array.isArray(display.dishes) || display.dishes.length === 0) {
+        await this.logger.warn("No lunch menu available for Västra Hamnen");
+        return [];
+      }
+
+      const weekday = WEEKDAY_MAP[display.weekday];
+
+      // Skip weekends (no weekday lunch served)
+      if (!weekday || weekday === "lördag" || weekday === "söndag") {
+        await this.logger.info("Skipping non-weekday menu", {
+          weekday: display.weekday,
+        });
+        return [];
+      }
 
       const categoryMap = Object.fromEntries(
         categories.map((c) => [c.id, c.nameSv]),
       );
 
-      // Filter to västra hamnen menus only
-      const vhMenus = menus.filter(
-        (m) => m.location === LOCATION && m.isActive,
-      );
+      const date = new Date(display.resolvedDate + "T12:00:00");
+      const week = this.getWeekNumber(date);
 
-      if (vhMenus.length === 0) {
-        await this.logger.warn("No active menus found for Västra Hamnen");
-        return [];
-      }
-
-      // Fetch dishes for each menu
-      const lunches = [];
-      for (const menu of vhMenus) {
-        const dishes = await this.fetchJson(
-          `/api/daily-menus/${menu.id}/dishes`,
-        );
-        const date = new Date(menu.date + "T12:00:00");
-        const weekday = WEEKDAY_MAP[date.getDay()];
-
-        // Skip weekends
-        if (weekday === "lördag" || weekday === "söndag") continue;
-
-        const week = this.getWeekNumber(date);
-
-        for (const dish of dishes) {
-          const category = categoryMap[dish.categoryId] || "";
-          lunches.push(
-            this.createLunchObject({
-              name: `${dish.nameSv}${category ? " (" + category + ")" : ""}`,
-              description: dish.descriptionSv || "",
-              price: menu.price,
-              weekday,
-              week,
-              place: this.getName(),
-            }),
-          );
-        }
-      }
+      const lunches = display.dishes.map((dish) => {
+        const category = categoryMap[dish.categoryId] || "";
+        return this.createLunchObject({
+          name: `${dish.nameSv.trim()}${category ? " (" + category + ")" : ""}`,
+          description: (dish.descriptionSv || "").trim(),
+          price: display.price,
+          weekday,
+          week,
+          place: this.getName(),
+        });
+      });
 
       await this.logger.info("Kontrast parsing completed", {
         totalLunches: lunches.length,
-        uniqueWeekdays: [...new Set(lunches.map((l) => l.weekday))].length,
+        weekday,
+        date: display.resolvedDate,
       });
 
       return lunches;

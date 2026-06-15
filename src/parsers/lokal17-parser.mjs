@@ -116,7 +116,24 @@ export class Lokal17Parser extends BaseParser {
       lines.push(pageText);
     }
 
-    return lines.join("\n");
+    return this._fixUmlautGlyphs(lines.join("\n"));
+  }
+
+  /**
+   * Repair umlaut glyphs mangled by PDF text extraction.
+   *
+   * This PDF's font maps the capital "Ä" glyph to the codepoint pair "A="
+   * (the diaeresis is emitted as a stray "=" after the base letter). Lowercase
+   * vowels and "Å" decode correctly, so only the uppercase diaeresis vowels are
+   * affected. The PDF contains no legitimate "=" characters, so collapsing a
+   * base vowel directly followed by "=" back into its umlaut form is safe.
+   */
+  _fixUmlautGlyphs(text) {
+    return text
+      .replace(/A=/g, "Ä")
+      .replace(/O=/g, "Ö")
+      .replace(/a=/g, "ä")
+      .replace(/o=/g, "ö");
   }
 
   /**

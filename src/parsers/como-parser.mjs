@@ -10,7 +10,9 @@ export class ComoParser extends BaseParser {
   constructor(config = {}) {
     super({
       name: "COMO",
-      url: "https://comomalmo.se/meny",
+      // The lunch menu is rendered on the homepage (in a menu overlay).
+      // The old /meny path now returns a "Nothing Found" page with no menu.
+      url: "https://comomalmo.se/",
       timeout: 30000,
       retries: 3,
       retryDelay: 1000,
@@ -23,7 +25,7 @@ export class ComoParser extends BaseParser {
   }
 
   getUrl() {
-    return "https://comomalmo.se/meny";
+    return "https://comomalmo.se/";
   }
 
   async parseMenu() {
