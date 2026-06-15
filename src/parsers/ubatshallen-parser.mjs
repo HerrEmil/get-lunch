@@ -2,10 +2,20 @@
  * Ubåtshallen Parser
  * Extracts lunch menu from ubatshallen.se
  *
- * Structure: .entry-content contains <p> elements:
- *   - "Måndag" / "Tisdag" etc. as plain text
- *   - Next <p> has all dishes concatenated: "Det gröna: ...Husman: ...Internationell: ..."
- *   - Price in a later paragraph: "129,-"
+ * Structure: .entry-content contains <p> elements, but the weekday headers
+ * are NOT reliably in their own paragraphs. In practice the source bleeds
+ * content across paragraph boundaries, e.g.:
+ *   - "Måndag" as its own <p>, dishes in the next <p>
+ *   - A weekday label tacked onto the END of the previous day's dish <p>
+ *     (e.g. "...sötsur såsOnsdag")
+ *   - A closed day inlined after another day's dishes
+ *     (e.g. "...stekt ägg Fredag Det gröna: Husman: STÄNGT ...")
+ *
+ * To be robust we concatenate all paragraph text, then split the whole blob
+ * on weekday labels wherever they appear. Each weekday segment is parsed for
+ * the three categories; segments marked STÄNGT (e.g. Midsummer) are skipped.
+ *
+ * Price appears as e.g. "129,-".
  */
 
 import { BaseParser } from "./base-parser.mjs";
@@ -66,44 +76,85 @@ export class UbatshallenParser extends BaseParser {
     const content = this.safeQuery(document, ".entry-content");
     if (!content) return lunches;
 
+    // Concatenate all paragraph text. Weekday labels are unreliable as
+    // standalone paragraphs (the source frequently appends the next day's
+    // label to the previous day's dish paragraph, or inlines a closed day),
+    // so we treat the whole content as one stream and split on weekday labels.
     const paragraphs = content.querySelectorAll("p");
-    let currentWeekday = null;
-
+    let blob = "";
     for (const p of paragraphs) {
       const text = p.textContent?.trim();
       if (!text) continue;
+      blob += text + "\n";
+    }
 
-      // Check if this paragraph is a weekday header
-      const lower = text.toLowerCase().split(/[\s–\-]/)[0];
-      if (WEEKDAYS.includes(lower)) {
-        currentWeekday = lower;
-        // Check if the day text contains closure info
-        if (/stängt|stängd/i.test(text)) {
-          currentWeekday = null;
-        }
-        continue;
-      }
+    const seen = new Set(); // dedupe weekday+category emissions
 
-      // If we have a weekday and this paragraph has dish categories, parse them
-      if (currentWeekday && /det gröna|husman|internationell/i.test(text)) {
-        const dishes = this.splitDishes(text);
-        for (const dish of dishes) {
-          lunches.push(
-            this.createLunchObject({
-              name: dish.category,
-              description: dish.text,
-              price,
-              weekday: currentWeekday,
-              week,
-              place: this.getName(),
-            }),
-          );
-        }
-        currentWeekday = null; // Each day has one paragraph with all dishes
+    for (const segment of this._splitByWeekday(blob)) {
+      const { weekday, text } = segment;
+
+      // Skip closed days (e.g. "STÄNGT — GLAD MIDSOMMAR" on Midsummer Eve).
+      if (/stängt|stängd/i.test(text)) continue;
+
+      if (!/det gröna|husman|internationell/i.test(text)) continue;
+
+      const dishes = this.splitDishes(text);
+      for (const dish of dishes) {
+        const key = `${weekday}|${dish.category.toLowerCase()}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        lunches.push(
+          this.createLunchObject({
+            name: dish.category,
+            description: dish.text,
+            price,
+            weekday,
+            week,
+            place: this.getName(),
+          }),
+        );
       }
     }
 
     return lunches;
+  }
+
+  /**
+   * Split a text blob into per-weekday segments. A weekday label may appear
+   * at the start of a line or inline anywhere in the text. Each returned
+   * segment holds the text from one weekday label up to the next.
+   * @param {string} blob - Concatenated content text
+   * @returns {Array<{weekday: string, text: string}>}
+   */
+  _splitByWeekday(blob) {
+    // Match a capitalised weekday word as a standalone token. Allow it to be
+    // glued to preceding lowercase text (e.g. "sötsur såsOnsdag") by not
+    // requiring a leading boundary, but require it to be followed by a
+    // non-letter (space, colon, newline, end) so we don't match e.g.
+    // "Måndag" inside "Måndagsklubben".
+    const pattern = new RegExp(
+      `(${WEEKDAYS.join("|")})(?=[^a-zåäö]|$)`,
+      "gi",
+    );
+
+    const matches = [];
+    let m;
+    while ((m = pattern.exec(blob)) !== null) {
+      matches.push({ weekday: m[1].toLowerCase(), index: m.index, end: pattern.lastIndex });
+    }
+
+    const segments = [];
+    for (let i = 0; i < matches.length; i++) {
+      const start = matches[i].end;
+      const stop = i + 1 < matches.length ? matches[i + 1].index : blob.length;
+      segments.push({
+        weekday: matches[i].weekday,
+        text: blob.slice(start, stop).trim(),
+      });
+    }
+
+    return segments;
   }
 
   splitDishes(text) {
