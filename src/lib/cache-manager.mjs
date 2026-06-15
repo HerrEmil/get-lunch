@@ -204,6 +204,41 @@ export function createCacheKey(
 }
 
 /**
+ * Merge newly-collected lunches into the lunches already cached for a week,
+ * using replace-by-weekday semantics:
+ *   - Any weekday present in the new batch fully replaces that weekday's
+ *     previously cached entries (so refreshed data wins, no duplicates).
+ *   - Weekdays only present in the existing cache are preserved.
+ *
+ * This lets restaurants that publish a single day at a time (e.g. Kontrast,
+ * whose public API only exposes the current day) accumulate a full week across
+ * daily collection runs. For restaurants that publish the whole week in one
+ * run, every weekday is replaced, so the result is identical to an overwrite.
+ *
+ * Lunches without a weekday are treated as a single "" bucket and are likewise
+ * replaced wholesale whenever the new batch contains any weekday-less entry,
+ * preserving the previous overwrite behaviour for those parsers.
+ *
+ * @param {Array} existingLunches - Lunches already cached for the week
+ * @param {Array} newLunches - Lunches from the current collection run
+ * @returns {Array} - Merged lunches array
+ */
+function mergeLunchesByWeekday(existingLunches, newLunches) {
+  if (!Array.isArray(existingLunches) || existingLunches.length === 0) {
+    return newLunches;
+  }
+
+  const weekdayKey = (lunch) => (lunch?.weekday || "").toLowerCase();
+  const replacedWeekdays = new Set(newLunches.map(weekdayKey));
+
+  const preserved = existingLunches.filter(
+    (lunch) => !replacedWeekdays.has(weekdayKey(lunch)),
+  );
+
+  return [...preserved, ...newLunches];
+}
+
+/**
  * Store lunch data in cache
  * @param {string} restaurant - Restaurant name
  * @param {number} week - Week number
@@ -227,13 +262,35 @@ export async function cacheLunchData(restaurant, week, lunches, metadata = {}) {
     const timestamp = new Date().toISOString();
     const ttl = getTtlTimestamp();
 
+    // Merge with any data already cached for this (restaurant, week) so that
+    // single-day collection runs accumulate into a full week rather than
+    // clobbering previously collected weekdays.
+    let mergedLunches = lunches;
+    try {
+      const existing = await executeWithRetry(
+        () =>
+          docClient.send(
+            new GetCommand({ TableName: TABLE_NAME, Key: { pk: cacheKey } }),
+          ),
+        `cacheLunchData.read(${restaurant}, week ${week})`,
+      );
+      mergedLunches = mergeLunchesByWeekday(existing?.Item?.lunches, lunches);
+    } catch (readError) {
+      // A failed read should not block writing fresh data; fall back to the
+      // new batch (previous overwrite behaviour).
+      console.warn(
+        `cacheLunchData: could not read existing data for ${cacheKey}, writing new batch only:`,
+        readError.message,
+      );
+    }
+
     const item = {
       pk: cacheKey,
       restaurant: restaurant.toLowerCase(),
       week: Number(week),
       year: new Date().getFullYear(),
-      lunches: lunches,
-      lunchCount: lunches.length,
+      lunches: mergedLunches,
+      lunchCount: mergedLunches.length,
       cachedAt: timestamp,
       ttl: ttl,
       metadata: {

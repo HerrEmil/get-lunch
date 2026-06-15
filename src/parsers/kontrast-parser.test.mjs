@@ -113,4 +113,24 @@ describe("KontrastParser", () => {
     expect(parser.getWeekNumber(new Date(2026, 0, 5))).toBe(2);
     expect(parser.getWeekNumber(new Date(2026, 2, 30))).toBe(14);
   });
+
+  it("returns only the single resolved weekday (cache accumulates the week)", async () => {
+    // The public lunch-display API exposes one server-resolved day per call,
+    // so each run must tag every dish with that one weekday. The data-collector
+    // runs Mon-Fri and the cache merges by weekday to build the full week.
+    mockRequests(parser, {
+      resolvedDate: "2026-06-17", // Wednesday, week 25
+      weekday: 3,
+      price: 125,
+      dishes: [
+        { nameSv: "Dish A", descriptionSv: "", categoryId: 1 },
+        { nameSv: "Dish B", descriptionSv: "", categoryId: 3 },
+      ],
+    });
+
+    const lunches = await parser.parseMenu();
+    expect(lunches).toHaveLength(2);
+    expect(new Set(lunches.map((l) => l.weekday))).toEqual(new Set(["onsdag"]));
+    expect(lunches.every((l) => l.week === 25)).toBe(true);
+  });
 });
