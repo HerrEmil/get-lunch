@@ -41,7 +41,7 @@ const RESTAURANT_CONFIGS = [
     id: "taste",
     name: "Taste",
     parser: "taste",
-    url: "https://www.tastebynordrest.se/17/6/taste-malmo/",
+    url: "https://www.nordrest.se/restaurang/taste-by-nordrest-malmo/",
     active: true,
   },
   {
