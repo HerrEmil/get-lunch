@@ -75,7 +75,7 @@ functions:
   # HTML Serving Lambda (API Gateway).
   # Note: Lambda SnapStart is not supported for Node.js runtimes (only Java/Python/.NET).
   # Cold-start mitigation here relies on AWS_NODEJS_CONNECTION_REUSE_ENABLED + small
-  # bundle (ESM tree-shake, externalized heavy deps) + API Gateway response caching.
+  # bundle (ESM tree-shake, externalized heavy deps).
   apiServer:
     handler: dist/api-server/index.handler
     timeout: 30
