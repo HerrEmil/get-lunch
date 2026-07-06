@@ -39,7 +39,7 @@
     "html-validate": "^11.5.5",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
-    "osls": "^3.76.0",
+    "osls": "^4.0.0",
     "prettier": "^3.9.4",
     "serverless-domain-manager": "^10.2.0",
     "serverless-dynamodb": "^0.2.58",
