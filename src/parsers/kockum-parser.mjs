@@ -1,6 +1,19 @@
 /**
  * Kockum Fritid Restaurant Parser (FreDa49)
  * Extracts lunch menu from FreDa49's lunch page at Kockum Fritid
+ *
+ * The page has appeared in three formats over time, so extraction is tiered:
+ *  1. Weekday-header format: "Lunch vecka N" + måndag/tisdag/... headers with
+ *     dishes under each day (and a "Veckans vegetariska" all-week section).
+ *  2. Flat weekly list (seen 2026-07): "Lunchmeny vecka N" followed by
+ *     bold-span dish names with non-bold description lines. No weekday
+ *     grouping — every dish is served all week. Price in "pris 136kr" line.
+ *  3. Affärsluncher fallback (seen when no weekly menu is published): a
+ *     "Vårens affärsluncher i Malmö" section with numbered dishes
+ *     ("1. Fläskfilé ..."), applied to all weekdays. Price in the
+ *     "Affärslunchen kostar 195kr" line.
+ *
+ * All menu content lives in <p class="mobile-undersized-upper"> elements.
  */
 
 import { BaseParser } from "./base-parser.mjs";
@@ -13,6 +26,9 @@ const WEEKDAY_LABELS = [
   "torsdag",
   "fredag",
 ];
+
+const DEFAULT_WEEKLY_PRICE = 136;
+const DEFAULT_BUSINESS_PRICE = 195;
 
 export class KockumParser extends BaseParser {
   constructor(config = {}) {
@@ -53,19 +69,36 @@ export class KockumParser extends BaseParser {
   }
 
   extractMenu(document) {
-    const lunches = [];
-
-    // Extract week number from "Lunch vecka 14/2026" pattern
+    // Extract week number from "Lunch vecka 14/2026" or "Lunchmeny vecka 27"
     const allText = document.body?.textContent || "";
-    const weekMatch = allText.match(/[Ll]unch\s+vecka\s+(\d+)/);
+    const weekMatch = allText.match(/lunch(?:meny)?\s+vecka\s+(\d+)/i);
     const week = weekMatch ? parseInt(weekMatch[1]) : this._getCurrentWeek();
 
-    // Extract price from H1 containing "136kr" or similar
-    const price = this.extractPrice(allText);
-
     // All content is in <p class="mobile-undersized-upper"> elements
-    const paragraphs = document.querySelectorAll("p.mobile-undersized-upper");
-    if (!paragraphs || paragraphs.length === 0) return lunches;
+    const paragraphs = [
+      ...(document.querySelectorAll("p.mobile-undersized-upper") || []),
+    ];
+    if (paragraphs.length === 0) return [];
+
+    // Tier 1: legacy weekday-header format (site may revert to it)
+    const weekdayLunches = this.parseWeekdayFormat(paragraphs, week, allText);
+    if (weekdayLunches.length > 0) return weekdayLunches;
+
+    // Tier 2: flat "Lunchmeny vecka N" list — dishes served all week
+    const weeklyLunches = this.parseWeeklyListFormat(paragraphs, week);
+    if (weeklyLunches.length > 0) return weeklyLunches;
+
+    // Tier 3: affärsluncher numbered list — applied to all weekdays
+    return this.parseBusinessLunchFormat(paragraphs, week);
+  }
+
+  /**
+   * Tier 1: weekday headers (måndag/tisdag/...) with dishes under each,
+   * plus a "Veckans vegetariska" section applied to all weekdays.
+   */
+  parseWeekdayFormat(paragraphs, week, allText) {
+    const lunches = [];
+    const price = this.extractPrice(allText);
 
     let currentWeekday = null;
     let isVegetarian = false;
@@ -75,8 +108,8 @@ export class KockumParser extends BaseParser {
       const text = p.textContent.trim();
       if (!text) continue;
 
-      // Skip the "Lunch vecka" header
-      if (/^lunch\s+vecka/i.test(text)) continue;
+      // Skip the "Lunch vecka" / "Lunchmeny vecka" header
+      if (/^lunch(?:meny)?\s+vecka/i.test(text)) continue;
 
       // Check if this is a weekday header
       const weekday = this.matchWeekday(text);
@@ -100,7 +133,9 @@ export class KockumParser extends BaseParser {
         skipRest = true;
         continue;
       }
-      // Break at start of catering/smörrebröd section — everything after is noise
+      // Break at start of catering/smörrebröd section — everything after is
+      // noise. Note: "affärslunch" is deliberately unanchored so the boundary
+      // fires on "Vårens affärsluncher i Malmö" as well.
       if (/^smörrebröd|affärslunch/i.test(text)) break;
       if (skipRest) continue;
 
@@ -162,9 +197,148 @@ export class KockumParser extends BaseParser {
     return lunches;
   }
 
+  /**
+   * Tier 2: flat weekly list under a "Lunchmeny vecka N" heading. Dish names
+   * are bold spans; the following non-bold line(s) are the description.
+   * There is no weekday grouping — every dish is served all week, so each
+   * dish is emitted for måndag–fredag (same pattern as the old "veckans
+   * vegetariska" handling).
+   */
+  parseWeeklyListFormat(paragraphs, week) {
+    const lunches = [];
+    const startIdx = paragraphs.findIndex((p) =>
+      /lunch(?:meny)?\s+vecka/i.test(p.textContent),
+    );
+    if (startIdx === -1) return lunches;
+
+    let price = DEFAULT_WEEKLY_PRICE;
+    const dishes = [];
+    let currentDish = null;
+
+    for (let i = startIdx + 1; i < paragraphs.length; i++) {
+      const text = paragraphs[i].textContent.trim();
+      if (!text) continue; // &nbsp;/<br> spacer paragraphs
+
+      // "Serveras mellan 11.00-14.00, pris 136kr" — scoped price extraction
+      const priceMatch = text.match(/pris\s*(\d{2,3})\s*kr/i);
+      if (priceMatch) {
+        price = parseInt(priceMatch[1]);
+        continue;
+      }
+
+      // Info lines that are not dishes
+      if (/^(serveras\s+mellan|ingår)/i.test(text)) continue;
+
+      // Boundary: the affärsluncher/catering block ends the weekly menu
+      if (/affärslunch|avhämtning|catering/i.test(text)) break;
+
+      if (this.hasBoldText(paragraphs[i])) {
+        // Bold span = new dish name (handles bold nested in a non-bold span)
+        if (currentDish) dishes.push(currentDish);
+        currentDish = { name: text, description: "" };
+      } else if (currentDish) {
+        // Non-bold line following a dish = its description
+        currentDish.description = currentDish.description
+          ? `${currentDish.description} ${text}`
+          : text;
+      }
+    }
+    if (currentDish) dishes.push(currentDish);
+
+    for (const dish of dishes) {
+      for (const day of WEEKDAY_LABELS) {
+        lunches.push(
+          this.createLunchObject({
+            name: dish.name,
+            description: dish.description,
+            price,
+            weekday: day,
+            week,
+            place: this.getName(),
+          }),
+        );
+      }
+    }
+
+    return lunches;
+  }
+
+  /**
+   * Tier 3: "Vårens affärsluncher i Malmö" numbered list ("1. Fläskfilé ...").
+   * Used when no weekly lunch menu is published. Dishes apply to all
+   * weekdays; price comes from the "Affärslunchen kostar 195kr" line.
+   */
+  parseBusinessLunchFormat(paragraphs, week) {
+    const lunches = [];
+    const startIdx = paragraphs.findIndex((p) =>
+      /affärslunch/i.test(p.textContent),
+    );
+    if (startIdx === -1) return lunches;
+
+    let price = DEFAULT_BUSINESS_PRICE;
+    const dishes = [];
+
+    for (let i = startIdx + 1; i < paragraphs.length; i++) {
+      const text = paragraphs[i].textContent.trim();
+      if (!text) continue;
+
+      // Numbered dish: "1. Fläskfilé med kålfrikassé & dragonrostade potatisar"
+      const dishMatch = text.match(/^\d+\.\s*(.+)$/);
+      if (dishMatch) {
+        dishes.push(dishMatch[1].trim());
+        continue;
+      }
+
+      // "Affärslunchen kostar 195kr / person" — scoped price, ends the section
+      const priceMatch = text.match(/kostar\s*(\d{2,3})\s*kr/i);
+      if (priceMatch) {
+        price = parseInt(priceMatch[1]);
+        break;
+      }
+
+      // Any other prose after we have collected dishes ends the section
+      if (dishes.length > 0) break;
+    }
+
+    for (const name of dishes) {
+      for (const day of WEEKDAY_LABELS) {
+        lunches.push(
+          this.createLunchObject({
+            name,
+            description: "",
+            price,
+            weekday: day,
+            week,
+            place: this.getName(),
+          }),
+        );
+      }
+    }
+
+    return lunches;
+  }
+
+  /**
+   * True if the paragraph (or any descendant) carries bold styling.
+   * The site uses inline styles, e.g. <span style="font-weight: bold;">,
+   * sometimes nested inside a non-bold span.
+   */
+  hasBoldText(p) {
+    if (/font-weight:\s*bold/i.test(p.getAttribute?.("style") || "")) {
+      return true;
+    }
+    const styled = p.querySelectorAll?.("[style]") || [];
+    for (const el of styled) {
+      if (/font-weight:\s*bold/i.test(el.getAttribute("style") || "")) {
+        return true;
+      }
+    }
+    return !!p.querySelector?.("b, strong");
+  }
+
   extractPrice(text) {
     const match = text.match(/(\d{2,3})\s*kr/i);
-    return match ? parseInt(match[1]) : 136;
+    return match ? parseInt(match[1]) : DEFAULT_WEEKLY_PRICE;
   }
 
   matchWeekday(text) {

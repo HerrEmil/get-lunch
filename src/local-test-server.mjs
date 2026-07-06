@@ -18,7 +18,7 @@ const RESTAURANT_CONFIGS = [
   { id: "spill", name: "Spill", parser: "spill", url: "https://www.restaurangspill.se/", active: true },
   { id: "kontrast", name: "Kontrast", parser: "kontrast", url: "https://www.kontrastrestaurang.se/vastra-hamnen/", active: true },
   { id: "p2", name: "P2", parser: "p2", url: "https://restaurangp2.se/", active: true },
-  { id: "taste", name: "Taste", parser: "taste", url: "https://www.tastebynordrest.se/17/6/taste-malmo/", active: true },
+  { id: "taste", name: "Taste", parser: "taste", url: "https://www.nordrest.se/restaurang/taste-by-nordrest-malmo/", active: true },
   { id: "varv", name: "Varv", parser: "varv", url: "https://varvmalmo.com/menu", active: true },
   { id: "fonderie", name: "La Fonderie", parser: "fonderie", url: "https://www.lafonderie.se/lelunch", active: true },
   { id: "laziza", name: "Laziza", parser: "laziza", url: "https://www.laziza.se/lunch/", active: true },
