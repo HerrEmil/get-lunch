@@ -204,6 +204,31 @@ describe("TasteParser", () => {
     expect(parser.extractLunchPrice(document)).toBe(135);
   });
 
+  it("returns 0 lunches when the menu is unpublished but the castit plugin is present", async () => {
+    // Live state of the Taste page during the 2026 summer closure: no week
+    // panels are rendered at all; only plugin assets (script/CSS ids) remain.
+    const document = new JSDOM(`
+      <html><head>
+        <script type="text/rocketlazyloadscript" id="castit-menus-js" data-rocket-src="/wp-content/plugins/castit-menus/assets/castit-menus.js"></script>
+      </head><body><main>Taste by Nordrest Malmö</main></body></html>
+    `).window.document;
+    parser.fetchDocument = async () => document;
+
+    const lunches = await parser.parseMenu();
+    expect(lunches).toHaveLength(0);
+  });
+
+  it("still fails loudly when the page has no castit traces at all", async () => {
+    const document = new JSDOM(
+      `<html><body><h1>Taste</h1><p>Helt ny sida</p></body></html>`,
+    ).window.document;
+    parser.fetchDocument = async () => document;
+
+    await expect(parser.parseMenu()).rejects.toThrow(
+      "Could not find castit week panel",
+    );
+  });
+
   it("filters the vacation closure placeholder so a closed week yields 0 lunches", () => {
     const document = new JSDOM(VACATION_PAGE).window.document;
     const panel = parser.findCurrentWeekPanel(document);

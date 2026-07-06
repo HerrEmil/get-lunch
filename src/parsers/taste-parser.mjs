@@ -17,6 +17,10 @@
  * - Closure placeholders (e.g. a single dish "SEMESTER STÄNGT ÖPPNAR IGEN
  *   3/8" during vacation weeks) are filtered out so a closed week yields zero
  *   lunches instead of a fake dish.
+ * - Deep closures unpublish the week panels entirely (observed summer 2026):
+ *   the page keeps the plugin's CSS/JS assets (e.g. `id="castit-menus-js"`)
+ *   but renders no `[data-week-panel]` at all. That also yields zero lunches;
+ *   only a page with no castit traces at all is treated as a parse failure.
  */
 
 import { BaseParser } from "./base-parser.mjs";
@@ -53,6 +57,16 @@ export class TasteParser extends BaseParser {
       const panel = this.findCurrentWeekPanel(document);
 
       if (!panel) {
+        // During closures the site unpublishes the week panels entirely —
+        // only the castit plugin's assets remain. That is "no menu right
+        // now", not a parse failure; a page without any castit traces at
+        // all, however, means the template changed.
+        if (this.safeQuery(document, '[id*="castit"], [class*="castit"]')) {
+          await this.logger.info(
+            "No castit week panels published (restaurant closed?) — returning 0 lunches",
+          );
+          return [];
+        }
         throw new Error("Could not find castit week panel");
       }
 
