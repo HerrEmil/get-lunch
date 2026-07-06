@@ -36,15 +36,15 @@
   "devDependencies": {
     "esbuild": "^0.28.1",
     "eslint": "^10.6.0",
-    "html-validate": "^11.5.3",
+    "html-validate": "^11.5.5",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
     "osls": "^3.76.0",
-    "prettier": "^3.9.3",
+    "prettier": "^3.9.4",
     "serverless-domain-manager": "^10.2.0",
     "serverless-dynamodb": "^0.2.58",
     "serverless-offline": "^14.7.4",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.10"
   },
   "engines": {
     "node": ">=22.0.0"
