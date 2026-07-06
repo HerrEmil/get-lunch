@@ -2,6 +2,7 @@ node_modules
 dist
 .esbuild
 .serverless
-.claude
+.claude/*
+!.claude/settings.json
 .DS_Store
 test-results.json
