@@ -2,8 +2,38 @@
   "sandbox": {
     "network": {
       "allowedDomains": [
+        "comomalmo.se",
+        "www.comomalmo.se",
+        "freda49.se",
+        "www.freda49.se",
+        "holygreens.se",
+        "www.holygreens.se",
+        "ica.se",
+        "www.ica.se",
+        "kontrastrestaurang.se",
+        "www.kontrastrestaurang.se",
+        "lafonderie.se",
+        "www.lafonderie.se",
+        "laziza.se",
+        "www.laziza.se",
+        "lokal17.se",
+        "www.lokal17.se",
+        "miamarias.nu",
+        "www.miamarias.nu",
         "nordrest.se",
-        "www.nordrest.se"
+        "www.nordrest.se",
+        "papisaluhallen.se",
+        "www.papisaluhallen.se",
+        "restaurangniagara.se",
+        "www.restaurangniagara.se",
+        "restaurangp2.se",
+        "www.restaurangp2.se",
+        "restaurangspill.se",
+        "www.restaurangspill.se",
+        "ubatshallen.se",
+        "www.ubatshallen.se",
+        "varvmalmo.com",
+        "www.varvmalmo.com"
       ]
     }
   }
