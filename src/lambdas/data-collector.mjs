@@ -114,6 +114,13 @@ const RESTAURANT_CONFIGS = [
     url: "https://www.papisaluhallen.se/",
     active: true,
   },
+  {
+    id: "holygreens",
+    name: "Holy Greens",
+    parser: "holygreens",
+    url: "https://holygreens.se/meny/",
+    active: true,
+  },
 ];
 
 /**

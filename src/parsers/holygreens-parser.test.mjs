@@ -14,6 +14,42 @@ function createParser() {
   return parser;
 }
 
+// Captured from https://holygreens.se/meny/ (2026-07, ISO week 29). Each dish is
+// an `.item` card wrapping an `.image-wrap` image and a `.content-wrap` with the
+// dish name in an <h3>, plus an optional `.more-wrap` nutrition block. The parser
+// only reads the <h3> under each `.item`, so the surrounding wrappers mirror the
+// live markup without the (large) nutrition tables.
+const MOCK_HTML = `
+<html><body>
+  <div class="menu">
+    <div class="item has-more">
+      <div class="image-wrap"><img src="https://holygreens.se/wp-content/uploads/sommarsallad-app-640x480.jpg" width="640" height="480" alt=""></div>
+      <div class="content-wrap"><h3>sommarsallad</h3><p class="p1">Bjärekyckling, vit quinoa, salladsmix, vattenmelon, jordgubbar.</p></div>
+    </div>
+    <div class="item has-more">
+      <div class="image-wrap"><img src="https://holygreens.se/wp-content/uploads/asiatisk-raka-640x480.jpg" width="640" height="480" alt=""></div>
+      <div class="content-wrap"><h3>asiatisk räka</h3><p class="p1">Räkor, ris, edamame, morot, sesam.</p></div>
+    </div>
+    <div class="item has-more">
+      <div class="image-wrap"><img src="https://holygreens.se/wp-content/uploads/laxokado-1-640x480.jpg" width="640" height="480" alt=""></div>
+      <div class="content-wrap"><h3>laxokado</h3><p class="p1">Varmrökt lax, avokado, quinoa, spenat.</p></div>
+    </div>
+    <div class="item has-more">
+      <div class="image-wrap"><img src="https://holygreens.se/wp-content/uploads/holy-caesar-2-640x480.jpg" width="640" height="480" alt=""></div>
+      <div class="content-wrap"><h3>holy caesar</h3><p class="p1">Kyckling, romansallad, parmesan, krutonger.</p></div>
+    </div>
+    <div class="item has-more">
+      <div class="image-wrap"><img src="https://holygreens.se/wp-content/uploads/holylulu-640x480.jpg" width="640" height="480" alt=""></div>
+      <div class="content-wrap"><h3>holylulu</h3><p class="p1">Falafel, hummus, granatäpple, quinoa.</p></div>
+    </div>
+    <div class="item has-more">
+      <div class="image-wrap"><img src="https://holygreens.se/wp-content/uploads/gronsakslandet-640x480.jpg" width="640" height="480" alt=""></div>
+      <div class="content-wrap"><h3>grönsakslandet vegansk</h3><p class="p1">Rostade grönsaker, linser, tahini.</p></div>
+    </div>
+  </div>
+</body></html>
+`;
+
 let JSDOM;
 
 beforeAll(async () => {
@@ -34,15 +70,16 @@ describe("HolyGreensParser", () => {
   });
 
   it("extracts item names from .item elements", () => {
-    const dom = new JSDOM(`
-      <html><body>
-        <div class="item"><h3>Caesar Salad</h3><p>Romansallad, parmesan, krutonger</p></div>
-        <div class="item"><h3>Thai Bowl</h3><p>Ris, kyckling, jordnötter</p></div>
-        <div class="item"><h3>Greek Salad</h3><p>Fetaost, oliver, tomat</p></div>
-      </body></html>
-    `);
+    const dom = new JSDOM(MOCK_HTML);
     const names = parser.extractItemNames(dom.window.document);
-    expect(names).toEqual(["Caesar Salad", "Thai Bowl", "Greek Salad"]);
+    expect(names).toEqual([
+      "sommarsallad",
+      "asiatisk räka",
+      "laxokado",
+      "holy caesar",
+      "holylulu",
+      "grönsakslandet vegansk",
+    ]);
   });
 
   it("returns empty array when no .item elements found", () => {
@@ -51,17 +88,8 @@ describe("HolyGreensParser", () => {
     expect(names).toEqual([]);
   });
 
-  it("creates one lunch per weekday with item names as description", async () => {
-    const dom = new JSDOM(`
-      <html><body>
-        <div class="item"><h3>Caesar Salad</h3><p>Romansallad</p></div>
-        <div class="item"><h3>Thai Bowl</h3><p>Ris, kyckling</p></div>
-        <div class="item"><h3>Greek Salad</h3><p>Fetaost, oliver</p></div>
-        <div class="item"><h3>Poke Bowl</h3><p>Lax, ris</p></div>
-        <div class="item"><h3>Falafel Bowl</h3><p>Falafel, hummus</p></div>
-        <div class="item"><h3>Smoothie</h3><p>Banan, blåbär</p></div>
-      </body></html>
-    `);
+  it("creates one lunch per weekday with the first five item names as description", async () => {
+    const dom = new JSDOM(MOCK_HTML);
 
     parser.fetchDocument = async () => dom.window.document;
 
@@ -74,11 +102,11 @@ describe("HolyGreensParser", () => {
       weekday: "måndag",
       place: "Holy Greens",
     });
-    // Description should contain first 5 items
-    expect(lunches[0].description).toContain("Caesar Salad");
-    expect(lunches[0].description).toContain("Falafel Bowl");
-    // 6th item should not be in description
-    expect(lunches[0].description).not.toContain("Smoothie");
+    // Description should contain the first 5 items...
+    expect(lunches[0].description).toContain("sommarsallad");
+    expect(lunches[0].description).toContain("holylulu");
+    // ...but not the 6th.
+    expect(lunches[0].description).not.toContain("grönsakslandet vegansk");
 
     expect(lunches[4]).toMatchObject({
       weekday: "fredag",
