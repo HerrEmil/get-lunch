@@ -1,0 +1,43 @@
+diff --git a/node_modules/serverless-domain-manager/dist/src/globals.js b/node_modules/serverless-domain-manager/dist/src/globals.js
+index ba283a9..ef84d6d 100644
+--- a/node_modules/serverless-domain-manager/dist/src/globals.js
++++ b/node_modules/serverless-domain-manager/dist/src/globals.js
+@@ -18,8 +18,16 @@ class Globals {
+         return Globals.options.stage || Globals.serverless.service.provider.stage;
+     }
+     static getServiceEndpoint(service) {
+-        if (Globals.serverless.providers.aws.sdk) {
+-            const serviceConf = Globals.serverless.providers.aws.sdk.config[service];
++        // osls v4 removed the AWS SDK v2 surface: provider.sdk is a getter that throws
++        let sdk;
++        try {
++            sdk = Globals.serverless.providers.aws.sdk;
++        }
++        catch (_a) {
++            return null;
++        }
++        if (sdk) {
++            const serviceConf = sdk.config[service];
+             if (serviceConf) {
+                 return serviceConf.endpoint;
+             }
+diff --git a/node_modules/serverless-domain-manager/dist/src/index.js b/node_modules/serverless-domain-manager/dist/src/index.js
+index c2f24ed..04ec496 100644
+--- a/node_modules/serverless-domain-manager/dist/src/index.js
++++ b/node_modules/serverless-domain-manager/dist/src/index.js
+@@ -86,7 +86,14 @@ class ServerlessCustomDomain {
+                 }
+                 catch (error) {
+                     if (error.message.includes("Could not load credentials from any providers")) {
+-                        globals_1.default.credentials = this.serverless.providers.aws.getCredentials();
++                        // osls v4 removed provider.getCredentials(); rethrow the original
++                        // credentials error instead of the guided migration error
++                        try {
++                            globals_1.default.credentials = this.serverless.providers.aws.getCredentials();
++                        }
++                        catch (_a) {
++                            throw error;
++                        }
+                         yield this.initAWSResources();
+                     }
+                 }

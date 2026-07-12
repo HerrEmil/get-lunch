@@ -21,6 +21,7 @@
     "remove": "serverless remove",
     "lint": "eslint .",
     "format": "prettier --write .",
+    "postinstall": "patch-package",
     "prepare": "husky || true"
   },
   "lint-staged": {
@@ -42,6 +43,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
     "osls": "^4.0.0",
+    "patch-package": "^8.0.1",
     "prettier": "^3.9.4",
     "serverless-domain-manager": "^10.2.0",
     "serverless-dynamodb": "^0.2.58",
