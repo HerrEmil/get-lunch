@@ -21,7 +21,6 @@
 import { BaseParser } from "./base-parser.mjs";
 
 const WEEKDAYS = ["måndag", "tisdag", "onsdag", "torsdag", "fredag"];
-const CATEGORIES = ["det gröna", "husman", "internationell"];
 
 export class UbatshallenParser extends BaseParser {
   constructor(config = {}) {

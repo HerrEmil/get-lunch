@@ -4,7 +4,6 @@
  */
 
 import { BaseParser } from "./base-parser.mjs";
-import { createLunchObject } from "./parser-interfaces.mjs";
 import { SWEDISH_WEEKDAYS } from "./parser-interfaces.mjs";
 
 export class NiagaraParser extends BaseParser {
@@ -671,7 +670,7 @@ export class NiagaraParser extends BaseParser {
               `Calculated week number: ${week} from date: ${dateStr}`,
             );
             return week;
-          } catch (dateError) {
+          } catch {
             this.logger.warn("Failed to parse date from week text", {
               dateStr,
             });
@@ -689,7 +688,7 @@ export class NiagaraParser extends BaseParser {
               `Calculated week number: ${week} from formatted date: ${weekText}`,
             );
             return week;
-          } catch (dateError) {
+          } catch {
             this.logger.warn("Failed to parse formatted date from week text", {
               weekText,
             });

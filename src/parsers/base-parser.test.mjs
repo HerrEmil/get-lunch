@@ -8,11 +8,8 @@ import { NiagaraParser } from "./niagara-parser.mjs";
 import { ParserFactory } from "./parser-factory.mjs";
 import { createLunchObject } from "./parser-interfaces.mjs";
 
-let JSDOM;
-
 beforeAll(async () => {
   vi.doUnmock("jsdom");
-  ({ JSDOM } = await import("jsdom"));
 });
 
 class MockParser extends BaseParser {

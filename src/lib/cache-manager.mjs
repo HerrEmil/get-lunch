@@ -316,7 +316,9 @@ export async function cacheLunchData(restaurant, week, lunches, metadata = {}) {
     return true;
   } catch (error) {
     console.error("Error caching lunch data:", error);
-    throw new Error(`Failed to cache lunch data: ${error.message}`);
+    throw new Error(`Failed to cache lunch data: ${error.message}`, {
+      cause: error,
+    });
   }
 }
 
@@ -366,7 +368,9 @@ export async function getCachedLunchData(
     return response.Item;
   } catch (error) {
     console.error("Error retrieving cached lunch data:", error);
-    throw new Error(`Failed to retrieve cached data: ${error.message}`);
+    throw new Error(`Failed to retrieve cached data: ${error.message}`, {
+      cause: error,
+    });
   }
 }
 
@@ -484,7 +488,9 @@ export async function deleteCachedData(
     return true;
   } catch (error) {
     console.error("Error deleting cached data:", error);
-    throw new Error(`Failed to delete cached data: ${error.message}`);
+    throw new Error(`Failed to delete cached data: ${error.message}`, {
+      cause: error,
+    });
   }
 }
 
@@ -592,7 +598,9 @@ export async function batchCacheLunchData(entries) {
     };
   } catch (error) {
     console.error("Error in batch cache operation:", error);
-    throw new Error(`Batch cache operation failed: ${error.message}`);
+    throw new Error(`Batch cache operation failed: ${error.message}`, {
+      cause: error,
+    });
   }
 }
 
@@ -691,7 +699,9 @@ export async function cleanupExpiredCache() {
     return deletedCount;
   } catch (error) {
     console.error("Error cleaning up expired cache:", error);
-    throw new Error(`Cache cleanup failed: ${error.message}`);
+    throw new Error(`Cache cleanup failed: ${error.message}`, {
+      cause: error,
+    });
   }
 }
 

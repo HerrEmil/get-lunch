@@ -2,7 +2,7 @@
  * Unit tests for API Server Lambda Function
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { handler } from "./api-server.mjs";
 
 // Mock dependencies
@@ -24,7 +24,6 @@ vi.mock("fs", () => ({
 }));
 
 import { getCachedLunchData } from "../lib/cache-manager.mjs";
-import { createRestaurantLogger } from "../lib/enhanced-logger.mjs";
 import { readFileSync } from "fs";
 
 // Sample test data

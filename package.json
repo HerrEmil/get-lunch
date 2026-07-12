@@ -34,8 +34,10 @@
     "pdfjs-dist": "^6.1.200"
   },
   "devDependencies": {
+    "@eslint/js": "^10",
     "esbuild": "^0.28.1",
     "eslint": "^10.6.0",
+    "globals": "^17.7.0",
     "html-validate": "^11.5.5",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",

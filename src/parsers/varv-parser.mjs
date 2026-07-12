@@ -4,7 +4,6 @@
  */
 
 import { BaseParser } from "./base-parser.mjs";
-import { SWEDISH_WEEKDAYS } from "./parser-interfaces.mjs";
 
 const ENGLISH_TO_SWEDISH = {
   monday: "måndag",
