@@ -121,6 +121,13 @@ const RESTAURANT_CONFIGS = [
     url: "https://holygreens.se/meny/",
     active: true,
   },
+  {
+    id: "smak",
+    name: "SMAK",
+    parser: "smak",
+    url: "https://smak.gastrogate.com/lunch/",
+    active: true,
+  },
 ];
 
 /**

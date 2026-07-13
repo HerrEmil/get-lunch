@@ -36,6 +36,7 @@ const RESTAURANT_CONFIGS = [
   { id: "como", name: "COMO", url: "https://comomalmo.se/meny", active: true },
   { id: "papi", name: "PAPI", url: "https://www.papisaluhallen.se/", active: true },
   { id: "holygreens", name: "Holy Greens", url: "https://holygreens.se/meny/", active: true },
+  { id: "smak", name: "SMAK", url: "https://smak.gastrogate.com/lunch/", active: true },
 ];
 
 // Swedish weekday mapping
