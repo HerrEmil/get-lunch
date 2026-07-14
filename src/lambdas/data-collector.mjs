@@ -128,6 +128,13 @@ const RESTAURANT_CONFIGS = [
     url: "https://smak.gastrogate.com/lunch/",
     active: true,
   },
+  {
+    id: "kolga",
+    name: "Kolga",
+    parser: "kolga",
+    url: "https://kolga.gastrogate.com/lunch/",
+    active: true,
+  },
 ];
 
 /**

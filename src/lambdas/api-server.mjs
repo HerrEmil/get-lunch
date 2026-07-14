@@ -37,6 +37,7 @@ const RESTAURANT_CONFIGS = [
   { id: "papi", name: "PAPI", url: "https://www.papisaluhallen.se/", active: true },
   { id: "holygreens", name: "Holy Greens", url: "https://holygreens.se/meny/", active: true },
   { id: "smak", name: "SMAK", url: "https://smak.gastrogate.com/lunch/", active: true },
+  { id: "kolga", name: "Kolga", url: "https://kolga.gastrogate.com/lunch/", active: true },
 ];
 
 // Swedish weekday mapping

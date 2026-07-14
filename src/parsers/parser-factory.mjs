@@ -21,6 +21,7 @@ import { ComoParser } from "./como-parser.mjs";
 import { PapiParser } from "./papi-parser.mjs";
 import { HolyGreensParser } from "./holygreens-parser.mjs";
 import { SmakParser } from "./smak-parser.mjs";
+import { KolgaParser } from "./kolga-parser.mjs";
 import { DEFAULT_PARSER_CONFIG } from "./parser-interfaces.mjs";
 
 /**
@@ -86,6 +87,7 @@ export class ParserFactory {
     this.registerParserClass("papi", PapiParser);
     this.registerParserClass("holygreens", HolyGreensParser);
     this.registerParserClass("smak", SmakParser);
+    this.registerParserClass("kolga", KolgaParser);
 
     // Initialize circuit breakers
     this.initializeCircuitBreakers();
