@@ -55,7 +55,7 @@ const RESTAURANT_CONFIGS = [
     id: "fonderie",
     name: "La Fonderie",
     parser: "fonderie",
-    url: "https://www.lafonderie.se/lelunch",
+    url: "https://www.lafonderie.se/lunch",
     active: true,
   },
   {
@@ -133,6 +133,13 @@ const RESTAURANT_CONFIGS = [
     name: "Kolga",
     parser: "kolga",
     url: "https://kolga.gastrogate.com/lunch/",
+    active: true,
+  },
+  {
+    id: "kitchen961",
+    name: "Kitchen961",
+    parser: "kitchen961",
+    url: "https://kitchen961.se/lunchen/",
     active: true,
   },
 ];

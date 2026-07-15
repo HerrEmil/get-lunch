@@ -26,7 +26,7 @@ const RESTAURANT_CONFIGS = [
   { id: "p2", name: "P2", url: "https://restaurangp2.se/#lunch", active: true },
   { id: "taste", name: "Taste", url: "https://www.nordrest.se/restaurang/taste-by-nordrest-malmo/", active: true },
   { id: "varv", name: "Varv", url: "https://varvmalmo.com/menu", active: true },
-  { id: "fonderie", name: "La Fonderie", url: "https://www.lafonderie.se/lelunch", active: true },
+  { id: "fonderie", name: "La Fonderie", url: "https://www.lafonderie.se/lunch", active: true },
   { id: "laziza", name: "Laziza", url: "https://www.laziza.se/lunch/", active: true },
   { id: "kockum", name: "Kockum Fritid", url: "https://freda49.se/lunch-malmo.html", active: true },
   { id: "ubåtshallen", name: "Ubåtshallen", url: "https://www.ubatshallen.se/", active: true },
@@ -38,6 +38,7 @@ const RESTAURANT_CONFIGS = [
   { id: "holygreens", name: "Holy Greens", url: "https://holygreens.se/meny/", active: true },
   { id: "smak", name: "SMAK", url: "https://smak.gastrogate.com/lunch/", active: true },
   { id: "kolga", name: "Kolga", url: "https://kolga.gastrogate.com/lunch/", active: true },
+  { id: "kitchen961", name: "Kitchen961", url: "https://kitchen961.se/lunchen/", active: true },
 ];
 
 // Swedish weekday mapping
