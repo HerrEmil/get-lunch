@@ -39,6 +39,7 @@ const RESTAURANT_CONFIGS = [
   { id: "smak", name: "SMAK", url: "https://smak.gastrogate.com/lunch/", active: true },
   { id: "kolga", name: "Kolga", url: "https://kolga.gastrogate.com/lunch/", active: true },
   { id: "kitchen961", name: "Kitchen961", url: "https://kitchen961.se/lunchen/", active: true },
+  { id: "frilaget", name: "Friläget", url: "https://frilaget.gastrogate.com/lunch/", active: true },
 ];
 
 // Swedish weekday mapping

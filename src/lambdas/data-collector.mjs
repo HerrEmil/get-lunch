@@ -142,6 +142,13 @@ const RESTAURANT_CONFIGS = [
     url: "https://kitchen961.se/lunchen/",
     active: true,
   },
+  {
+    id: "frilaget",
+    name: "Friläget",
+    parser: "frilaget",
+    url: "https://frilaget.gastrogate.com/lunch/",
+    active: true,
+  },
 ];
 
 /**
