@@ -149,6 +149,13 @@ const RESTAURANT_CONFIGS = [
     url: "https://frilaget.gastrogate.com/lunch/",
     active: true,
   },
+  {
+    id: "hamnochpeppar",
+    name: "Hamn o Peppar",
+    parser: "hamnochpeppar",
+    url: "https://hamnochpeppar.gastrogate.com/lunch/",
+    active: true,
+  },
 ];
 
 /**

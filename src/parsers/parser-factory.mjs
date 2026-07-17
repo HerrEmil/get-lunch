@@ -24,6 +24,7 @@ import { SmakParser } from "./smak-parser.mjs";
 import { KolgaParser } from "./kolga-parser.mjs";
 import { Kitchen961Parser } from "./kitchen961-parser.mjs";
 import { FrilagetParser } from "./frilaget-parser.mjs";
+import { HamnOchPepparParser } from "./hamnochpeppar-parser.mjs";
 import { DEFAULT_PARSER_CONFIG } from "./parser-interfaces.mjs";
 
 /**
@@ -92,6 +93,7 @@ export class ParserFactory {
     this.registerParserClass("kolga", KolgaParser);
     this.registerParserClass("kitchen961", Kitchen961Parser);
     this.registerParserClass("frilaget", FrilagetParser);
+    this.registerParserClass("hamnochpeppar", HamnOchPepparParser);
 
     // Initialize circuit breakers
     this.initializeCircuitBreakers();
