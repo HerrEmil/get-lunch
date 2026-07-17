@@ -546,6 +546,21 @@ export class NiagaraParser extends BaseParser {
         return null;
       }
 
+      // During holidays Niagara puts a closure notice in the very slot a dish
+      // would occupy (a .lunchmeny_container whose .lunch_title reads e.g.
+      // "Semesterstängt V.29-32" and whose .lunch_price is empty). Without this
+      // guard the notice becomes a "dish" priced off the digits in "V.29-32".
+      // Only the resolved item name is inspected — never the page or the
+      // description — so real titles (the categories Green/Local/Asia/World
+      // Wide/Veckans, or a dish name) are unaffected when the menu returns.
+      if (this.isClosureNotice(name)) {
+        await this.logger.info("Skipping closure notice found in menu slot", {
+          name,
+          weekday,
+        });
+        return null;
+      }
+
       // Try multiple selectors for description
       const descSelectors = [
         ".lunch_desc",
@@ -717,6 +732,19 @@ export class NiagaraParser extends BaseParser {
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
     return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+  }
+
+  /**
+   * True when a menu-item title is actually a closure notice rather than a dish.
+   *
+   * Deliberately narrow: it matches only an explicit "stängt"/"stängd" (which
+   * covers the "semesterstängt"/"sommarstängt" compounds) or "sommarlov", and
+   * it is only ever applied to the dish-name slot. No Swedish dish or menu
+   * category contains those words, so a real menu cannot be suppressed.
+   */
+  isClosureNotice(name) {
+    if (!name) return false;
+    return /st[äa]ng[dt]|sommarlov/i.test(name);
   }
 
   /**

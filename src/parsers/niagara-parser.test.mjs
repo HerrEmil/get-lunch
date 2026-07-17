@@ -120,6 +120,41 @@ describe("NiagaraParser modern layout handling", () => {
     expect(local.description).toContain("strömming");
   });
 
+  it("returns no items when the page shows a vacation notice instead of a menu", async () => {
+    // Real markup observed 2026-07-17 (week 29): the closure notice occupies the
+    // same .lunchmeny_container slot a dish would, with an empty .lunch_price.
+    // The digits in "V.29-32" previously leaked out as a 0.29 kr "dish".
+    const dom = new JSDOM(`
+      <section class="lunch-section">
+        <h3>Vecka 20250714</h3>
+        <div id="e-n-tab-content-2115517941" role="tabpanel" aria-labelledby="monday-tab">
+          <div class="elementor-element monday">
+            <h3 class="elementor-heading-title">Måndag</h3>
+            <div class="elementor-shortcode">
+              <div class="lunchmeny_wrapper">
+                <div class="lunchmeny_container">
+                  <span class="lunch_icon"><svg viewBox="0 0 512 512"><path d="M361.5 1.2z"/></svg></span>
+                  <span class="lunch_title">Semesterstängt V.29-32</span>
+                  <span class="lunch_separator"></span>
+                  <span class="lunch_price"></span>
+                  <div class="lunch_desc">Vi på restaurang Niagara önskar er en glad sommar! 😎⛱️
+Vi är återigen måndagen den 10 Augusti.
+Hälsningar från Personalen!
+</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    `);
+
+    const container = dom.window.document.querySelector("section");
+    const lunches = await parser.extractFromModernStructure(container);
+
+    expect(lunches).toHaveLength(0);
+  });
+
   it("detects closure messaging when no lunches exist", async () => {
     const dom = new JSDOM(`
       <section>
