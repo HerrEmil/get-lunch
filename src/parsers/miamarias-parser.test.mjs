@@ -211,6 +211,120 @@ describe("MiaMariasParser", () => {
     expect(lunches[0].price).toBe(130);
   });
 
+  describe("day-tab layout (live site markup)", () => {
+    // Mirrors the Elementor tab widget on miamarias.nu/lunch/: tab titles
+    // carry the weekday (Friday decorated as "Schnitzelfredag"), panels hold
+    // the categories, and Friday's panel opens with a "Stängt" notice h2.
+    const TABBED_MOCK = `
+      <div>
+        <h2>Vecka 29</h2>
+        <p>Intro text</p>
+        <div class="e-n-tabs">
+          <div class="e-n-tabs-heading">
+            <button><span class="e-n-tab-title-text">Måndag</span></button>
+            <button><span class="e-n-tab-title-text">Tisdag</span></button>
+            <button><span class="e-n-tab-title-text">Onsdag</span></button>
+            <button><span class="e-n-tab-title-text">Torsdag</span></button>
+            <button><span class="e-n-tab-title-text">Schnitzelfredag</span></button>
+          </div>
+          <div class="e-n-tabs-content">
+            <div>
+              <h2>Fisk</h2><p>Mån fisk</p><p>130:-</p>
+              <h2>Kött</h2><p>Mån kött</p><p>130:-</p>
+              <h2>Vegetariskt</h2><p>Mån veg</p><p>130:-</p>
+            </div>
+            <div>
+              <h2>Fisk</h2><p>Tis fisk</p><p>130:-</p>
+              <h2>Kött</h2><p>Tis kött</p><p>130:-</p>
+              <h2>Vegetariskt</h2><p>Tis veg</p><p>130:-</p>
+            </div>
+            <div>
+              <h2>Fisk</h2><p>Ons fisk</p><p>130:-</p>
+              <h2>Kött</h2><p>Ons kött</p><p>130:-</p>
+              <h2>Vegetariskt</h2><p>Ons veg</p><p>130:-</p>
+            </div>
+            <div>
+              <h2>Fisk</h2><p>Tor fisk</p><p>130:-</p>
+              <h2>Kött</h2><p>Tor kött</p><p>130:-</p>
+              <h2>Vegetariskt</h2><p>Tor veg</p><p>130:-</p>
+              <h2>Torsdagens soppa</h2><p>Ärtsoppa</p><p>110:-</p>
+            </div>
+            <div>
+              <h2>Stängt</h2>
+              <p>Semesterstängt v. 28–32</p>
+              <h2>Fisk</h2><p>Kolja med rostad potatis</p><p>130:-</p>
+              <h2>Kött</h2><p>Fläskschnitzel med skysås</p><p>130:-</p>
+              <h2>Vegetariskt</h2><p>Lasagne med sötpotatis</p><p>130:-</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    it("maps decorated day titles to weekdays (Schnitzelfredag -> fredag)", () => {
+      const dom = new JSDOM(TABBED_MOCK);
+      const lunches = parser.extractMenu(dom.window.document);
+
+      expect(lunches.length).toBe(15);
+      expect(lunches.every((l) => l.week === 29)).toBe(true);
+
+      const friday = lunches.filter((l) => l.weekday === "fredag");
+      expect(friday.length).toBe(3);
+      expect(friday.map((l) => l.name)).toEqual([
+        "Fisk",
+        "Kött",
+        "Vegetariskt",
+      ]);
+      expect(friday[1].description).toContain("Fläskschnitzel");
+    });
+
+    it("does not let a Stängt notice inside a panel shift or leak dishes", () => {
+      const dom = new JSDOM(TABBED_MOCK);
+      const lunches = parser.extractMenu(dom.window.document);
+
+      // Every weekday present exactly once per category.
+      for (const day of ["måndag", "tisdag", "onsdag", "torsdag", "fredag"]) {
+        expect(lunches.filter((l) => l.weekday === day).length).toBe(3);
+      }
+      // The notice paragraph and the soup (non-category heading) are not
+      // captured as dishes.
+      expect(
+        lunches.some((l) => l.description.includes("Semesterstängt")),
+      ).toBe(false);
+      expect(lunches.some((l) => l.description.includes("Ärtsoppa"))).toBe(
+        false,
+      );
+    });
+
+    it("skips tabs whose title contains no weekday name", () => {
+      const dom = new JSDOM(`
+        <div>
+          <h2>Vecka 29</h2>
+          <div class="e-n-tabs">
+            <div class="e-n-tabs-heading">
+              <button><span class="e-n-tab-title-text">Måndag</span></button>
+              <button><span class="e-n-tab-title-text">Helgbuffé</span></button>
+            </div>
+            <div class="e-n-tabs-content">
+              <div>
+                <h2>Fisk</h2><p>Mån fisk</p><p>130:-</p>
+              </div>
+              <div>
+                <h2>Kött</h2><p>Helg kött</p><p>200:-</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `);
+
+      const lunches = parser.extractMenu(dom.window.document);
+
+      expect(lunches.length).toBe(1);
+      expect(lunches[0].weekday).toBe("måndag");
+      expect(lunches.some((l) => l.description.includes("Helg"))).toBe(false);
+    });
+  });
+
   it("falls back to the first section when the current week is absent", () => {
     // Mirrors the live-site situation where the page still shows last week's
     // menu. The parser should surface that single section rather than nothing.
