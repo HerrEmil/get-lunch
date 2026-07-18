@@ -2,8 +2,13 @@ name: Collect
 
 # Manually trigger the data-collector Lambda (e.g. to refresh DynamoDB after
 # a parser fix lands, instead of waiting for the weekday 08:00 UTC cron).
+# Also runs when this file changes, so a collect can be triggered by a push.
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/collect.yml"
 
 concurrency:
   group: collect
