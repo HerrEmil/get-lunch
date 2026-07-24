@@ -58,7 +58,7 @@
     "whatwg-url": "^14.0.0",
     "tr46": "^5.0.0",
     "cross-spawn": "^7.0.6",
-    "fast-xml-parser": "^5.9.3",
+    "fast-xml-parser": "^5.10.1",
     "tar": "^7.5.3",
     "minimatch": "^5.1.6",
     "qs": "^6.15.2",
