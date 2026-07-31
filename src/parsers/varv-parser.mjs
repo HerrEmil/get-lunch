@@ -1,9 +1,22 @@
 /**
  * Restaurang Varv Parser
  * Extends BaseParser to extract lunch menu data from Restaurang Varv
+ *
+ * Varv's Squarespace page has been published with the week heading as an <h1>
+ * and, later, as an <h2>, so both are searched for "Lunch menu week <n>".
+ *
+ * The lunch price is only read from a heading that explicitly names it
+ * ("Lunch for 145" / "Lunch 145 kr"). The page's Breakfast and Coffee sections
+ * carry prices of their own, and those must never be mistaken for the lunch
+ * price. When no lunch price is published at all, no lunches are emitted
+ * rather than emitting rows with a fabricated 0 kr.
  */
 
 import { BaseParser } from "./base-parser.mjs";
+
+const WEEK_PATTERN = /Lunch menu week\s+(\d+)/i;
+
+const PRICE_PATTERNS = [/Lunch for\s+(\d+)/i, /Lunch\s+(\d+)\s*(?:kr|:-)/i];
 
 const ENGLISH_TO_SWEDISH = {
   monday: "måndag",
@@ -42,6 +55,14 @@ export class VarvParser extends BaseParser {
       const document = await this.fetchDocument();
 
       const { week, price, dayDishes } = this.extractMenuData(document);
+
+      if (price === null) {
+        await this.logger.warn(
+          "Varv publishes no lunch price - skipping menu",
+          { week },
+        );
+        return [];
+      }
 
       const lunches = [];
       for (const { weekday, dishes } of dayDishes) {
@@ -82,15 +103,14 @@ export class VarvParser extends BaseParser {
   }
 
   /**
-   * Extract week number from H1 containing "Lunch menu week"
+   * Extract week number from H1/H2 containing "Lunch menu week"
    */
   extractWeekNumber(document) {
-    const headings = this.safeQuery(document, "h1", true);
+    const headings = this.safeQuery(document, "h1, h2", true);
     if (!headings) return this._getCurrentWeek();
 
-    for (const h1 of headings) {
-      const text = this.extractText(h1);
-      const match = text.match(/Lunch menu week\s+(\d+)/i);
+    for (const heading of headings) {
+      const match = this.extractText(heading).match(WEEK_PATTERN);
       if (match) {
         return parseInt(match[1]);
       }
@@ -100,21 +120,24 @@ export class VarvParser extends BaseParser {
   }
 
   /**
-   * Extract price from H2 containing "Lunch for (\d+)"
+   * Extract the lunch price from a H1/H2 that explicitly names it
+   * @returns {number|null} Price, or null when no lunch price is published
    */
   extractPrice(document) {
-    const headings = this.safeQuery(document, "h2", true);
-    if (!headings) return 0;
+    const headings = this.safeQuery(document, "h1, h2", true);
+    if (!headings) return null;
 
-    for (const h2 of headings) {
-      const text = this.extractText(h2);
-      const match = text.match(/Lunch for\s+(\d+)/i);
-      if (match) {
-        return parseInt(match[1]);
+    for (const heading of headings) {
+      const text = this.extractText(heading);
+      for (const pattern of PRICE_PATTERNS) {
+        const match = text.match(pattern);
+        if (match) {
+          return parseInt(match[1]);
+        }
       }
     }
 
-    return 0;
+    return null;
   }
 
   /**
@@ -146,7 +169,11 @@ export class VarvParser extends BaseParser {
 
         if (sibling.tagName.toLowerCase() === "p") {
           const dishText = this.extractText(sibling).trim();
-          if (dishText && !/^(or|eller)$/i.test(dishText)) {
+          if (
+            dishText &&
+            !/^(or|eller)$/i.test(dishText) &&
+            !this._isItalicNote(sibling)
+          ) {
             dishes.push(dishText);
           }
         }
@@ -160,6 +187,21 @@ export class VarvParser extends BaseParser {
     }
 
     return dayDishes;
+  }
+
+  /**
+   * A paragraph whose entire content is italicised is site boilerplate
+   * (e.g. "<em>All dishes are available for take-away.</em>"), not a dish
+   * @private
+   */
+  _isItalicNote(paragraph) {
+    if (paragraph.children.length !== 1) return false;
+
+    const child = paragraph.children[0];
+    const tagName = child.tagName.toLowerCase();
+    if (tagName !== "em" && tagName !== "i") return false;
+
+    return this.extractText(child) === this.extractText(paragraph);
   }
 }
 

@@ -28,7 +28,17 @@ describe("VarvParser", () => {
     parser = createParser();
   });
 
-  it("extracts week number from H1", () => {
+  it("extracts week number from H2", () => {
+    const dom = new JSDOM(`
+      <html><body>
+        <h2>Lunch menu week 32, 11:30 — 14:00</h2>
+      </body></html>
+    `);
+    const document = dom.window.document;
+    expect(parser.extractWeekNumber(document)).toBe(32);
+  });
+
+  it("extracts week number from legacy H1 markup", () => {
     const dom = new JSDOM(`
       <html><body>
         <h1>Lunch menu week 14, 11:30 — 14:00</h1>
@@ -48,11 +58,24 @@ describe("VarvParser", () => {
     expect(parser.extractPrice(document)).toBe(145);
   });
 
+  it("returns null when no lunch price is published", () => {
+    const dom = new JSDOM(`
+      <html><body>
+        <h2>Lunch menu week 32, 11:30 — 14:00</h2>
+        <h2>Breakfast</h2>
+        <p>Yoghurt, granola 45 kr</p>
+        <h2>Coffee</h2>
+        <p>Cappuccino 38 kr</p>
+      </body></html>
+    `);
+    const document = dom.window.document;
+    expect(parser.extractPrice(document)).toBeNull();
+  });
+
   it("extracts dishes grouped by day with Swedish weekday names", () => {
     const dom = new JSDOM(`
       <html><body>
-        <h1>Lunch menu week 14, 11:30 — 14:00</h1>
-        <h2>Lunch for 145</h2>
+        <h2>Lunch menu week 32, 11:30 — 14:00</h2>
         <p>All lunches include salad and bread.</p>
         <h2>Monday</h2>
         <p>Beef tartare, soy, jerusalem artichokes, coriander &amp; fries</p>
@@ -78,11 +101,30 @@ describe("VarvParser", () => {
     expect(dayDishes[1].dishes[1]).toContain("Gnocchi");
   });
 
+  it("does not count an italic disclaimer paragraph as a dish", () => {
+    const dom = new JSDOM(`
+      <html><body>
+        <h2>Friday</h2>
+        <p>Pork Schnitzel, potato, peas, café de paris, gravy</p>
+        <p>or</p>
+        <p>Mozzarella, tomatoes, fermented chilli, string beans, lovage</p>
+        <p></p>
+        <p><em>All dishes are available for take-away.</em></p>
+        <h2>Breakfast</h2>
+      </body></html>
+    `);
+    const document = dom.window.document;
+    const dayDishes = parser.extractDayDishes(document);
+
+    expect(dayDishes).toHaveLength(1);
+    expect(dayDishes[0].dishes).toHaveLength(2);
+    expect(dayDishes[0].dishes.join(" ")).not.toContain("take-away");
+  });
+
   it("extracts full menu data end-to-end", () => {
     const dom = new JSDOM(`
       <html><body>
-        <h1>Lunch menu week 14, 11:30 — 14:00</h1>
-        <h2>Lunch for 145</h2>
+        <h2>Lunch menu week 32, 11:30 — 14:00</h2>
         <p>All lunches include salad and bread.</p>
         <h2>Monday</h2>
         <p>Beef tartare, soy, jerusalem artichokes, coriander &amp; fries</p>
@@ -99,6 +141,33 @@ describe("VarvParser", () => {
         <h2>Friday</h2>
         <p>Fish tacos</p>
         <p>Bean burrito</p>
+        <p><em>All dishes are available for take-away.</em></p>
+        <h2>Breakfast</h2>
+        <p>Yoghurt, granola 45 kr</p>
+      </body></html>
+    `);
+    const document = dom.window.document;
+    const { week, price, dayDishes } = parser.extractMenuData(document);
+
+    expect(week).toBe(32);
+    expect(price).toBeNull();
+    expect(dayDishes).toHaveLength(5);
+    expect(dayDishes[4].weekday).toBe("fredag");
+    expect(dayDishes[4].dishes).toHaveLength(2);
+  });
+
+  it("extracts full menu data from legacy H1 + priced markup", () => {
+    const dom = new JSDOM(`
+      <html><body>
+        <h1>Lunch menu week 14, 11:30 — 14:00</h1>
+        <h2>Lunch for 145</h2>
+        <p>All lunches include salad and bread.</p>
+        <h2>Monday</h2>
+        <p>Beef tartare, soy, jerusalem artichokes, coriander &amp; fries</p>
+        <p>Pointed cabbage, hummous, harissa, almonds &amp; mint</p>
+        <h2>Tuesday</h2>
+        <p>Cottage pie (beef mince topped with potato mash)</p>
+        <p>Gnocchi, taleggio, radicchio, peppers</p>
       </body></html>
     `);
     const document = dom.window.document;
@@ -106,14 +175,13 @@ describe("VarvParser", () => {
 
     expect(week).toBe(14);
     expect(price).toBe(145);
-    expect(dayDishes).toHaveLength(5);
-    expect(dayDishes[4].weekday).toBe("fredag");
+    expect(dayDishes).toHaveLength(2);
   });
 
   it("returns empty array when no day headings found", () => {
     const dom = new JSDOM(`
       <html><body>
-        <h1>Lunch menu week 14</h1>
+        <h2>Lunch menu week 32</h2>
         <p>No menu this week</p>
       </body></html>
     `);
@@ -140,6 +208,42 @@ describe("VarvParser", () => {
     expect(dayDishes).toHaveLength(2);
     expect(dayDishes[0].weekday).toBe("måndag");
     expect(dayDishes[1].weekday).toBe("tisdag");
+  });
+
+  it("emits no lunches when no lunch price is published", async () => {
+    const dom = new JSDOM(`
+      <html><body>
+        <h2>Lunch menu week 32, 11:30 — 14:00</h2>
+        <h2>Monday</h2>
+        <p>Beef tartare, soy, jerusalem artichokes, coriander &amp; fries</p>
+        <p>Pointed cabbage, hummous, harissa, almonds &amp; mint</p>
+        <h2>Breakfast</h2>
+        <p>Yoghurt, granola 45 kr</p>
+      </body></html>
+    `);
+    parser.fetchDocument = () => Promise.resolve(dom.window.document);
+
+    await expect(parser.parseMenu()).resolves.toEqual([]);
+  });
+
+  it("emits priced lunches when a lunch price is published", async () => {
+    const dom = new JSDOM(`
+      <html><body>
+        <h2>Lunch menu week 32, 11:30 — 14:00</h2>
+        <h2>Lunch for 165</h2>
+        <h2>Monday</h2>
+        <p>Beef tartare, soy, jerusalem artichokes, coriander &amp; fries</p>
+        <p>Pointed cabbage, hummous, harissa, almonds &amp; mint</p>
+      </body></html>
+    `);
+    parser.fetchDocument = () => Promise.resolve(dom.window.document);
+
+    const lunches = await parser.parseMenu();
+
+    expect(lunches).toHaveLength(2);
+    expect(lunches[0].price).toBe(165);
+    expect(lunches[0].week).toBe(32);
+    expect(lunches[0].weekday).toBe("måndag");
   });
 
   it("returns correct getName and getUrl", () => {
