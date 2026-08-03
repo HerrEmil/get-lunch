@@ -2,6 +2,13 @@
  * Ubåtshallen Parser
  * Extracts lunch menu from ubatshallen.se
  *
+ * URL: the weekly menu lives on the "Veckans Meny" page
+ * (/modern-svensk-husmanskost/, the page the site's own nav links to). It used
+ * to also render at the site root, but from the 2026 summer pause the root
+ * serves a standalone "Sommarpaus" landing page with no menu at all, so the
+ * root can no longer be relied on. The Veckans Meny page is the canonical
+ * location and keeps working regardless of what the front page is set to.
+ *
  * Structure: .entry-content contains <p> elements, but the weekday headers
  * are NOT reliably in their own paragraphs. In practice the source bleeds
  * content across paragraph boundaries, e.g.:
@@ -26,7 +33,7 @@ export class UbatshallenParser extends BaseParser {
   constructor(config = {}) {
     super({
       name: "Ubåtshallen",
-      url: "https://www.ubatshallen.se/",
+      url: "https://www.ubatshallen.se/modern-svensk-husmanskost/",
       timeout: 30000,
       retries: 3,
       retryDelay: 1000,
@@ -39,7 +46,7 @@ export class UbatshallenParser extends BaseParser {
   }
 
   getUrl() {
-    return "https://www.ubatshallen.se/";
+    return "https://www.ubatshallen.se/modern-svensk-husmanskost/";
   }
 
   async parseMenu() {

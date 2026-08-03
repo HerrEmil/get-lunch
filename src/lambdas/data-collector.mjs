@@ -76,7 +76,7 @@ const RESTAURANT_CONFIGS = [
     id: "ubåtshallen",
     name: "Ubåtshallen",
     parser: "ubatshallen",
-    url: "https://www.ubatshallen.se/",
+    url: "https://www.ubatshallen.se/modern-svensk-husmanskost/",
     active: true,
   },
   {
@@ -104,7 +104,7 @@ const RESTAURANT_CONFIGS = [
     id: "como",
     name: "COMO",
     parser: "como",
-    url: "https://comomalmo.se/meny",
+    url: "https://comomalmo.se/",
     active: true,
   },
   {

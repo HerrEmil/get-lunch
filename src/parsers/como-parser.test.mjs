@@ -134,6 +134,65 @@ mynta &amp; rostad potatis</p>
 </body></html>
 `;
 
+// Captured from comomalmo.se on 2026-08-03. Same summer template and the same
+// LI structure, but the CMS now publishes the lunch items with an EMPTY <h3>
+// (whitespace only) and the whole dish text in the description <p> — note it
+// is the SAME dish at the SAME price as SUMMER_HTML's "Sallad Niçoise" 195,
+// just with the title folded into the description. The evening/dessert
+// sections are unchanged and still carry titled, description-less items.
+const SUMMER_UNTITLED_HTML = `
+<html><body>
+  <div id="menu-content">
+    <section class="mb-12 text-black">
+      <h2 class="uppercase tracking-widest">
+        Sommarlunch (11:30–14:00, M–F)</h2>
+      <ul>
+        <li class="flex items-baseline justify-between">
+          <div class="flex-1">
+            <h3 class="uppercase tracking-wide">
+            </h3>
+            <p>sallad niçoise,
+halstrad tonfisk, ägg,
+haricot vertes, tomat
+&amp; sardell</p>
+          </div>
+          <p>
+            195</p>
+        </li>
+        <li class="flex items-baseline justify-between">
+          <div class="flex-1">
+            <h3 class="uppercase tracking-wide">
+            </h3>
+            <p>grillat kycklingbröst,
+caesarsallad, friterad potatis
+&amp; parmesan</p>
+          </div>
+          <p>
+            185</p>
+        </li>
+        <li class="flex items-baseline justify-between">
+          <div class="flex-1">
+            <h3 class="uppercase tracking-wide">
+            </h3>
+          </div>
+          <p>
+            95</p>
+        </li>
+      </ul>
+    </section>
+    <section class="mb-12 text-black">
+      <h2>Sommarmeny</h2>
+      <ul>
+        <li>
+          <div class="flex-1"><h3>Oliver &amp; Piparras</h3></div>
+          <p>65</p>
+        </li>
+      </ul>
+    </section>
+  </div>
+</body></html>
+`;
+
 describe("ComoParser", () => {
   let parser;
 
@@ -252,6 +311,56 @@ describe("ComoParser", () => {
 
       for (const lunch of lunches) {
         expect(lunch.week).toBe(parser._getCurrentWeek());
+        expect(lunch.place).toBe("COMO");
+      }
+    });
+  });
+
+  describe("summer template with untitled items (2026-08 markup)", () => {
+    it("keeps priced lunch items whose h3 is empty, using the published text as the name", () => {
+      const dom = new JSDOM(SUMMER_UNTITLED_HTML);
+      const dishes = parser.extractDishes(dom.window.document);
+
+      expect(dishes).toHaveLength(2);
+
+      expect(dishes[0]).toMatchObject({
+        name: "Sallad niçoise, halstrad tonfisk, ägg, haricot vertes, tomat & sardell",
+        description: "",
+        price: 195,
+      });
+      expect(dishes[1]).toMatchObject({
+        name: "Grillat kycklingbröst, caesarsallad, friterad potatis & parmesan",
+        description: "",
+        price: 185,
+      });
+    });
+
+    it("still skips an untitled item that publishes no dish text at all", () => {
+      const dom = new JSDOM(SUMMER_UNTITLED_HTML);
+      const dishes = parser.extractDishes(dom.window.document);
+      // The third LI has an empty h3 and no description P — nothing is
+      // published for it, so nothing is invented for it either.
+      expect(dishes.map((d) => d.price)).not.toContain(95);
+    });
+
+    it("does not reach into the evening menu for a name", () => {
+      const dom = new JSDOM(SUMMER_UNTITLED_HTML);
+      const dishes = parser.extractDishes(dom.window.document);
+      const names = dishes.map((d) => d.name.toLowerCase());
+      expect(names).not.toContain("oliver & piparras");
+    });
+
+    it("creates 5 lunches per untitled dish", async () => {
+      const dom = new JSDOM(SUMMER_UNTITLED_HTML);
+      parser.fetchDocument = async () => dom.window.document;
+
+      const lunches = await parser.parseMenu();
+
+      // 2 dishes * 5 weekdays
+      expect(lunches).toHaveLength(10);
+      for (const lunch of lunches) {
+        expect(lunch.name).not.toBe("");
+        expect(lunch.price).toBeGreaterThan(0);
         expect(lunch.place).toBe("COMO");
       }
     });

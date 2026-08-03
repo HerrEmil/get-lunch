@@ -30,7 +30,27 @@ describe("UbatshallenParser", () => {
 
   it("has correct name and url", () => {
     expect(parser.getName()).toBe("Ubåtshallen");
-    expect(parser.getUrl()).toBe("https://www.ubatshallen.se/");
+    // The "Veckans Meny" page, not the site root: from the 2026 summer pause
+    // the root serves a menu-less "Sommarpaus" landing page.
+    expect(parser.getUrl()).toBe(
+      "https://www.ubatshallen.se/modern-svensk-husmanskost/",
+    );
+  });
+
+  it("returns no lunches for the menu-less Sommarpaus landing page", () => {
+    // Mirrors the site root as served from 2026-07-13: an .entry-content with
+    // a closure notice and no weekday or category labels anywhere.
+    const dom = new JSDOM(`
+      <div class="entry-content">
+        <h2 class="wp-block-heading">Sommarpaus</h2>
+        <p>Kära Gäster,</p>
+        <p>Vi tar en liten paus för att ladda upp med ny energi och nya menyer.
+        Från 13 juli till 2 augusti stänger vi dörrarna här, men vi ser fram emot
+        att välkomna er tillbaka när vi öppnar igen!</p>
+        <p>Med varma sommarhälsningar,</p>
+      </div>
+    `);
+    expect(parser.extractMenu(dom.window.document)).toEqual([]);
   });
 
   it("extracts dishes from concatenated category format", () => {

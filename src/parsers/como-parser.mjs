@@ -91,6 +91,15 @@ export class ComoParser extends BaseParser {
    * "Sallad Niçoise" in summer) plus description P(s), and a trailing price P
    * as a direct child of the LI. Items without a description (desserts,
    * snacks) are not lunch dishes and are skipped.
+   *
+   * UNTITLED ITEMS (seen from 2026-08): the same summer template is now
+   * published with an EMPTY H3 and the whole dish in the description P
+   * ("sallad niçoise, halstrad tonfisk, ägg, haricot vertes, tomat &
+   * sardell", 195). Those are real, priced lunch dishes, so we mirror what is
+   * published: the description text becomes the dish name and no separate
+   * description is claimed. A non-empty H3 still wins, so the titled markup
+   * keeps parsing exactly as before. Nothing is invented — an item with no
+   * text at all is still skipped.
    */
   extractDishes(document) {
     const dishes = [];
@@ -120,7 +129,6 @@ export class ComoParser extends BaseParser {
       if (!h3) continue;
 
       const rawName = this.extractText(h3).replace(/\s+/g, " ").trim();
-      if (!rawName) continue;
 
       // Description P(s) sit next to the H3 inside the wrapper DIV; the
       // price P is a direct child of the LI, outside that DIV.
@@ -144,9 +152,11 @@ export class ComoParser extends BaseParser {
       }
       if (price === null) continue;
 
+      // Untitled item: the published dish text is the only name there is.
+      const name = rawName || description;
       dishes.push({
-        name: rawName.charAt(0).toUpperCase() + rawName.slice(1),
-        description,
+        name: name.charAt(0).toUpperCase() + name.slice(1),
+        description: rawName ? description : "",
         price,
       });
     }
