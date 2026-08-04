@@ -232,26 +232,23 @@ plugins:
 
 package:
   individually: true
-  patterns:
-    # Global excludes applied to every function package.
-    - '!**/*.md'
-    - '!**/*.markdown'
-    - '!**/*.map'
-    - '!**/*.ts'
-    - '!**/*.d.ts'
-    - '!**/*.d.mts'
-    - '!**/LICENSE'
-    - '!**/LICENSE.txt'
-    - '!**/LICENSE.md'
-    - '!**/CHANGELOG.md'
-    - '!**/CHANGELOG'
-    - '!**/test/**'
-    - '!**/tests/**'
-    - '!**/__tests__/**'
-    - '!**/types/**'
-    - '!**/.github/**'
-    - '!**/example/**'
-    - '!**/examples/**'
+  # NOTE: there is deliberately no service-level `patterns` list here, and
+  # adding one back will silently inflate the Lambda.
+  #
+  # Serverless concatenates the service-level patterns ahead of each function's
+  # own list and keeps the FIRST occurrence of a duplicated pattern. This block
+  # used to repeat the same metadata excludes that
+  # tools/collector-package-patterns.mjs already emits, which hoisted them in
+  # front of the include rules — so the includes re-added the very files the
+  # excludes were meant to strip, and dataCollector shipped 90 sourcemaps,
+  # 60 READMEs and 190 .ts sources: 1.23 MB of dead weight that left only
+  # 0.26 MB of headroom under the 5 MB cap and blocked the jsdom 30 bump.
+  # Measured on osls 4.0.0, 2 reps per cell, zip read with python zipfile:
+  #   service `!**/x` + function `!**/x`  -> 4,970,896 B, 1713 files, 90 maps
+  #   service absent  + function `!**/x`  -> 3,660,164 B, 1348 files,  0 maps
+  # Keep every exclude in exactly one place: collector-package-patterns.mjs.
+  # apiServer packages only its own esbuild bundle and needs no excludes.
+  # Guarded by a regression test in collector-package-patterns.test.mjs.
 
 # Environment-specific configurations
 configValidationMode: error

@@ -61,6 +61,12 @@ export function computeCollectorPatterns(nodeModulesDir) {
     // jsdom transitive deps (auto-derived; resolved by Node at runtime)
     ...jsdomDeps,
     // Excludes (last patterns win) — strip metadata, sourcemaps, type defs.
+    // These must exist ONLY here. serverless.yml deliberately declares no
+    // service-level `package.patterns`: serverless puts service patterns ahead
+    // of the function's own and keeps the first occurrence of a duplicate, so
+    // repeating any of these there hoists it in front of the includes above,
+    // which then re-add the files it was meant to strip (that bug shipped
+    // 1.23 MB of sourcemaps/READMEs/.ts and blocked the jsdom 30 bump).
     "!**/*.md",
     "!**/*.markdown",
     "!**/*.map",

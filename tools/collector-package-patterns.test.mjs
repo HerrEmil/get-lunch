@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 
 // test-setup.mjs globally mocks `fs`; this module reads the real filesystem,
 // so unmock it and import everything fresh (mirrors taste-parser.test.mjs).
-let jsdomClosure, computeCollectorPatterns, existsSync, mkdtempSync;
+let jsdomClosure, computeCollectorPatterns, existsSync, mkdtempSync, readFileSync;
 let patterns;
 
 const NODE_MODULES = path.join(process.cwd(), "node_modules");
@@ -12,7 +12,7 @@ const NODE_MODULES = path.join(process.cwd(), "node_modules");
 beforeAll(async () => {
   vi.doUnmock("fs");
   vi.doUnmock("node:fs");
-  ({ existsSync, mkdtempSync } = await import("node:fs"));
+  ({ existsSync, mkdtempSync, readFileSync } = await import("node:fs"));
   ({ jsdomClosure, computeCollectorPatterns } = await import(
     "./collector-package-patterns.mjs"
   ));
@@ -69,5 +69,34 @@ describe("collector package patterns", () => {
   it("throws when a required package is missing (fail-fast guard)", () => {
     const empty = mkdtempSync(path.join(tmpdir(), "no-jsdom-"));
     expect(() => jsdomClosure(empty)).toThrow(/required package "jsdom"/);
+  });
+
+  // Serverless concatenates the SERVICE-level `package.patterns` ahead of each
+  // function's own list and keeps the FIRST occurrence of a duplicated pattern.
+  // serverless.yml used to repeat these same metadata excludes at the service
+  // level, which hoisted them in front of the include rules — so the includes
+  // re-added the very files the excludes were meant to strip, and the Lambda
+  // shipped 90 sourcemaps / 60 READMEs / 190 .ts sources for 1.23 MB of dead
+  // weight. That left 0.26 MB of headroom and is what blocked jsdom 30.
+  // Measured on osls 4.0.0 (2 reps per cell, zip read with python zipfile):
+  //   service `!**/x` + function `!**/x`  -> 4,970,896 B, 90 maps  (duplicated)
+  //   service absent  + function `!**/x`  -> 3,660,164 B,  0 maps  (fixed)
+  // Keep the excludes in exactly one place: this file.
+  it("serverless.yml declares no service-level package.patterns", () => {
+    const yml = readFileSync(
+      path.join(process.cwd(), "serverless.yml"),
+      "utf8",
+    );
+    const lines = yml.split("\n");
+    const start = lines.findIndex((l) => l === "package:");
+    expect(start).toBeGreaterThan(-1);
+
+    const block = [];
+    for (const line of lines.slice(start + 1)) {
+      if (line.trim() !== "" && !/^\s/.test(line)) break; // next top-level key
+      block.push(line);
+    }
+    const declaresPatterns = block.some((l) => /^\s+patterns:/.test(l));
+    expect(declaresPatterns).toBe(false);
   });
 });
