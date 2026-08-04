@@ -4326,10 +4326,10 @@ semver@^7.0.0, semver@^7.5.3:
   resolved "https://registry.yarnpkg.com/semver/-/semver-7.7.4.tgz#28464e36060e991fa7a11d0279d2d3f3b57a7e8a"
   integrity sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA==
 
-serverless-domain-manager@^10.2.0:
-  version "10.2.0"
-  resolved "https://registry.yarnpkg.com/serverless-domain-manager/-/serverless-domain-manager-10.2.0.tgz#40eb1c5b315c22646e6f25126080242a5c4e82ce"
-  integrity sha512-MOntNLgh8wI1vg3HSCAstw83SOpIZ5ts6hA50EKcOt0u2E1NXecb3PZBeD9cyJcnWtETjzz/eILFjyfik1jLSA==
+serverless-domain-manager@^10.3.1:
+  version "10.3.1"
+  resolved "https://registry.yarnpkg.com/serverless-domain-manager/-/serverless-domain-manager-10.3.1.tgz#77fa9f5384171e03bc956b678b96d969a6864425"
+  integrity sha512-ikLaCQE8zN89NWVs4nqm4rDhGI0ftv+TPmd7hHl32KCPw7ueCdPR/hm6oqIVp70QfUzq5ESPVrTK5AfxW9+5Ig==
   dependencies:
     "@aws-sdk/client-acm" "^3.1016.0"
     "@aws-sdk/client-api-gateway" "^3.1016.0"
