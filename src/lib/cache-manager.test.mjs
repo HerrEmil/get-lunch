@@ -105,7 +105,9 @@ describe("cacheLunchData merge/accumulate semantics", () => {
 
   it("accumulates a new weekday onto the existing week (Kontrast case)", async () => {
     const { writtenItem } = setupClient([lunch("måndag", "Mon dish")]);
-    await cacheLunchData("Kontrast", 25, [lunch("tisdag", "Tue dish")]);
+    await cacheLunchData("Kontrast", 25, [lunch("tisdag", "Tue dish")], {}, {
+      accumulateWeekdays: true,
+    });
 
     const item = writtenItem();
     expect(item.lunches.map((l) => l.weekday)).toEqual(["måndag", "tisdag"]);
@@ -117,10 +119,13 @@ describe("cacheLunchData merge/accumulate semantics", () => {
       lunch("måndag", "Old Mon"),
       lunch("tisdag", "Tue dish"),
     ]);
-    await cacheLunchData("Kontrast", 25, [
-      lunch("måndag", "New Mon A"),
-      lunch("måndag", "New Mon B"),
-    ]);
+    await cacheLunchData(
+      "Kontrast",
+      25,
+      [lunch("måndag", "New Mon A"), lunch("måndag", "New Mon B")],
+      {},
+      { accumulateWeekdays: true },
+    );
 
     const item = writtenItem();
     // tisdag preserved; måndag fully swapped for the two new entries
@@ -131,16 +136,16 @@ describe("cacheLunchData merge/accumulate semantics", () => {
     ]);
   });
 
-  it("is a pure overwrite for parsers that publish the whole week at once", async () => {
+  it("overwrites by default so dropped weekdays don't survive", async () => {
+    // The Niagara week-33 case: Wednesday was closed, the fresh full-week
+    // parse has no onsdag rows, and the stale onsdag rows must disappear.
     const existing = [
       lunch("måndag", "old1"),
-      lunch("tisdag", "old2"),
-      lunch("onsdag", "old3"),
+      lunch("onsdag", "Stängt placeholder"),
+      lunch("torsdag", "old3"),
     ];
     const fresh = [
       lunch("måndag", "new1"),
-      lunch("tisdag", "new2"),
-      lunch("onsdag", "new3"),
       lunch("torsdag", "new4"),
       lunch("fredag", "new5"),
     ];
@@ -149,12 +154,16 @@ describe("cacheLunchData merge/accumulate semantics", () => {
 
     const item = writtenItem();
     expect(item.lunches).toEqual(fresh);
-    expect(item.lunchCount).toBe(5);
+    expect(item.lunchCount).toBe(3);
+    // No read is needed for an overwrite
+    expect(sendMock.mock.calls.some(([c]) => c.__type === "Get")).toBe(false);
   });
 
   it("replaces the weekday-less ('') bucket wholesale", async () => {
     const { writtenItem } = setupClient([lunch("", "old A"), lunch("", "old B")]);
-    await cacheLunchData("Spill", 25, [lunch("", "new only")]);
+    await cacheLunchData("Spill", 25, [lunch("", "new only")], {}, {
+      accumulateWeekdays: true,
+    });
 
     const item = writtenItem();
     expect(item.lunches.map((l) => l.name)).toEqual(["new only"]);
@@ -173,7 +182,9 @@ describe("cacheLunchData merge/accumulate semantics", () => {
     });
     initializeDynamoClient();
 
-    await cacheLunchData("Kontrast", 25, [lunch("tisdag", "Tue dish")]);
+    await cacheLunchData("Kontrast", 25, [lunch("tisdag", "Tue dish")], {}, {
+      accumulateWeekdays: true,
+    });
     expect(writes[writes.length - 1].lunches.map((l) => l.weekday)).toEqual([
       "tisdag",
     ]);

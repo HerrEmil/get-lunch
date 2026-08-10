@@ -244,9 +244,20 @@ function mergeLunchesByWeekday(existingLunches, newLunches) {
  * @param {number} week - Week number
  * @param {Array} lunches - Array of lunch objects
  * @param {Object} metadata - Optional metadata
+ * @param {Object} options - `accumulateWeekdays: true` merges the batch into
+ *   the cached week per weekday (for restaurants that publish one day at a
+ *   time). Default is a plain overwrite: a full-week parse is the whole
+ *   truth, so weekdays it no longer returns (closed days, filtered junk)
+ *   must not survive from earlier collections.
  * @returns {Promise<boolean>} - Success status
  */
-export async function cacheLunchData(restaurant, week, lunches, metadata = {}) {
+export async function cacheLunchData(
+  restaurant,
+  week,
+  lunches,
+  metadata = {},
+  options = {},
+) {
   if (!docClient) {
     initializeDynamoClient();
   }
@@ -262,26 +273,27 @@ export async function cacheLunchData(restaurant, week, lunches, metadata = {}) {
     const timestamp = new Date().toISOString();
     const ttl = getTtlTimestamp();
 
-    // Merge with any data already cached for this (restaurant, week) so that
-    // single-day collection runs accumulate into a full week rather than
-    // clobbering previously collected weekdays.
+    // Day-at-a-time restaurants merge into the cached week so daily runs
+    // accumulate a full week; everyone else overwrites (see doc comment).
     let mergedLunches = lunches;
-    try {
-      const existing = await executeWithRetry(
-        () =>
-          docClient.send(
-            new GetCommand({ TableName: TABLE_NAME, Key: { pk: cacheKey } }),
-          ),
-        `cacheLunchData.read(${restaurant}, week ${week})`,
-      );
-      mergedLunches = mergeLunchesByWeekday(existing?.Item?.lunches, lunches);
-    } catch (readError) {
-      // A failed read should not block writing fresh data; fall back to the
-      // new batch (previous overwrite behaviour).
-      console.warn(
-        `cacheLunchData: could not read existing data for ${cacheKey}, writing new batch only:`,
-        readError.message,
-      );
+    if (options.accumulateWeekdays) {
+      try {
+        const existing = await executeWithRetry(
+          () =>
+            docClient.send(
+              new GetCommand({ TableName: TABLE_NAME, Key: { pk: cacheKey } }),
+            ),
+          `cacheLunchData.read(${restaurant}, week ${week})`,
+        );
+        mergedLunches = mergeLunchesByWeekday(existing?.Item?.lunches, lunches);
+      } catch (readError) {
+        // A failed read should not block writing fresh data; fall back to the
+        // new batch (plain overwrite behaviour).
+        console.warn(
+          `cacheLunchData: could not read existing data for ${cacheKey}, writing new batch only:`,
+          readError.message,
+        );
+      }
     }
 
     const item = {

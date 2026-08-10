@@ -22,6 +22,8 @@ const RESTAURANT_CONFIGS = [
     parser: "spill",
     url: "https://www.restaurangspill.se/",
     active: true,
+    // Publishes one day at a time; daily runs accumulate into a full week.
+    accumulateWeekdays: true,
   },
   {
     id: "kontrast",
@@ -29,6 +31,7 @@ const RESTAURANT_CONFIGS = [
     parser: "kontrast",
     url: "https://www.kontrastrestaurang.se/vastra-hamnen/",
     active: true,
+    accumulateWeekdays: true,
   },
   {
     id: "p2",
@@ -349,12 +352,20 @@ async function cacheData(results, logger) {
       // Group lunches by week for caching
       const weekGroups = groupLunchesByWeek(result.lunches);
 
+      // Only day-at-a-time restaurants merge into the cached week; full-week
+      // parsers overwrite so removed weekdays (closed days, dropped junk)
+      // don't survive from earlier collections.
+      const config = RESTAURANT_CONFIGS.find(
+        (c) => c.name === result.restaurant,
+      );
+
       for (const [week, lunches] of Object.entries(weekGroups)) {
         await cacheLunchData(
           result.restaurant,
           parseInt(week),
           lunches,
           result.metadata,
+          { accumulateWeekdays: config?.accumulateWeekdays === true },
         );
         cacheResults.totalItems += lunches.length;
       }
