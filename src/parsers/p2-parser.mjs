@@ -72,6 +72,17 @@ export class P2Parser extends BaseParser {
 
           const description = this.extractText(descEl);
           const priceText = this.extractText(priceEl);
+
+          // Announcements ("Idag bjuder vi alla på kaffe & nåt sött 🙂") are
+          // rendered in the same container markup as dishes but carry only a
+          // title — real dishes always have a description and/or a price.
+          if (!description.trim() && !priceText.trim()) {
+            await this.logger.debug(`Skipping non-dish row for ${weekday}`, {
+              title,
+            });
+            continue;
+          }
+
           const price = this.extractNumber(priceText) || 128;
 
           lunches.push(

@@ -69,6 +69,7 @@ const WEEKLY_LIST_HTML = `
   <p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #160202;"><span style="font-weight: bold;"><span class="textnormal" style="color: #101101; font-size: 20px; font-weight: bold;">Lunchmeny vecka 27</span></span></span></p>
   <p style="text-align: center; font-size: 14px;" class="mobile-undersized-upper"><span class="textnormal mobile-undersized-upper" style="font-size: 14px; color: #060000; font-weight: normal;">Serveras mellan 11.00-14.00, pris 136kr</span></p>
   <p style="text-align: center; font-size: 14px;" class="mobile-undersized-upper"><span class="textnormal mobile-undersized-upper" style="font-size: 14px; color: #060000; font-weight: normal;">Ingår måltidsdryck, kaffe/te och sidsallad</span></p>
+  <p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #0c0202; font-weight: bold;">Välj mellan följande rätter</span></p>
   <p style="text-align: center;" class="mobile-undersized-upper"><span class="textnormal" style="font-size: 20px; font-weight: bold; color: #060000;"><br></span></p>
   <p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #120101; font-weight: bold;">Citronmarinerad kycklingklubbstek</span></p>
   <p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #120101;">Serveras med potatissallad med kapris, örtcrème, rostad majskolv</span></p>
@@ -231,6 +232,7 @@ describe("KockumParser", () => {
       expect(names).not.toContain("Lunchmeny");
       expect(names).not.toContain("Serveras mellan");
       expect(names).not.toContain("Ingår måltidsdryck");
+      expect(names).not.toContain("Välj mellan");
       expect(names).not.toContain("affärsluncher");
       expect(names).not.toContain("Fläskfilé");
       expect(names).not.toContain("kostar");

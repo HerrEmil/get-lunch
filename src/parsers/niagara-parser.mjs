@@ -6,6 +6,11 @@
 import { BaseParser } from "./base-parser.mjs";
 import { SWEDISH_WEEKDAYS } from "./parser-interfaces.mjs";
 
+// Niagara uses category headings as dish titles; the dish itself lives in
+// the description. A category with no description is an unpublished
+// placeholder (seen mid-week before the kitchen decides), not a dish.
+const NIAGARA_CATEGORIES = ["green", "local", "asia", "world wide", "veckans"];
+
 export class NiagaraParser extends BaseParser {
   constructor(config = {}) {
     super({
@@ -296,6 +301,14 @@ export class NiagaraParser extends BaseParser {
         return null;
       }
 
+      if (this.isEmptyCategoryPlaceholder(name, description)) {
+        await this.logger.debug("Skipping category row without dish text", {
+          name,
+          weekday,
+        });
+        return null;
+      }
+
       const price = this.extractNumber(priceText);
       if (price <= 0) {
         await this.logger.debug("Skipping row with invalid price", {
@@ -583,7 +596,13 @@ export class NiagaraParser extends BaseParser {
       // Niagara uses category headings (Green, Local, Asia, World Wide) as
       // .lunch_title while the actual dish text is in .lunch_desc.
       // Keep the category as name (shown in Lunch column), use dish text as description.
-      const NIAGARA_CATEGORIES = ["green", "local", "asia", "world wide", "veckans"];
+      if (this.isEmptyCategoryPlaceholder(name, description)) {
+        await this.logger.debug("Skipping category slot without dish text", {
+          name,
+          weekday,
+        });
+        return null;
+      }
       const looksLikeCategory = NIAGARA_CATEGORIES.some(
         (cat) => name.toLowerCase().trim() === cat,
       );
@@ -732,6 +751,15 @@ export class NiagaraParser extends BaseParser {
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
     return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+  }
+
+  /**
+   * True when the title is a bare category heading (Green/Local/Asia/...)
+   * with no dish text — an unpublished menu slot, not a dish.
+   */
+  isEmptyCategoryPlaceholder(name, description) {
+    if (description && description.trim().length > 0) return false;
+    return NIAGARA_CATEGORIES.includes(name.toLowerCase().trim());
   }
 
   /**

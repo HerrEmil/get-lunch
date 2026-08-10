@@ -83,8 +83,10 @@ export class KolgaParser extends BaseParser {
   /**
    * Walk the lunch table in document order, tracking the current day block's
    * weekday(s) from each `<h3>` header and attaching every following dish row
-   * to it. Rows without a resolved weekday, without a title, or without a
-   * price are skipped.
+   * to it. Rows without a resolved weekday or without a title are skipped.
+   * Rows without a price (Gastrogate sometimes leaves the price cell empty on
+   * one dish in a day block) get the most common price in the table; they are
+   * only dropped when no row in the table has a price.
    */
   extractLunches(document, week) {
     const lunches = [];
@@ -101,6 +103,7 @@ export class KolgaParser extends BaseParser {
         true,
       ) || [];
 
+    const rows = [];
     let currentWeekdays = [];
     for (const node of nodes) {
       if (node.tagName.toLowerCase() === "h3") {
@@ -118,13 +121,27 @@ export class KolgaParser extends BaseParser {
       const priceMatch = this.extractText(
         this.safeQuery(node, ".price-tag"),
       ).match(/(\d{2,4})/);
-      if (!priceMatch) continue;
 
-      const price = parseInt(priceMatch[1], 10);
-      for (const weekday of currentWeekdays) {
+      rows.push({
+        name,
+        price: priceMatch ? parseInt(priceMatch[1], 10) : null,
+        weekdays: [...currentWeekdays],
+      });
+    }
+
+    const fallbackPrice = this.mostCommonPrice(rows);
+    for (const row of rows) {
+      const price = row.price ?? fallbackPrice;
+      if (!price) {
+        this.logger.warn("Skipping dish without any resolvable price", {
+          name: row.name,
+        });
+        continue;
+      }
+      for (const weekday of row.weekdays) {
         lunches.push(
           this.createLunchObject({
-            name,
+            name: row.name,
             description: "",
             price,
             weekday,
@@ -136,6 +153,22 @@ export class KolgaParser extends BaseParser {
     }
 
     return lunches;
+  }
+
+  /**
+   * The most frequent explicit price among the parsed rows (the restaurant's
+   * standard dagens price), or null when no row has a price.
+   */
+  mostCommonPrice(rows) {
+    const counts = new Map();
+    for (const { price } of rows) {
+      if (price) counts.set(price, (counts.get(price) || 0) + 1);
+    }
+    let best = null;
+    for (const [price, count] of counts) {
+      if (best === null || count > counts.get(best)) best = price;
+    }
+    return best;
   }
 
   /**

@@ -45,17 +45,24 @@ describe("LazizaParser", () => {
     expect(price).toBe(139);
   });
 
-  it("extracts description from page text", () => {
+  it("extracts only the Dockan hours, not the full location dump", () => {
+    // The lunch page lists hours for all four locations; only Dockan's
+    // matter here (captured from laziza.se/lunch 2026-08-10).
     const dom = new JSDOM(`
       <html><body>
         <h1>Lunch</h1>
-        <p>Libanesisk lunchbuffé, måndag till fredag 11:00 — 15:00</p>
-        <p>139 kr / 115 kr (take away)</p>
+        <p>Libanesisk lunchbuffé, måndag till fredag</p>
+        <p>Laziza Baltzars: 11:00 — 15:00</p>
+        <p>Laziza Dockan: 11:00 — 14:00</p>
+        <p>Laziza Hyllie: 11:00 — 14:00</p>
+        <p>Laziza Lund: 11:00 — 14:00</p>
+        <p>145 kr / 115 kr (take away)</p>
       </body></html>
     `);
     const description = parser.extractDescriptionFromPage(dom.window.document);
-    expect(description).toContain("måndag");
-    expect(description).toMatch(/11:00/);
+    expect(description).toBe("Måndag till fredag 11:00–14:00");
+    expect(description).not.toContain("Baltzars");
+    expect(description).not.toContain("Hyllie");
   });
 
   it("returns default description when pattern not found", () => {

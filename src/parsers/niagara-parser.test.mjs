@@ -120,6 +120,35 @@ describe("NiagaraParser modern layout handling", () => {
     expect(local.description).toContain("strömming");
   });
 
+  it("skips category slots whose dish text is not yet published", async () => {
+    // Seen live 2026-08-10: mid-week days can list only the category names
+    // (Green/Local/Asia) with empty descriptions until the kitchen decides.
+    const dom = new JSDOM(`
+      <section class="lunch-section">
+        <h3>Vecka 20260810</h3>
+        <div role="tabpanel" data-day="onsdag">
+          <div class="lunchmeny_container">
+            <span class="lunch_title">Green</span>
+            <span class="lunch_price">115:-</span>
+            <div class="lunch_desc"></div>
+          </div>
+          <div class="lunchmeny_container">
+            <span class="lunch_title">Asia</span>
+            <span class="lunch_price">115:-</span>
+            <div class="lunch_desc">Bibimbap med kimchi och koriandersallad</div>
+          </div>
+        </div>
+      </section>
+    `);
+
+    const container = dom.window.document.querySelector("section");
+    const lunches = await parser.extractFromModernStructure(container);
+
+    expect(lunches).toHaveLength(1);
+    expect(lunches[0].name).toBe("Asia");
+    expect(lunches[0].description).toContain("Bibimbap");
+  });
+
   it("returns no items when the page shows a vacation notice instead of a menu", async () => {
     // Real markup observed 2026-07-17 (week 29): the closure notice occupies the
     // same .lunchmeny_container slot a dish would, with an empty .lunch_price.

@@ -106,6 +106,25 @@ describe("SpillParser", () => {
     expect(vegetarianDish).toContain("Halloumiburgare");
   });
 
+  it("strips trailing greeting and price from the dish text", () => {
+    // The source's veg field sometimes ends with "Varmt välkomna" after a
+    // <br><br>, and extractMenuText can flatten the panel's price onto it.
+    const text =
+      "Tri-tip med potatiskaka och rödvinssås Vegetarisk: Biff på bönor och svamp med potatiskaka, honungsglacerade grönsaker och rödvinssås Varmt välkomna 135kr";
+    const { mainDish, vegetarianDish } = parser.parseMenuText(text);
+
+    expect(mainDish).toBe("Tri-tip med potatiskaka och rödvinssås");
+    expect(vegetarianDish).toBe(
+      "Biff på bönor och svamp med potatiskaka, honungsglacerade grönsaker och rödvinssås",
+    );
+  });
+
+  it("strips a lone trailing 'Välkommen' greeting", () => {
+    expect(parser.cleanDishText("Caesarsallad med kyckling Välkommen")).toBe(
+      "Caesarsallad med kyckling",
+    );
+  });
+
   it("handles menu without vegetarian option", () => {
     const text = "Vegansk bowl med tofu, edamame och sesamdressing";
     const { mainDish, vegetarianDish } = parser.parseMenuText(text);

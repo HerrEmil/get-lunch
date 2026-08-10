@@ -159,6 +159,39 @@ describe("P2Parser", () => {
     expect(lunches).toHaveLength(0);
   });
 
+  it("skips announcement rows that carry only a title", async () => {
+    // Captured from restaurangp2.se 2026-08-10: an announcement rendered in
+    // the same container markup as a dish, but with empty desc and price.
+    const dom = new JSDOM(`
+      <div id="menu">
+        <h3>Vecka 33</h3>
+        <div class="friday">
+          <div class="lunchmeny_container">
+            <span class="lunch_title">WORLD WIDE</span>
+            <span class="lunch_price"></span>
+            <div class="lunch_desc">Något gott från köket</div>
+          </div>
+          <div class="lunchmeny_container">
+            <span class="lunch_title">Idag bjuder vi alla på kaffe &amp; nåt sött 🙂</span>
+            <span class="lunch_price"></span>
+            <div class="lunch_desc"></div>
+          </div>
+        </div>
+      </div>
+    `);
+    parser.fetchDocument = async () => dom.window.document;
+
+    const lunches = await parser.parseMenu();
+
+    expect(lunches).toHaveLength(1);
+    expect(lunches[0]).toMatchObject({
+      name: "WORLD WIDE",
+      description: "Något gott från köket",
+      price: 128,
+      weekday: "fredag",
+    });
+  });
+
   it("extracts price from lunch_price element", () => {
     expect(parser.extractNumber("128:-")).toBe(128);
     expect(parser.extractNumber("145:-")).toBe(145);

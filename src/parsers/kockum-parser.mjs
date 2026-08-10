@@ -133,6 +133,8 @@ export class KockumParser extends BaseParser {
         skipRest = true;
         continue;
       }
+
+      if (this.isInfoLine(text)) continue;
       // Break at start of catering/smörrebröd section — everything after is
       // noise. Note: "affärslunch" is deliberately unanchored so the boundary
       // fires on "Vårens affärsluncher i Malmö" as well.
@@ -226,8 +228,7 @@ export class KockumParser extends BaseParser {
         continue;
       }
 
-      // Info lines that are not dishes
-      if (/^(serveras\s+mellan|ingår)/i.test(text)) continue;
+      if (this.isInfoLine(text)) continue;
 
       // Boundary: the affärsluncher/catering block ends the weekly menu
       if (/affärslunch|avhämtning|catering/i.test(text)) break;
@@ -316,6 +317,16 @@ export class KockumParser extends BaseParser {
     }
 
     return lunches;
+  }
+
+  /**
+   * True for info lines that describe the menu rather than a dish, e.g.
+   * "Välj mellan följande rätter", "Serveras mellan 11.00-14.00" or
+   * "Ingår måltidsdryck...". These appear in both the weekday and the flat
+   * weekly formats (bold or not), so both tiers must skip them.
+   */
+  isInfoLine(text) {
+    return /^(serveras\s+mellan|ingår|välj\s+mellan)/i.test(text);
   }
 
   /**

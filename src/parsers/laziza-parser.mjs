@@ -76,16 +76,17 @@ export class LazizaParser extends BaseParser {
   }
 
   /**
-   * Extract the description text from the page (hours, etc.)
+   * Extract the description text from the page. The lunch page lists hours
+   * for all four locations; only the Dockan hours are relevant here, so a
+   * single concise line is produced instead of the full location dump.
    */
   extractDescriptionFromPage(document) {
     const bodyText = this.extractText(document.body);
-    // Look for the hours/schedule text
-    const hoursMatch = bodyText.match(
-      /(måndag[^.]*\d{1,2}:\d{2}\s*[—\-–]\s*\d{1,2}:\d{2})/i,
+    const dockanMatch = bodyText.match(
+      /dockan:?\s*(\d{1,2}:\d{2})\s*[—\-–]\s*(\d{1,2}:\d{2})/i,
     );
-    if (hoursMatch) {
-      return hoursMatch[1].trim();
+    if (dockanMatch) {
+      return `Måndag till fredag ${dockanMatch[1]}–${dockanMatch[2]}`;
     }
     return "Måndag till fredag 11:00-15:00";
   }

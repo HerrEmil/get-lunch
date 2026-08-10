@@ -277,6 +277,14 @@ export class SpillParser extends BaseParser {
       .replace(/\s*[,.\-–]\s*$/, "")
       .trim();
 
+    // The dish field sometimes ends with a greeting ("Varmt välkomna",
+    // "Välkommen") and/or the price ("135kr") — flattened onto the dish text
+    // by extractMenuText. Neither belongs in the dish name.
+    cleaned = cleaned
+      .replace(/\s*(?:varmt\s+)?välkom(?:men|na)\b.*$/i, "")
+      .replace(/\s*\d{2,3}\s*kr\s*$/i, "")
+      .trim();
+
     // Remove leading weekday if present
     for (const day of SWEDISH_WEEKDAYS) {
       const regex = new RegExp(`^${day}[,\\s]*`, "i");

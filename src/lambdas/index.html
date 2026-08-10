@@ -370,7 +370,9 @@ function DishCards({ rows, lunchQ, descQ }) {
               fontSize: 14, fontWeight: 700, color: 'var(--text-dark)',
               fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
             }}>
-              {r.price} <span style={{ color: 'var(--text-gray)', fontWeight: 500, fontSize: 12 }}>kr</span>
+              {r.price > 0
+                ? <>{r.price} <span style={{ color: 'var(--text-gray)', fontWeight: 500, fontSize: 12 }}>kr</span></>
+                : <span style={{ color: 'var(--gray-70)' }}>—</span>}
             </div>
           </div>
           <div style={{
@@ -452,7 +454,9 @@ function DishTable({ rows, sort, setSort, lunchQ, descQ }) {
                     : <span style={{ color: 'var(--gray-70)', fontStyle: 'italic' }}>—</span>}
                 </td>
                 <td style={{ padding, textAlign: 'right', fontWeight: 600, color: 'var(--text-dark)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
-                  {r.price} <span style={{ color: 'var(--text-gray)', fontWeight: 500, fontSize: 12 }}>kr</span>
+                  {r.price > 0
+                    ? <>{r.price} <span style={{ color: 'var(--text-gray)', fontWeight: 500, fontSize: 12 }}>kr</span></>
+                    : <span style={{ color: 'var(--gray-70)' }}>—</span>}
                 </td>
               </tr>
             ))}

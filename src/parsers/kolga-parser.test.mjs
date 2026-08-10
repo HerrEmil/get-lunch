@@ -133,6 +133,70 @@ describe("KolgaParser", () => {
     expect(burger.price).toBe(130);
   });
 
+  it("gives a price-less dish the table's most common price", async () => {
+    // Seen live 2026-08-10: Gastrogate left Monday's first dish without a
+    // price tag; it must inherit the standard dagens price, not be dropped.
+    const html = `
+    <html><body>
+      <table class="table lunch_menu">
+        <thead class="lunch-day-header"><tr><th><h3>Måndag 10 augusti</h3></th></tr></thead>
+        <tbody class="lunch-day-content">
+          <tr class="lunch-menu-item">
+            <td class="td_title">Ugnsstekt Fläskkarré med potatis, sås och äppelmos</td>
+            <td class="td_price"><div class="price"></div></td>
+          </tr>
+          <tr class="lunch-menu-item">
+            <td class="td_title">Spagetti med köttfärssås och riven ost</td>
+            <td class="td_price"><strong class="price-tag">130 kr</strong></td>
+          </tr>
+        </tbody>
+        <thead class="lunch-day-header"><tr><th><h3>Tisdag 11 augusti</h3></th></tr></thead>
+        <tbody class="lunch-day-content">
+          <tr class="lunch-menu-item">
+            <td class="td_title">Wienersnitzel med potatis och grönsaker</td>
+            <td class="td_price"><strong class="price-tag">145 kr</strong></td>
+          </tr>
+          <tr class="lunch-menu-item">
+            <td class="td_title">Korv Stroganoff, ris och grönsaker</td>
+            <td class="td_price"><strong class="price-tag">130 kr</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </body></html>
+    `;
+    const dom = new JSDOM(html);
+    parser.fetchDocument = async () => dom.window.document;
+
+    const lunches = await parser.parseMenu();
+
+    expect(lunches).toHaveLength(4);
+    const flaskkarre = lunches.find((l) => l.name.startsWith("Ugnsstekt"));
+    expect(flaskkarre).toBeDefined();
+    expect(flaskkarre.price).toBe(130); // modal price, not 145
+    expect(flaskkarre.weekday).toBe("måndag");
+  });
+
+  it("drops all dishes only when no row in the table has a price", async () => {
+    const html = `
+    <html><body>
+      <table class="table lunch_menu">
+        <thead class="lunch-day-header"><tr><th><h3>Måndag 10 augusti</h3></th></tr></thead>
+        <tbody class="lunch-day-content">
+          <tr class="lunch-menu-item">
+            <td class="td_title">Spagetti med köttfärssås</td>
+            <td class="td_price"></td>
+          </tr>
+        </tbody>
+      </table>
+    </body></html>
+    `;
+    const dom = new JSDOM(html);
+    parser.fetchDocument = async () => dom.window.document;
+
+    const lunches = await parser.parseMenu();
+    expect(lunches).toEqual([]);
+  });
+
   it("returns no lunches when the menu table is missing", async () => {
     const dom = new JSDOM(`<html><body><p>Ingen meny</p></body></html>`);
     parser.fetchDocument = async () => dom.window.document;

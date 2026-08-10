@@ -129,6 +129,17 @@ describe("Lokal17Parser", () => {
     expect(parser._fixUmlautGlyphs("ostkräm-räka")).toBe("ostkräm-räka");
   });
 
+  it("repairs the alternate f glyph mangled to a bare =", () => {
+    // Seen live 2026-08-10: "confiterad" extracted as "con=iterad".
+    expect(parser._fixUmlautGlyphs("Pannbiff-con=iterad lök-skysås")).toBe(
+      "Pannbiff-confiterad lök-skysås",
+    );
+    // Umlaut repair must win over the f-glyph repair for vowel + "=".
+    expect(parser._fixUmlautGlyphs("A=gg och con=iterad lök")).toBe(
+      "Ägg och confiterad lök",
+    );
+  });
+
   it("parses a vegetarian dish whose Ä was mangled to A=", () => {
     const text =
       "LUNCH VECKA 25 " +
