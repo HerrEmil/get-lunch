@@ -376,6 +376,20 @@
     "@smithy/types" "^4.15.1"
     tslib "^2.6.2"
 
+"@aws-sdk/client-sso-oidc@^3.1034.0":
+  version "3.1107.0"
+  resolved "https://registry.yarnpkg.com/@aws-sdk/client-sso-oidc/-/client-sso-oidc-3.1107.0.tgz#6c108544d82f5c8c79d14fe4e1a2245220d6c2d4"
+  integrity sha512-DOfnGSqbw1xsgK4xJJPvarP6l9SXd6+9qqdDgjqbQkrcCeJ9HC5TmY1Fe49fPJXouj8Up7mWhlJHUIMS2iyhLg==
+  dependencies:
+    "@aws-sdk/core" "^3.977.6"
+    "@aws-sdk/credential-provider-node" "^3.972.78"
+    "@aws-sdk/types" "^3.974.2"
+    "@smithy/core" "^3.31.1"
+    "@smithy/fetch-http-handler" "^5.6.13"
+    "@smithy/node-http-handler" "^4.9.13"
+    "@smithy/types" "^4.16.1"
+    tslib "^2.6.2"
+
 "@aws-sdk/client-sts@^3.1034.0":
   version "3.1080.0"
   resolved "https://registry.yarnpkg.com/@aws-sdk/client-sts/-/client-sts-3.1080.0.tgz#60f59b11000db3e4dc2721f890fa9247cc747469"
@@ -1697,7 +1711,7 @@
     "@smithy/util-middleware" "^4.2.10"
     tslib "^2.6.2"
 
-"@smithy/core@^3.23.13", "@smithy/core@^3.23.16", "@smithy/core@^3.23.17", "@smithy/core@^3.29.0", "@smithy/core@^3.29.1", "@smithy/core@^3.31.1":
+"@smithy/core@^3.23.13", "@smithy/core@^3.23.17", "@smithy/core@^3.24.0", "@smithy/core@^3.29.0", "@smithy/core@^3.29.1", "@smithy/core@^3.31.1":
   version "3.31.1"
   resolved "https://registry.yarnpkg.com/@smithy/core/-/core-3.31.1.tgz#a57090db8997917d2f99eeb39db50b6283e60d3c"
   integrity sha512-CyogUINxvi7C7LDsh8Syo6hVJOT9ckz4rG8dRZfTJ8r91HkMY59PnNooaj7WcHyxEkxPfBAmbgztZU+xTo76lg==
@@ -2777,10 +2791,10 @@ eslint-visitor-keys@^5.0.1:
   resolved "https://registry.yarnpkg.com/eslint-visitor-keys/-/eslint-visitor-keys-5.0.1.tgz#9e3c9489697824d2d4ce3a8ad12628f91e9f59be"
   integrity sha512-tD40eHxA35h0PEIZNeIjkHoDR4YjjJp34biM0mDvplBe//mB+IHCqHDGV7pxF+7MklTvighcCPPZC7ynWyjdTA==
 
-eslint@^10.8.0:
-  version "10.8.0"
-  resolved "https://registry.yarnpkg.com/eslint/-/eslint-10.8.0.tgz#e6d19907a3f090a53a022261ba34c5ff6d04908b"
-  integrity sha512-nuKKvN+oIBO0koN7Tm7dlkmnkc21mtt0QJLwAKzjLq14y6lRTdVG36MZHJ8eQHwdJMwZbQNMlPOYedMq/oVJvQ==
+eslint@^10.8.1:
+  version "10.8.1"
+  resolved "https://registry.yarnpkg.com/eslint/-/eslint-10.8.1.tgz#fb37d514c19b6dd5b2d6b70169fd26fddfa97967"
+  integrity sha512-wqA7W2jbsC/BnV9Iv1UZpKVFkO1AdNoSmYW8NWG4HNOBbkAMvIqDZ27pI2f07dqn583NcIC44ckjAcOXDL1QbQ==
   dependencies:
     "@eslint-community/eslint-utils" "^4.8.0"
     "@eslint-community/regexpp" "^4.12.2"
@@ -3121,10 +3135,10 @@ glob-parent@^6.0.2:
   dependencies:
     is-glob "^4.0.3"
 
-globals@^17.8.0:
-  version "17.8.0"
-  resolved "https://registry.yarnpkg.com/globals/-/globals-17.8.0.tgz#a1f213a06adcd0eec38004c5cd39fef7af7e0830"
-  integrity sha512-Zz/LMDZScFmkakeL2cTHzf+PbWKdpU3uclqkZT7TjDG58j5WPt0PpA+n9uPI24fZtlw07q0OtEi84K+umsRzqQ==
+globals@^17.9.0:
+  version "17.9.0"
+  resolved "https://registry.yarnpkg.com/globals/-/globals-17.9.0.tgz#e43f252d6bbe71508da43902a1709c8895a59f70"
+  integrity sha512-m/MvAW61QVU5VDNF1Vj8axt016h8w7L5TU1e9zlab7XIttAT2YAlCwl75K1fOqvMM9apmD7lbCIRhpfkhmxhCg==
 
 gopd@^1.0.1, gopd@^1.2.0:
   version "1.2.0"
@@ -3172,10 +3186,10 @@ html-encoding-sniffer@^6.0.0:
   dependencies:
     "@exodus/bytes" "^1.6.0"
 
-html-validate@^11.6.0:
-  version "11.6.0"
-  resolved "https://registry.yarnpkg.com/html-validate/-/html-validate-11.6.0.tgz#84a5098404a2ccd0ceb5464dcfa0cc02e4a90c5e"
-  integrity sha512-VKoRiWBqV9g5M1sb3H0WimxAM6UCNTv6JbovEmNEtBWKVK/W5fKCY++EM4shkS92FypBwnGMlBymeo9Tlyiqxw==
+html-validate@^11.6.2:
+  version "11.6.2"
+  resolved "https://registry.yarnpkg.com/html-validate/-/html-validate-11.6.2.tgz#67f05a68a016481681827cb5a956caa28c0740aa"
+  integrity sha512-dlAAEeWOOdv9ya/n3pdSFTzzzGlrw+ZI43J/39zBgCSqzSg24lyqrouuBP9MEkSFAtXVZm64F35mlL7m43jCNA==
   dependencies:
     "@html-validate/stylish" "^6.0.0"
     "@sidvind/better-ajv-errors" "7.0.0"
@@ -3872,10 +3886,10 @@ optionator@^0.9.3:
     type-check "^0.4.0"
     word-wrap "^1.2.5"
 
-osls@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/osls/-/osls-4.0.0.tgz#82091120bd98695bf5dc8a4d4b24964890a5078f"
-  integrity sha512-ti1s4IhJLfpdWtgyb3gj8slDs1KoucRU0jNyqGIaEGPGCODiJtFXXVM3cs52pQLi3Ig2RBeqHzhD84vWOLvSeQ==
+osls@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/osls/-/osls-4.1.0.tgz#147e26f7214eeaedec0f1fdaa6b707eea8af2e35"
+  integrity sha512-MtlKIC8tSVFYnixCh0wKUBR1atQG+6+9+YNTHZIgt2BSWEbiWrofwIqW4Wau3jVcwQN/b7585tHOQnNnSgqHUw==
   dependencies:
     "@apidevtools/json-schema-ref-parser" "^15.3.5"
     "@aws-sdk/client-api-gateway" "^3.1034.0"
@@ -3890,10 +3904,11 @@ osls@^4.0.0:
     "@aws-sdk/client-lambda" "^3.1034.0"
     "@aws-sdk/client-s3" "^3.1034.0"
     "@aws-sdk/client-ssm" "^3.1034.0"
+    "@aws-sdk/client-sso-oidc" "^3.1034.0"
     "@aws-sdk/client-sts" "^3.1034.0"
     "@aws-sdk/credential-providers" "^3.1034.0"
     "@aws-sdk/lib-storage" "^3.1034.0"
-    "@smithy/core" "^3.23.16"
+    "@smithy/core" "^3.24.0"
     "@smithy/node-http-handler" "^4.6.1"
     ajv "^8.12.0"
     ajv-formats "^3.0.1"
@@ -4237,10 +4252,10 @@ serverless-dynamodb@^0.2.58:
     "@aws-sdk/lib-dynamodb" "^3.474.0"
     aws-dynamodb-local "^0.0.14"
 
-serverless-offline@^14.7.4:
-  version "14.7.4"
-  resolved "https://registry.yarnpkg.com/serverless-offline/-/serverless-offline-14.7.4.tgz#27eb6b86b6235a433c0c073f3e220b1d90f2cd7f"
-  integrity sha512-IqHZY39Gc805f/W4TLElpjW4yUjUejtPaueivQ4nE1j5+RBDctPYnCAlMLZb3zkpMYuwSWOL2gFH5uVHYLgSVg==
+serverless-offline@^14.8.0:
+  version "14.8.0"
+  resolved "https://registry.yarnpkg.com/serverless-offline/-/serverless-offline-14.8.0.tgz#5f00790723ff1f6cf954848fcfeffa5adfcdc9b4"
+  integrity sha512-OEjkcYFUPNnTAdTeH4nnxWzV7QfUVzBbgv5c43vWGueCpshxcZ8f4Ybz52+GnE1Pz9iWuPt1SYNNgPZ6YQFU2Q==
   dependencies:
     "@aws-sdk/client-lambda" "^3.1069.0"
     "@hapi/boom" "^10.0.1"
