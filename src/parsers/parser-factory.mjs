@@ -20,11 +20,7 @@ import { Lokal17Parser } from "./lokal17-parser.mjs";
 import { ComoParser } from "./como-parser.mjs";
 import { PapiParser } from "./papi-parser.mjs";
 import { HolyGreensParser } from "./holygreens-parser.mjs";
-import { SmakParser } from "./smak-parser.mjs";
 import { KolgaParser } from "./kolga-parser.mjs";
-import { Kitchen961Parser } from "./kitchen961-parser.mjs";
-import { FrilagetParser } from "./frilaget-parser.mjs";
-import { HamnOchPepparParser } from "./hamnochpeppar-parser.mjs";
 import { DEFAULT_PARSER_CONFIG } from "./parser-interfaces.mjs";
 
 /**
@@ -89,11 +85,7 @@ export class ParserFactory {
     this.registerParserClass("como", ComoParser);
     this.registerParserClass("papi", PapiParser);
     this.registerParserClass("holygreens", HolyGreensParser);
-    this.registerParserClass("smak", SmakParser);
     this.registerParserClass("kolga", KolgaParser);
-    this.registerParserClass("kitchen961", Kitchen961Parser);
-    this.registerParserClass("frilaget", FrilagetParser);
-    this.registerParserClass("hamnochpeppar", HamnOchPepparParser);
 
     // Initialize circuit breakers
     this.initializeCircuitBreakers();

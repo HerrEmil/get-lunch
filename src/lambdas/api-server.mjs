@@ -19,28 +19,26 @@ const __mod_dirname =
 let htmlTemplate = null;
 
 // Restaurant configurations (should match data-collector.mjs)
+// walkMinutes: estimated walk from the office (Västra Varvsgatan 19),
+// straight-line distance × 1.3 street factor at 5 km/h
 const RESTAURANT_CONFIGS = [
-  { id: "niagara", name: "Niagara", url: "https://restaurangniagara.se/lunch/#lunch", active: true },
-  { id: "spill", name: "Spill", url: "https://www.restaurangspill.se/", active: true },
-  { id: "kontrast", name: "Kontrast", url: "https://www.kontrastrestaurang.se/menu/vastra-hamnen?tab=lunch", active: true },
-  { id: "p2", name: "P2", url: "https://restaurangp2.se/#lunch", active: true },
-  { id: "taste", name: "Taste", url: "https://www.nordrest.se/restaurang/taste-by-nordrest-malmo/", active: true },
-  { id: "varv", name: "Varv", url: "https://varvmalmo.com/menu", active: true },
-  { id: "fonderie", name: "La Fonderie", url: "https://www.lafonderie.se/lunch", active: true },
-  { id: "laziza", name: "Laziza", url: "https://www.laziza.se/lunch/", active: true },
-  { id: "kockum", name: "Kockum Fritid", url: "https://freda49.se/lunch-malmo.html", active: true },
-  { id: "ubåtshallen", name: "Ubåtshallen", url: "https://www.ubatshallen.se/modern-svensk-husmanskost/", active: true },
-  { id: "miamarias", name: "MiaMarias", url: "https://miamarias.nu/lunch/", active: true },
-  { id: "ica", name: "ICA Maxi", url: "https://www.ica.se/butiker/maxi/malmo/maxi-ica-stormarknad-vastra-hamnen-1003569/tjanster/dagens-lunch/", active: true },
-  { id: "lokal17", name: "Lokal 17", url: "https://lokal17.se/", active: true },
-  { id: "como", name: "COMO", url: "https://comomalmo.se/", active: true },
-  { id: "papi", name: "PAPI", url: "https://www.papisaluhallen.se/", active: true },
-  { id: "holygreens", name: "Holy Greens", url: "https://holygreens.se/meny/", active: true },
-  { id: "smak", name: "SMAK", url: "https://smak.gastrogate.com/lunch/", active: true },
-  { id: "kolga", name: "Kolga", url: "https://kolga.gastrogate.com/lunch/", active: true },
-  { id: "kitchen961", name: "Kitchen961", url: "https://kitchen961.se/lunchen/", active: true },
-  { id: "frilaget", name: "Friläget", url: "https://frilaget.gastrogate.com/lunch/", active: true },
-  { id: "hamnochpeppar", name: "Hamn o Peppar", url: "https://hamnochpeppar.gastrogate.com/lunch/", active: true },
+  { id: "niagara", name: "Niagara", url: "https://restaurangniagara.se/lunch/#lunch", walkMinutes: 16, active: true },
+  { id: "spill", name: "Spill", url: "https://www.restaurangspill.se/", walkMinutes: 10, active: true },
+  { id: "kontrast", name: "Kontrast", url: "https://www.kontrastrestaurang.se/menu/vastra-hamnen?tab=lunch", walkMinutes: 5, active: true },
+  { id: "p2", name: "P2", url: "https://restaurangp2.se/#lunch", walkMinutes: 11, active: true },
+  { id: "taste", name: "Taste", url: "https://www.nordrest.se/restaurang/taste-by-nordrest-malmo/", walkMinutes: 4, active: true },
+  { id: "varv", name: "Varv", url: "https://varvmalmo.com/menu", walkMinutes: 13, active: true },
+  { id: "fonderie", name: "La Fonderie", url: "https://www.lafonderie.se/lunch", walkMinutes: 13, active: true },
+  { id: "laziza", name: "Laziza", url: "https://www.laziza.se/lunch/", walkMinutes: 11, active: true },
+  { id: "kockum", name: "Kockum Fritid", url: "https://freda49.se/lunch-malmo.html", walkMinutes: 6, active: true },
+  { id: "ubåtshallen", name: "Ubåtshallen", url: "https://www.ubatshallen.se/modern-svensk-husmanskost/", walkMinutes: 9, active: true },
+  { id: "miamarias", name: "MiaMarias", url: "https://miamarias.nu/lunch/", walkMinutes: 14, active: true },
+  { id: "ica", name: "ICA Maxi", url: "https://www.ica.se/butiker/maxi/malmo/maxi-ica-stormarknad-vastra-hamnen-1003569/tjanster/dagens-lunch/", walkMinutes: 2, active: true },
+  { id: "lokal17", name: "Lokal 17", url: "https://lokal17.se/", walkMinutes: 17, active: true },
+  { id: "como", name: "COMO", url: "https://comomalmo.se/", walkMinutes: 21, active: true },
+  { id: "papi", name: "PAPI", url: "https://www.papisaluhallen.se/", walkMinutes: 14, active: true },
+  { id: "holygreens", name: "Holy Greens", url: "https://holygreens.se/meny/", walkMinutes: 13, active: true },
+  { id: "kolga", name: "Kolga", url: "https://kolga.gastrogate.com/lunch/", walkMinutes: 20, active: true },
 ];
 
 // Swedish weekday mapping
@@ -205,6 +203,7 @@ async function fetchCachedData(week, logger) {
           place: config.name,
           placeUrl: config.url,
           restaurant: config.id,
+          walkMinutes: config.walkMinutes,
         }));
 
         allData.push(...dataWithMeta);

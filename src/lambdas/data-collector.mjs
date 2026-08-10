@@ -122,38 +122,10 @@ const RESTAURANT_CONFIGS = [
     active: true,
   },
   {
-    id: "smak",
-    name: "SMAK",
-    parser: "smak",
-    url: "https://smak.gastrogate.com/lunch/",
-    active: true,
-  },
-  {
     id: "kolga",
     name: "Kolga",
     parser: "kolga",
     url: "https://kolga.gastrogate.com/lunch/",
-    active: true,
-  },
-  {
-    id: "kitchen961",
-    name: "Kitchen961",
-    parser: "kitchen961",
-    url: "https://kitchen961.se/lunchen/",
-    active: true,
-  },
-  {
-    id: "frilaget",
-    name: "Friläget",
-    parser: "frilaget",
-    url: "https://frilaget.gastrogate.com/lunch/",
-    active: true,
-  },
-  {
-    id: "hamnochpeppar",
-    name: "Hamn o Peppar",
-    parser: "hamnochpeppar",
-    url: "https://hamnochpeppar.gastrogate.com/lunch/",
     active: true,
   },
 ];

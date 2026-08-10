@@ -73,7 +73,7 @@ function normaliseDay(d) {
 }
 
 const ROWS = (lunches || []).map(l => ({
-  week: l.week,
+  walk: typeof l.walkMinutes === 'number' ? l.walkMinutes : null,
   day: normaliseDay(l.weekday),
   place: l.place || '',
   placeUrl: l.placeUrl || '',
@@ -354,8 +354,12 @@ function DishCards({ rows, lunchQ, descQ }) {
               fontSize: 11, color: 'var(--text-gray)',
               textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600,
             }}>
-              <span>v.{r.week}</span>
-              <span style={{ color: 'var(--gray-80)' }}>·</span>
+              {r.walk != null && (
+                <React.Fragment>
+                  <span>🚶 {r.walk} min</span>
+                  <span style={{ color: 'var(--gray-80)' }}>·</span>
+                </React.Fragment>
+              )}
               <span>{r.day}</span>
               <span style={{ color: 'var(--gray-80)' }}>·</span>
               <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 600 }}>
@@ -411,7 +415,9 @@ function DishTable({ rows, sort, setSort, lunchQ, descQ }) {
           </colgroup>
           <thead>
             <tr>
-              <Th sortKey="week" sort={sort} setSort={setSort}>Vecka</Th>
+              <Th sortKey="walk" sort={sort} setSort={setSort}>
+                <span title="Promenad från kontoret" aria-label="Promenad från kontoret">🚶</span>
+              </Th>
               <Th sortKey="day" sort={sort} setSort={setSort}>Dag</Th>
               <Th sortKey="place" sort={sort} setSort={setSort}>Plats</Th>
               <Th sortKey="lunch" sort={sort} setSort={setSort}>Lunch</Th>
@@ -428,7 +434,11 @@ function DishTable({ rows, sort, setSort, lunchQ, descQ }) {
               onMouseEnter={e => e.currentTarget.style.background = 'var(--gray-98)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
-                <td style={{ padding, color: 'var(--text-gray)', fontVariantNumeric: 'tabular-nums' }}>{r.week}</td>
+                <td style={{ padding, color: 'var(--text-gray)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+                  {r.walk != null
+                    ? <React.Fragment>{r.walk} <span style={{ fontSize: 12 }}>min</span></React.Fragment>
+                    : <span style={{ color: 'var(--gray-70)' }}>—</span>}
+                </td>
                 <td style={{ padding, color: 'var(--text-gray)', textTransform: 'lowercase' }}>{r.day}</td>
                 <td style={{ padding }}>
                   <PlaceLink name={r.place} url={r.placeUrl} />
@@ -467,7 +477,7 @@ function LunchScreen() {
   const [day, setDay] = useState(() => currentDaySv());
   const [lunchQ, setLunchQ] = useState('');
   const [descQ, setDescQ] = useState('');
-  const [sort, setSort] = useState({ key: null, dir: 'asc' });
+  const [sort, setSort] = useState({ key: 'walk', dir: 'asc' });
 
   const filtered = useMemo(() => {
     const lq = lunchQ.trim().toLowerCase();
@@ -484,6 +494,7 @@ function LunchScreen() {
       rows = [...rows].sort((a, b) => {
         let av = a[sort.key], bv = b[sort.key];
         if (sort.key === 'day') { av = dayOrder[av]; bv = dayOrder[bv]; }
+        if (sort.key === 'walk') { av = av ?? Infinity; bv = bv ?? Infinity; }
         if (typeof av === 'string') return av.localeCompare(bv, 'sv') * mul;
         return (av - bv) * mul;
       });
