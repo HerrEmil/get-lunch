@@ -755,11 +755,17 @@ export class NiagaraParser extends BaseParser {
 
   /**
    * True when the title is a bare category heading (Green/Local/Asia/...)
-   * with no dish text — an unpublished menu slot, not a dish.
+   * whose slot holds no servable dish: the dish text is either missing
+   * (unpublished) or a short closure notice like "Stängt" (seen live
+   * 2026-08-10 on a day the kitchen was closed). The closure check is
+   * length-capped so a real dish description mentioning "stängt" in passing
+   * could never be suppressed.
    */
   isEmptyCategoryPlaceholder(name, description) {
-    if (description && description.trim().length > 0) return false;
-    return NIAGARA_CATEGORIES.includes(name.toLowerCase().trim());
+    if (!NIAGARA_CATEGORIES.includes(name.toLowerCase().trim())) return false;
+    const desc = (description || "").trim();
+    if (desc.length === 0) return true;
+    return desc.length <= 30 && this.isClosureNotice(desc);
   }
 
   /**

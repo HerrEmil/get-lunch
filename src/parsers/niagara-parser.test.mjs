@@ -120,9 +120,10 @@ describe("NiagaraParser modern layout handling", () => {
     expect(local.description).toContain("strömming");
   });
 
-  it("skips category slots whose dish text is not yet published", async () => {
+  it("skips category slots with unpublished or closed dish text", async () => {
     // Seen live 2026-08-10: mid-week days can list only the category names
-    // (Green/Local/Asia) with empty descriptions until the kitchen decides.
+    // (Green/Local/Asia) with empty descriptions until the kitchen decides,
+    // or with a bare "Stängt" when the kitchen is closed that day.
     const dom = new JSDOM(`
       <section class="lunch-section">
         <h3>Vecka 20260810</h3>
@@ -131,6 +132,11 @@ describe("NiagaraParser modern layout handling", () => {
             <span class="lunch_title">Green</span>
             <span class="lunch_price">115:-</span>
             <div class="lunch_desc"></div>
+          </div>
+          <div class="lunchmeny_container">
+            <span class="lunch_title">Local</span>
+            <span class="lunch_price">115:-</span>
+            <div class="lunch_desc">Stängt</div>
           </div>
           <div class="lunchmeny_container">
             <span class="lunch_title">Asia</span>
