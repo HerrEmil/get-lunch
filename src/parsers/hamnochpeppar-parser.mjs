@@ -10,7 +10,8 @@
  * `td.td_price .price-tag` (e.g. "140 kr").
  *
  * A day header is either a weekday + date ("Måndag 13 juli") or a whole-week
- * block ("Gäller hela vecka 29"); the latter is fanned out across Mon–Fri.
+ * block ("Gäller hela vecka 29", "Vardagsmeny"); the latter is fanned out
+ * across Mon–Fri.
  * Dish titles occasionally contain a `<br>` (e.g. "Friterad spätta med dansk
  * remouladsås och kokt<br>nypotatis") which is collapsed to a single space.
  *
@@ -144,12 +145,13 @@ export class HamnOchPepparParser extends BaseParser {
 
   /**
    * Map a day header to the weekday(s) it applies to. A weekday word wins; a
-   * "hela veckan"/"veckans" header fans out to the whole week; anything else
-   * (e.g. an intro note) resolves to no weekday and is ignored.
+   * whole-week header ("hela veckan"/"veckans"/"vardagsmeny"/"vardagar") fans
+   * out to the whole week; anything else (e.g. an intro note) resolves to no
+   * weekday and is ignored.
    */
   headerToWeekdays(headerText) {
     const text = headerText.toLowerCase();
-    if (/hela\s+veck|veckans/.test(text)) {
+    if (/hela\s+veck|veckans|vardag/.test(text)) {
       return [...WEEKDAYS];
     }
     const weekday = WEEKDAYS.find((wd) => text.includes(wd));
