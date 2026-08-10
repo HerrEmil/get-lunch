@@ -37,17 +37,17 @@
   "devDependencies": {
     "@eslint/js": "^10",
     "esbuild": "^0.28.1",
-    "eslint": "^10.8.0",
-    "globals": "^17.8.0",
-    "html-validate": "^11.6.0",
+    "eslint": "^10.8.1",
+    "globals": "^17.9.0",
+    "html-validate": "^11.6.2",
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
-    "osls": "^4.0.0",
+    "osls": "^4.1.0",
     "patch-package": "^8.0.1",
     "prettier": "^3.9.6",
     "serverless-domain-manager": "^10.3.1",
     "serverless-dynamodb": "^0.2.58",
-    "serverless-offline": "^14.7.4",
+    "serverless-offline": "^14.8.0",
     "vitest": "^4.1.10"
   },
   "engines": {
