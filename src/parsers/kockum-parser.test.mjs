@@ -96,6 +96,64 @@ const BUSINESS_LUNCH_ONLY_HTML = `
 </body></html>
 `;
 
+// Weekday-header format WITH all-week sections, exactly as rendered on
+// freda49.se (captured live 2026-08-17, ISO week 34). This is the layout the
+// site returned to after the flat week-27 list, and the one the older
+// hand-written SAMPLE_HTML above does not represent:
+//  - a long dish name WRAPS across two paragraphs (Måndag, "Veckans vegetariska");
+//  - &nbsp;/<br> spacer paragraphs are the dish separator;
+//  - "Innehåller: ..." ingredient lines follow bold salad names;
+//  - the "Veckans sallader" / "Veckans 3 smörrebröd" headings carry a
+//    font-size style INSTEAD of the mobile-undersized-upper class;
+//  - a stray "." paragraph sits under Torsdag and a mailto link under the
+//    smörrebröd block.
+const WEEKDAY_SECTIONS_HTML = `
+<html><body>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #160202;"><span style="font-weight: bold;"><span class="textnormal" style="color: #101101; font-size: 20px; font-weight: bold;">Lunchmeny vecka 34</span></span></span></p>
+<p style="text-align: center; font-size: 14px;" class="mobile-undersized-upper"><span class="textnormal mobile-undersized-upper" style="font-size: 14px; color: #060000; font-weight: normal;">Serveras mellan 11.00-14.00, pris 136kr</span></p>
+<p style="text-align: center; font-size: 14px;" class="mobile-undersized-upper"><span class="textnormal mobile-undersized-upper" style="font-size: 14px; color: #060000; font-weight: normal;">Ingår måltidsdryck, kaffe/te och salladsbuffé &amp; hembakat bröd</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><br></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101; font-weight: bold;">Måndag</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101;">Pork belly rostad rotselleripuré/äpplesky/</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101;">svartkålssallad/rostade hasselnötter</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101;">&nbsp;</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101; font-weight: bold;">Tisdag</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101;">Pannbiff med lök/ lingon/ skysås/ mos</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101;">&nbsp;</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101; font-weight: bold;">Onsdag</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101;">Fisksoppa med saffrans aioli &amp; fänkålscrudité</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101;">&nbsp;</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101; font-weight: bold;">Torsdag</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101;">Schnitzel, kryddsmör, skysås, ärtor &amp; potatissallad med kapris</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101;">.&nbsp;</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101; font-weight: bold;">Fredag</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101;">Wallenbergare på kalv/ lingon/skirat smör/ ärtor/ mos</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101;">&nbsp;</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101; font-weight: bold;">Veckans vegetariska</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101;">Rostad spetskål/beluga linser/brynt smör/harisa yoghurt,</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101;">rostade fröer och mizuna sallad med citrus</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101;">&nbsp;</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #100101;">Aloo gobi gryta/ kokosmjölk/ kikärtor/ blomkål/ yoghurt/ mangochutney</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #0f0101;">&nbsp;</span></p>
+<p style="text-align: center; font-size: 16px;"><span style="color: #0f0101; font-weight: bold; font-size: 16px;">&nbsp;Veckans sallader</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #0f0101; font-weight: bold;">Varm rökt laxsallad med romsås</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #0f0101;">Innehåller: Lax, quinoa, tomat, gurka, dill, citron, sallad, romsås</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #0f0101;">&nbsp;</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #0f0101; font-weight: bold;">Asiatisk sallad med pankofriterad kyckling</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #0f0101;">Innehåller: krispig panko friterad kyckling, srirachamajonnäs, ingefära, sesamfrö, groddar, rotfruktschips, picklad rödlök &amp; wakame</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #0f0101;">&nbsp;</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #0f0101;">&nbsp;</span></p>
+<p style="text-align: center; font-size: 16px;"><span style="color: #0f0101; font-size: 16px; font-weight: bold;">Veckans 3 smörrebröd</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #0f0101;">sill &amp; potatis/ Hönsesallad/ Rostbiff &amp; remoulad</span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #0f0101;"><br></span></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><span style="color: #110202;"><br></span></p>
+<p style="text-align: center; font-size: 16px;"><span style="font-size: 16px;"><span style="font-size: 18px; font-weight: bold;"><a class="link1" href="mailto:info@freda49.se">bokning@freda49.se</a></span></span></p>
+<p class="mobile-undersized-upper"><br></p>
+<p style="text-align: center;" class="mobile-undersized-upper"><br></p>
+${BUSINESS_LUNCH_SECTION}
+</body></html>
+`;
+
 describe("KockumParser", () => {
   let parser;
 
@@ -178,6 +236,100 @@ describe("KockumParser", () => {
       // Legitimate dishes still present
       expect(names).toContain("Crispy chicken");
       expect(names).toContain("Grillad haloumi");
+    });
+  });
+
+  describe("weekday headers + all-week sections (live capture, week 34)", () => {
+    let lunches;
+
+    beforeEach(() => {
+      const doc = new JSDOM(WEEKDAY_SECTIONS_HTML).window.document;
+      lunches = parser.extractMenu(doc);
+    });
+
+    it("emits one row per dish, not one per paragraph", () => {
+      // 1 weekday dish + 2 vegetariska + 2 sallader + 1 smörrebröd = 6/day
+      expect(lunches).toHaveLength(30);
+      for (const day of ["måndag", "tisdag", "onsdag", "torsdag", "fredag"]) {
+        expect(lunches.filter((l) => l.weekday === day)).toHaveLength(6);
+      }
+      expect(lunches.every((l) => l.week === 34)).toBe(true);
+      expect(lunches.every((l) => l.price === 136)).toBe(true);
+    });
+
+    it("merges a dish name wrapped across paragraphs", () => {
+      const monday = lunches.filter(
+        (l) => l.weekday === "måndag" && !l.dietary.length,
+      );
+      const names = lunches.map((l) => l.name);
+
+      expect(monday[0].name).toBe(
+        "Pork belly rostad rotselleripuré/äpplesky/svartkålssallad/rostade hasselnötter",
+      );
+      // The wrapped tail must not survive as a dish of its own
+      expect(names).not.toContain("svartkålssallad/rostade hasselnötter");
+      expect(names).not.toContain("Pork belly rostad rotselleripuré/äpplesky/");
+
+      // Same wrap in the vegetariska block — 42 chars, so the old
+      // length < 40 continuation gate missed it
+      const veg = lunches.filter(
+        (l) => l.weekday === "måndag" && l.dietary.includes("vegetarian"),
+      );
+      expect(veg).toHaveLength(2);
+      expect(veg[0].name).toBe(
+        "Rostad spetskål/beluga linser/brynt smör/harisa yoghurt, rostade fröer och mizuna sallad med citrus",
+      );
+      expect(names).not.toContain("rostade fröer och mizuna sallad med citrus");
+    });
+
+    it("keeps 'Innehåller:' ingredient lines as descriptions, not dishes", () => {
+      expect(lunches.some((l) => /^Innehåller/.test(l.name))).toBe(false);
+
+      const lax = lunches.filter((l) => l.name.includes("Varm rökt laxsallad"));
+      expect(lax).toHaveLength(5);
+      expect(lax[0].description).toBe(
+        "Innehåller: Lax, quinoa, tomat, gurka, dill, citron, sallad, romsås",
+      );
+    });
+
+    it("does not tag the sallader/smörrebröd blocks as vegetarian", () => {
+      // Their headings carry a font-size style instead of the
+      // mobile-undersized-upper class, so a class-only query used to drop them
+      // and the vegetariska flag bled onto salmon and chicken.
+      const vegetarian = lunches.filter((l) =>
+        l.dietary.includes("vegetarian"),
+      );
+      expect(vegetarian).toHaveLength(10);
+      expect([...new Set(vegetarian.map((l) => l.name))]).toEqual([
+        "Rostad spetskål/beluga linser/brynt smör/harisa yoghurt, rostade fröer och mizuna sallad med citrus",
+        "Aloo gobi gryta/ kokosmjölk/ kikärtor/ blomkål/ yoghurt/ mangochutney",
+      ]);
+
+      for (const name of [
+        "Varm rökt laxsallad med romsås",
+        "Asiatisk sallad med pankofriterad kyckling",
+        "sill & potatis/ Hönsesallad/ Rostbiff & remoulad",
+      ]) {
+        const rows = lunches.filter((l) => l.name === name);
+        expect(rows).toHaveLength(5);
+        expect(rows.every((l) => l.dietary.length === 0)).toBe(true);
+      }
+    });
+
+    it("drops headings, contact details and the affärsluncher section", () => {
+      const text = lunches
+        .map((l) => `${l.name} | ${l.description}`)
+        .join(" || ");
+
+      expect(text).not.toContain("Lunchmeny");
+      expect(text).not.toContain("Serveras mellan");
+      expect(text).not.toContain("Ingår måltidsdryck");
+      expect(text).not.toContain("Veckans");
+      expect(text).not.toContain("@");
+      expect(text).not.toContain("affärsluncher");
+      expect(text).not.toContain("Fläskfilé");
+      // The stray "." paragraph under Torsdag is not a dish either
+      expect(lunches.every((l) => l.name.length > 5)).toBe(true);
     });
   });
 
