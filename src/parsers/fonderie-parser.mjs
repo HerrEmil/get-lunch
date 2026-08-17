@@ -119,23 +119,33 @@ export class FonderieParser extends BaseParser {
       sibling = sibling.nextElementSibling;
     }
 
-    // Parse pairs of paragraphs: name + description with price
+    // Parse pairs of paragraphs: name + description, one of which carries
+    // the price. Format is a dash (hyphen/en/em) + amount, with an optional
+    // "kr" suffix (the site dropped "kr" at some point), e.g. "… – 195" or
+    // "… - 195 kr". The site has published the price on either line at
+    // different times, so both orders are checked.
     // Skip lines that are general notes (e.g., "Alla rätter serveras med...")
+    const PRICE_SUFFIX = /[-–—]\s*(\d+)\s*(?:kr)?\s*$/;
     let i = 0;
     while (i < paragraphs.length - 1) {
-      const nameLine = paragraphs[i];
-      const descLine = paragraphs[i + 1];
+      const line1 = paragraphs[i];
+      const line2 = paragraphs[i + 1];
 
-      // Check if the description line ends with a price.
-      // Format is a dash (hyphen/en/em) + amount, with an optional "kr"
-      // suffix (the site dropped "kr" at some point), e.g. "… – 195" or "… - 195 kr".
-      const priceMatch = descLine.match(/[-–—]\s*(\d+)\s*(?:kr)?\s*$/);
+      const priceInLine2 = line2.match(PRICE_SUFFIX);
+      const priceInLine1 = line1.match(PRICE_SUFFIX);
 
-      if (priceMatch) {
+      if (priceInLine2) {
         dishes.push({
-          name: nameLine,
-          description: descLine.replace(/\s*[-–—]\s*\d+\s*(?:kr)?\s*$/, "").trim(),
-          price: parseInt(priceMatch[1]),
+          name: line1,
+          description: line2.replace(PRICE_SUFFIX, "").trim(),
+          price: parseInt(priceInLine2[1]),
+        });
+        i += 2;
+      } else if (priceInLine1) {
+        dishes.push({
+          name: line1.replace(PRICE_SUFFIX, "").trim(),
+          description: line2,
+          price: parseInt(priceInLine1[1]),
         });
         i += 2;
       } else {
