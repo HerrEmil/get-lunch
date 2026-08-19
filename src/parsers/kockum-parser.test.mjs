@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it, beforeEach, vi } from "vitest";
 import { KockumParser } from "./kockum-parser.mjs";
+import { SWEDISH_WEEKDAYS } from "./parser-interfaces.mjs";
 
 function createParser() {
   const parser = new KockumParser();
@@ -237,6 +238,31 @@ describe("KockumParser", () => {
       expect(names).toContain("Crispy chicken");
       expect(names).toContain("Grillad haloumi");
     });
+
+    it("treats an unclassed spacer paragraph as a dish boundary", () => {
+      // The CMS drops mobile-undersized-upper from some <p> elements — that is
+      // how the all-week headings arrive. A spacer that lands unclassed must
+      // still close the dish group, or the line after it is swallowed as the
+      // previous dish's description and one dish disappears from the day.
+      const html = `
+        <html><body><div>
+          <p class="mobile-undersized-upper"><span style="font-weight: bold;">Måndag</span></p>
+          <p class="mobile-undersized-upper"><span style="font-weight: bold;">Fisksoppa med saffran</span></p>
+          <p style="text-align: center; font-size: 16px;">&nbsp;</p>
+          <p class="mobile-undersized-upper">Pannbiff med lök, lingon &amp; skysås</p>
+        </div></body></html>
+      `;
+      const doc = new JSDOM(html).window.document;
+      const monday = parser
+        .extractMenu(doc)
+        .filter((l) => l.weekday === "måndag");
+
+      expect(monday.map((l) => l.name)).toEqual([
+        "Fisksoppa med saffran",
+        "Pannbiff med lök, lingon & skysås",
+      ]);
+      expect(monday.every((l) => l.description === "")).toBe(true);
+    });
   });
 
   describe("weekday headers + all-week sections (live capture, week 34)", () => {
@@ -250,7 +276,7 @@ describe("KockumParser", () => {
     it("emits one row per dish, not one per paragraph", () => {
       // 1 weekday dish + 2 vegetariska + 2 sallader + 1 smörrebröd = 6/day
       expect(lunches).toHaveLength(30);
-      for (const day of ["måndag", "tisdag", "onsdag", "torsdag", "fredag"]) {
+      for (const day of SWEDISH_WEEKDAYS) {
         expect(lunches.filter((l) => l.weekday === day)).toHaveLength(6);
       }
       expect(lunches.every((l) => l.week === 34)).toBe(true);
@@ -340,7 +366,7 @@ describe("KockumParser", () => {
 
       // 6 dishes x 5 weekdays
       expect(lunches).toHaveLength(30);
-      for (const day of ["måndag", "tisdag", "onsdag", "torsdag", "fredag"]) {
+      for (const day of SWEDISH_WEEKDAYS) {
         expect(lunches.filter((l) => l.weekday === day)).toHaveLength(6);
       }
     });
@@ -400,7 +426,7 @@ describe("KockumParser", () => {
 
       // 4 numbered dishes x 5 weekdays
       expect(lunches).toHaveLength(20);
-      for (const day of ["måndag", "tisdag", "onsdag", "torsdag", "fredag"]) {
+      for (const day of SWEDISH_WEEKDAYS) {
         const dayLunches = lunches.filter((l) => l.weekday === day);
         expect(dayLunches).toHaveLength(4);
       }

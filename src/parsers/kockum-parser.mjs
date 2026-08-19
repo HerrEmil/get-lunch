@@ -14,25 +14,13 @@
  *     ("1. Fläskfilé ..."), applied to all weekdays. Price in the
  *     "Affärslunchen kostar 195kr" line.
  *
- * Menu content lives in <p class="mobile-undersized-upper"> elements, EXCEPT
- * the all-week section headings, which the CMS emits as sibling <p> elements
- * carrying only a font-size style (see collectMenuParagraphs).
- *
- * A dish is a GROUP of paragraphs, not a paragraph: the CMS wraps long dish
- * names across consecutive <p> elements and separates real dishes with
- * &nbsp;/<br> spacer paragraphs (see parseWeekdayFormat).
+ * Menu content lives in <p class="mobile-undersized-upper"> elements, except
+ * the all-week section headings — see collectMenuParagraphs. A dish is a GROUP
+ * of paragraphs rather than a paragraph — see parseWeekdayFormat.
  */
 
 import { BaseParser } from "./base-parser.mjs";
 import { SWEDISH_WEEKDAYS } from "./parser-interfaces.mjs";
-
-const WEEKDAY_LABELS = [
-  "måndag",
-  "tisdag",
-  "onsdag",
-  "torsdag",
-  "fredag",
-];
 
 const DEFAULT_WEEKLY_PRICE = 136;
 const DEFAULT_BUSINESS_PRICE = 195;
@@ -81,17 +69,19 @@ export class KockumParser extends BaseParser {
     const weekMatch = allText.match(/lunch(?:meny)?\s+vecka\s+(\d+)/i);
     const week = weekMatch ? parseInt(weekMatch[1]) : this._getCurrentWeek();
 
-    // All content is in <p class="mobile-undersized-upper"> elements
-    const paragraphs = [
-      ...(document.querySelectorAll("p.mobile-undersized-upper") || []),
-    ];
+    // Menu content is in <p class="mobile-undersized-upper"> elements. One
+    // traversal, then partition — collectMenuParagraphs needs the others too.
+    const allParagraphs = [...document.querySelectorAll("p")];
+    const paragraphs = allParagraphs.filter((p) =>
+      p.classList.contains("mobile-undersized-upper"),
+    );
     if (paragraphs.length === 0) return [];
 
     // Tier 1: weekday-header format. It needs the section headings too, so it
     // gets the widened paragraph list; tiers 2/3 key off bold spans and must
     // not see extra bold paragraphs.
     const weekdayLunches = this.parseWeekdayFormat(
-      this.collectMenuParagraphs(document, paragraphs),
+      this.collectMenuParagraphs(allParagraphs, paragraphs),
       week,
       allText,
     );
@@ -110,15 +100,23 @@ export class KockumParser extends BaseParser {
    * are emitted by the CMS as <p style="font-size: 16px"> siblings WITHOUT the
    * mobile-undersized-upper class, so a class-only query drops them and every
    * following block silently inherits the previous section's context — which
-   * is how salmon and chicken salads ended up tagged vegetarian. Re-include
-   * the unclassed <p> siblings that live in the same content containers,
-   * keeping document order.
+   * is how salmon and chicken salads ended up tagged vegetarian. Merge those
+   * headings back in, keeping document order — but only the headings and the
+   * empty spacer paragraphs: widening to every unclassed sibling also drags in
+   * the contact block and the like, which then have to be blocklisted one by
+   * one to stop them becoming dishes. Spacers have no text to mistake for a
+   * dish and they are what closes a dish group, so an unclassed one has to
+   * survive: drop it and the next line is swallowed by the preceding dish.
    */
-  collectMenuParagraphs(document, classedParagraphs) {
+  collectMenuParagraphs(allParagraphs, classedParagraphs) {
+    const classed = new Set(classedParagraphs);
     const containers = new Set(classedParagraphs.map((p) => p.parentElement));
-    return [...(document.querySelectorAll("p") || [])].filter((p) =>
-      containers.has(p.parentElement),
-    );
+    return allParagraphs.filter((p) => {
+      if (classed.has(p)) return true;
+      if (!containers.has(p.parentElement)) return false;
+      const text = p.textContent.trim();
+      return !text || this.matchAllWeekHeader(text, p) !== null;
+    });
   }
 
   /**
@@ -136,90 +134,71 @@ export class KockumParser extends BaseParser {
    * A spacer paragraph, a heading or an info line closes the group.
    */
   parseWeekdayFormat(paragraphs, week, allText) {
-    const lunches = [];
+    // Tier 1 only claims a page that has weekday headers somewhere. Without
+    // that guard the flat tier-2 layout would read its ordinary bold dish name
+    // "Veckans 3 smörrebröd" as an all-week section heading. This is an
+    // existence check, not an ordering one: an all-week heading sitting before
+    // the first weekday header is honoured rather than skipped.
+    if (!paragraphs.some((p) => this.matchWeekday(p.textContent.trim()))) {
+      return [];
+    }
+
     const price = this.extractPrice(allText);
+    const dishes = [];
 
     let currentWeekday = null;
-    let sawWeekday = false;
     let allWeekDietary = null; // non-null while inside an all-week section
     let skipRest = false;
-    let group = null;
-    let separated = true; // a spacer/heading closed the previous group
-
-    const flushGroup = () => {
-      if (!group) return;
-      const { name, description, days, dietary } = group;
-      group = null;
-      separated = true;
-      for (const day of days) {
-        lunches.push(
-          this.createLunchObject({
-            name,
-            description,
-            price,
-            weekday: day,
-            week,
-            place: this.getName(),
-            dietary,
-          }),
-        );
-      }
-    };
+    let group = null; // the dish being read; already appended to `dishes`
 
     for (const p of paragraphs) {
       const text = p.textContent.trim();
       if (!text) {
-        // &nbsp;/<br> spacer paragraph — dish boundary
-        separated = true;
+        group = null; // &nbsp;/<br> spacer paragraph — dish boundary
         continue;
       }
 
       // Skip the "Lunch vecka" / "Lunchmeny vecka" header
       if (/^lunch(?:meny)?\s+vecka/i.test(text)) {
-        flushGroup();
+        group = null;
         continue;
       }
 
       // Check if this is a weekday header
       const weekday = this.matchWeekday(text);
       if (weekday) {
-        flushGroup();
+        group = null;
         currentWeekday = weekday;
-        sawWeekday = true;
         allWeekDietary = null;
         skipRest = false;
         continue;
       }
 
-      // All-week section header. Only meaningful once a weekday header has
-      // been seen — otherwise this is the flat tier-2 layout, where "Veckans
-      // 3 smörrebröd" is an ordinary bold dish name and tier 1 must stay out.
-      if (sawWeekday && this.matchAllWeekHeader(text, p)) {
-        flushGroup();
-        currentWeekday = null; // these dishes apply to all days
-        allWeekDietary = /vegetarisk/i.test(text) ? ["vegetarian"] : [];
+      // All-week section header — its dishes are served every weekday
+      const sectionDietary = this.matchAllWeekHeader(text, p);
+      if (sectionDietary !== null) {
+        group = null;
+        currentWeekday = null;
+        allWeekDietary = sectionDietary;
         skipRest = false;
         continue;
       }
 
       // Stop parsing at holiday markers or smörrebröd section
       if (/glad\s+påsk|god\s+jul|semesterstängt|stängt/i.test(text)) {
-        flushGroup();
+        group = null;
         skipRest = true;
         continue;
       }
 
       if (this.isInfoLine(text)) {
-        flushGroup();
+        group = null;
         continue;
       }
       // Break at start of catering/smörrebröd section — everything after is
       // noise. Note: "affärslunch" is deliberately unanchored so the boundary
       // fires on "Vårens affärsluncher i Malmö" as well.
-      if (/^smörrebröd|affärslunch/i.test(text)) {
-        flushGroup();
-        break;
-      }
+      if (/^smörrebröd|affärslunch/i.test(text)) break;
       if (skipRest) continue;
 
       // Skip very short text or non-dish content (e.g. a stray ".")
@@ -229,12 +208,10 @@ export class KockumParser extends BaseParser {
       if (!currentWeekday && allWeekDietary === null) continue;
 
       const bold = this.hasBoldText(p);
-      if (group && !separated && !bold) {
+      if (group && !bold) {
         if (group.bold) {
           // Description line under a bold dish name
-          group.description = group.description
-            ? `${group.description} ${text}`
-            : text;
+          group.description = this.appendLine(group.description, text);
           continue;
         }
         if (!/^[A-ZÅÄÖ]/.test(text)) {
@@ -246,31 +223,58 @@ export class KockumParser extends BaseParser {
         }
       }
 
-      flushGroup();
       group = {
         name: text,
         description: "",
         bold,
-        days: currentWeekday ? [currentWeekday] : [...WEEKDAY_LABELS],
-        dietary: currentWeekday ? [] : allWeekDietary,
+        days: currentWeekday ? [currentWeekday] : SWEDISH_WEEKDAYS,
+        dietary: allWeekDietary ?? [],
       };
-      separated = false;
+      dishes.push(group);
     }
-    flushGroup();
 
-    return lunches;
+    return this.expandDishes(dishes, week, price);
   }
 
   /**
-   * True for the all-week block headings that follow the weekday sections.
-   * "Veckans vegetariska" is matched unanchored for backwards compatibility
-   * with the older markup; the other blocks ("Veckans sallader", "Veckans 3
-   * smörrebröd") are recognised only as bold headings so a dish name that
-   * happens to open with "Veckans" is not mistaken for one.
+   * The dietary tags for an all-week block heading, or null when `text` is not
+   * one. "Veckans vegetariska" is matched unanchored for backwards
+   * compatibility with the older markup; the other blocks ("Veckans sallader",
+   * "Veckans 3 smörrebröd") are recognised only as bold headings so a dish name
+   * that happens to open with "Veckans" is not mistaken for one.
    */
   matchAllWeekHeader(text, p) {
-    if (/veckans\s+vegetarisk/i.test(text)) return true;
-    return /^veckans\s+/i.test(text) && this.hasBoldText(p);
+    if (/veckans\s+vegetarisk/i.test(text)) return ["vegetarian"];
+    if (/^veckans\s+/i.test(text) && this.hasBoldText(p)) return [];
+    return null;
+  }
+
+  /**
+   * Fan each collected dish out to one lunch row per weekday it is served.
+   * `days` defaults to the whole week: tiers 2 and 3 have no weekday grouping.
+   */
+  expandDishes(dishes, week, price) {
+    const lunches = [];
+    for (const dish of dishes) {
+      for (const day of dish.days || SWEDISH_WEEKDAYS) {
+        lunches.push(
+          this.createLunchObject({
+            name: dish.name,
+            description: dish.description || "",
+            price,
+            weekday: day,
+            week,
+            ...(dish.dietary ? { dietary: dish.dietary } : {}),
+          }),
+        );
+      }
+    }
+    return lunches;
+  }
+
+  /** Append a continuation line to an accumulating description. */
+  appendLine(existing, text) {
+    return existing ? `${existing} ${text}` : text;
   }
 
   /**
@@ -281,11 +285,10 @@ export class KockumParser extends BaseParser {
    * vegetariska" handling).
    */
   parseWeeklyListFormat(paragraphs, week) {
-    const lunches = [];
     const startIdx = paragraphs.findIndex((p) =>
       /lunch(?:meny)?\s+vecka/i.test(p.textContent),
     );
-    if (startIdx === -1) return lunches;
+    if (startIdx === -1) return [];
 
     let price = DEFAULT_WEEKLY_PRICE;
     const dishes = [];
@@ -313,29 +316,12 @@ export class KockumParser extends BaseParser {
         currentDish = { name: text, description: "" };
       } else if (currentDish) {
         // Non-bold line following a dish = its description
-        currentDish.description = currentDish.description
-          ? `${currentDish.description} ${text}`
-          : text;
+        currentDish.description = this.appendLine(currentDish.description, text);
       }
     }
     if (currentDish) dishes.push(currentDish);
 
-    for (const dish of dishes) {
-      for (const day of WEEKDAY_LABELS) {
-        lunches.push(
-          this.createLunchObject({
-            name: dish.name,
-            description: dish.description,
-            price,
-            weekday: day,
-            week,
-            place: this.getName(),
-          }),
-        );
-      }
-    }
-
-    return lunches;
+    return this.expandDishes(dishes, week, price);
   }
 
   /**
@@ -344,11 +330,10 @@ export class KockumParser extends BaseParser {
    * weekdays; price comes from the "Affärslunchen kostar 195kr" line.
    */
   parseBusinessLunchFormat(paragraphs, week) {
-    const lunches = [];
     const startIdx = paragraphs.findIndex((p) =>
       /affärslunch/i.test(p.textContent),
     );
-    if (startIdx === -1) return lunches;
+    if (startIdx === -1) return [];
 
     let price = DEFAULT_BUSINESS_PRICE;
     const dishes = [];
@@ -360,7 +345,7 @@ export class KockumParser extends BaseParser {
       // Numbered dish: "1. Fläskfilé med kålfrikassé & dragonrostade potatisar"
       const dishMatch = text.match(/^\d+\.\s*(.+)$/);
       if (dishMatch) {
-        dishes.push(dishMatch[1].trim());
+        dishes.push({ name: dishMatch[1].trim() });
         continue;
       }
 
@@ -375,22 +360,7 @@ export class KockumParser extends BaseParser {
       if (dishes.length > 0) break;
     }
 
-    for (const name of dishes) {
-      for (const day of WEEKDAY_LABELS) {
-        lunches.push(
-          this.createLunchObject({
-            name,
-            description: "",
-            price,
-            weekday: day,
-            week,
-            place: this.getName(),
-          }),
-        );
-      }
-    }
-
-    return lunches;
+    return this.expandDishes(dishes, week, price);
   }
 
   /**
