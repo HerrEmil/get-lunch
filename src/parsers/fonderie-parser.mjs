@@ -6,6 +6,10 @@
 import { BaseParser } from "./base-parser.mjs";
 import { SWEDISH_WEEKDAYS } from "./parser-interfaces.mjs";
 
+// Format is a dash (hyphen/en/em) + amount, with an optional "kr" suffix
+// (the site dropped "kr" at some point), e.g. "… – 195" or "… - 195 kr".
+const PRICE_SUFFIX_PATTERN = /[-–—]\s*(\d+)\s*(?:kr)?\s*$/;
+
 export class FonderieParser extends BaseParser {
   constructor(config = {}) {
     super({
@@ -82,7 +86,9 @@ export class FonderieParser extends BaseParser {
 
   /**
    * Extract weekly dishes from the VECKANS section
-   * Parses pairs of <p> elements: first = dish name, second = description + price
+   * Parses pairs of <p> elements: dish name + description, with the price
+   * suffixed to whichever of the two the site currently puts it on (it has
+   * moved between the description line and the name line over time).
    */
   extractWeeklyDishes(document) {
     const dishes = [];
@@ -126,16 +132,21 @@ export class FonderieParser extends BaseParser {
       const nameLine = paragraphs[i];
       const descLine = paragraphs[i + 1];
 
-      // Check if the description line ends with a price.
-      // Format is a dash (hyphen/en/em) + amount, with an optional "kr"
-      // suffix (the site dropped "kr" at some point), e.g. "… – 195" or "… - 195 kr".
-      const priceMatch = descLine.match(/[-–—]\s*(\d+)\s*(?:kr)?\s*$/);
+      const descPriceMatch = descLine.match(PRICE_SUFFIX_PATTERN);
+      const namePriceMatch = nameLine.match(PRICE_SUFFIX_PATTERN);
 
-      if (priceMatch) {
+      if (descPriceMatch) {
         dishes.push({
           name: nameLine,
-          description: descLine.replace(/\s*[-–—]\s*\d+\s*(?:kr)?\s*$/, "").trim(),
-          price: parseInt(priceMatch[1]),
+          description: descLine.replace(PRICE_SUFFIX_PATTERN, "").trim(),
+          price: parseInt(descPriceMatch[1]),
+        });
+        i += 2;
+      } else if (namePriceMatch) {
+        dishes.push({
+          name: nameLine.replace(PRICE_SUFFIX_PATTERN, "").trim(),
+          description: descLine,
+          price: parseInt(namePriceMatch[1]),
         });
         i += 2;
       } else {

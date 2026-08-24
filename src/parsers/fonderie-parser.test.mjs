@@ -171,6 +171,42 @@ describe("FonderieParser", () => {
     expect(dishes[0].description).toBe("bearnaisesås, pommes frites");
   });
 
+  it("extracts price from the name line when the site puts it there instead of the description", () => {
+    const dom = new JSDOM(`
+      <html><body>
+        <h1>LE LUNCH v.34</h1>
+        <h4>VECKANS LUNCH</h4>
+        <p>Poisson Saint-Pierre – 195</p>
+        <p>Kungsfisk med sauce hollandaise, inlagd gurka, rättika, svartkål &amp; salta mandlar</p>
+        <p>Suprême de cuisse de poulet – 195</p>
+        <p>Marinerad kycklinglårfilé med buntmorötter, spetskål, hönsvelouté &amp; chimichurri</p>
+        <p>Girolles – 190</p>
+        <p>Stekta kantareller med bakad chèvre, päron, rostade pinjenötter, sallad på röd quinoa &amp; krispig lök</p>
+        <p>Samtliga veckans lunch serveras med smörslungad nypotatis.</p>
+      </body></html>
+    `);
+    const document = dom.window.document;
+    const dishes = parser.extractWeeklyDishes(document);
+
+    expect(dishes).toHaveLength(3);
+
+    expect(dishes[0]).toMatchObject({
+      name: "Poisson Saint-Pierre",
+      price: 195,
+    });
+    expect(dishes[0].description).toContain("Kungsfisk med sauce hollandaise");
+
+    expect(dishes[1]).toMatchObject({
+      name: "Suprême de cuisse de poulet",
+      price: 195,
+    });
+
+    expect(dishes[2]).toMatchObject({
+      name: "Girolles",
+      price: 190,
+    });
+  });
+
   it("returns correct getName and getUrl", () => {
     expect(parser.getName()).toBe("La Fonderie");
     expect(parser.getUrl()).toBe("https://www.lafonderie.se/lunch");
