@@ -32,7 +32,7 @@
     "@aws-sdk/client-dynamodb": "^3.1127.0",
     "@aws-sdk/lib-dynamodb": "^3.1127.0",
     "jsdom": "^30.0.1",
-    "pdfjs-dist": "^6.2.108"
+    "pdfjs-dist": "^6.3.289"
   },
   "devDependencies": {
     "@eslint/js": "^10",
