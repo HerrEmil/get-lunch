@@ -48,7 +48,8 @@
     "serverless-domain-manager": "^10.3.1",
     "serverless-dynamodb": "^0.2.58",
     "serverless-offline": "^14.8.1",
-    "vitest": "^4.1.11"
+    "vite": "^8.0.16",
+    "vitest": "^5.0.0"
   },
   "engines": {
     "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
