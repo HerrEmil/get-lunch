@@ -3177,10 +3177,10 @@ html-encoding-sniffer@^6.0.0:
   dependencies:
     "@exodus/bytes" "^1.6.0"
 
-html-validate@^11.13.0:
-  version "11.13.0"
-  resolved "https://registry.yarnpkg.com/html-validate/-/html-validate-11.13.0.tgz#e1161df9a65301f7570f90f8d2d4bcdc600db634"
-  integrity sha512-+D/OzRlO1500q7N5Zq6TElX/HUmclqpKVh4B8z3ko1121I09i2fOrdiuYnufBOAFw85ex5cprn2fOZpzA41Utg==
+html-validate@^11.15.0:
+  version "11.15.0"
+  resolved "https://registry.yarnpkg.com/html-validate/-/html-validate-11.15.0.tgz#648aa13edcd67024d10757d6eaf0f666a34c82ea"
+  integrity sha512-h9KaylhlNg6F1UliMJQr0W5vBCK5AppCLfOKTxLqiiL/B2n/9lPyvYJTKlwliHbyPTNzKYYp0Dhs0sZyI1osnA==
   dependencies:
     "@html-validate/stylish" "^6.0.0"
     "@sidvind/better-ajv-errors" "7.0.0"
@@ -3356,7 +3356,7 @@ js-string-escape@^1.0.1:
   resolved "https://registry.npmjs.org/js-string-escape/-/js-string-escape-1.0.1.tgz"
   integrity sha512-Smw4xcfIQ5LVjAOuJCvN/zIodzA/BBSsluuoSykP+lUvScIi4U6RJLfwHet5cxFnCswUjISV8oAXaqaJDY3chg==
 
-js-yaml@^4.1.1, js-yaml@^4.3.0, js-yaml@^4.3.1:
+js-yaml@^4.1.1, js-yaml@^4.3.0, js-yaml@^4.3.2:
   version "4.3.2"
   resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-4.3.2.tgz#8e44fb14a2643c59726bb15787b5f1512cb3d3fb"
   integrity sha512-SFNOvSJ+Dgf/9An904Yx+CgSlIPCkIpao4qo51lpee25TIRejdH3rhR4EZMGoNx3/TP3O+wzWuiTFl4sqbltzA==
@@ -3582,14 +3582,14 @@ lightningcss@^1.33.0:
     lightningcss-win32-arm64-msvc "1.33.0"
     lightningcss-win32-x64-msvc "1.33.0"
 
-lint-staged@^17.4.1:
-  version "17.4.1"
-  resolved "https://registry.yarnpkg.com/lint-staged/-/lint-staged-17.4.1.tgz#3d7684dcf8b3103794c31c3df4cb0de6921dfa75"
-  integrity sha512-FmJeudcalbSfg1du+JCfvi5vS6Qt08KgbfLWiHinbef+2JJwUZwAWVoaO1AcJVUTWPfk0t30PMQNwPAeCzYQ+Q==
+lint-staged@^17.5.1:
+  version "17.5.1"
+  resolved "https://registry.yarnpkg.com/lint-staged/-/lint-staged-17.5.1.tgz#a9222014fc2680934837b5b2214e98c050d2ea3e"
+  integrity sha512-7EDuco1xnBMeVpvAbeMq1U5KXwJGLmY8q6l+Ye78r36C4mPc+Vg1Z2SK8gHyRTyvPro90A0q5/FAZ+Au23d6QQ==
   dependencies:
     picomatch "^4.0.7"
     string-argv "^0.3.2"
-    tinyexec "^1.3.0"
+    tinyexec "^1.3.1"
   optionalDependencies:
     yaml "^2.9.0"
 
@@ -3872,10 +3872,10 @@ optionator@^0.9.3:
     type-check "^0.4.0"
     word-wrap "^1.2.5"
 
-osls@^4.2.0:
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/osls/-/osls-4.2.0.tgz#60f7aadc9fa146d4a7dffbf1328cae2d45c5059c"
-  integrity sha512-oMMc+WMwOAsNl/L+ZuIipyhIf+8ycBvRF891uWhEnh5h61/zfnSIRGxaJaa/tEGiqBm1kB0i7G6jlgZ/DkqTsA==
+osls@^4.3.1:
+  version "4.3.1"
+  resolved "https://registry.yarnpkg.com/osls/-/osls-4.3.1.tgz#bfbf8bc027d9f12af54aaa1f119b461473c07873"
+  integrity sha512-9kcVPXjkbTTAXZS7lXLlX1fvrasVGJtfaFloV2GP4kQFCQsr8z+A7Ckhl86B1Dt0xW3VAOMcMj8HBK0RmzDVMQ==
   dependencies:
     "@apidevtools/json-schema-ref-parser" "^15.3.5"
     "@aws-sdk/client-api-gateway" "^3.1034.0"
@@ -4041,12 +4041,12 @@ picocolors@^1.1.1:
   resolved "https://registry.yarnpkg.com/picocolors/-/picocolors-1.1.1.tgz#3d321af3eab939b083c8f929a1d12cda81c26b6b"
   integrity sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==
 
-picomatch@^2.3.1, picomatch@^2.3.2, picomatch@^4.0.4, picomatch@^4.0.5, picomatch@^4.0.7:
+picomatch@^2.3.1, picomatch@^2.3.2, picomatch@^4.0.4, picomatch@^4.0.7:
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/picomatch/-/picomatch-2.3.2.tgz#5a942915e26b372dc0f0e6753149a16e6b1c5601"
   integrity sha512-V7+vQEJ06Z+c5tSye8S+nHUfI51xoXIXjHQ99cQtKUkQqqO1kO/KCJUfZXuB47h/YBlDhah2H3hdUGXn8ie0oA==
 
-postcss@^8.5.26:
+postcss@^8.5.28:
   version "8.5.28"
   resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.5.28.tgz#da4563a99a06e62d6c1cd1acae363224bcaed6e9"
   integrity sha512-RRuzqDtt5Y9h3quz5hWhK+TPnsmVs6WwSU6LkJMeY4HstUEDuYTG8UJSdawMRzmzAtV+KEoG8N3Qg2qLy5vM/A==
@@ -4159,7 +4159,7 @@ reusify@^1.0.4:
   resolved "https://registry.npmjs.org/reusify/-/reusify-1.1.0.tgz"
   integrity sha512-g6QUff04oZpHs0eG5p83rFLhHeV00ug/Yf9nZM6fLeUrPguBTkTQOdpAWWspMh55TZfVQDPaN3NQJfbVRAxdIw==
 
-rolldown@~1.2.4:
+rolldown@~1.2.6:
   version "1.2.8"
   resolved "https://registry.yarnpkg.com/rolldown/-/rolldown-1.2.8.tgz#3a18ad3c74809f05abe9130229b2b8b4249e9e21"
   integrity sha512-Z67nTmhZe7anqnM/EjI392w5i/ANUinjip7QYsOyN37oayduxt3ksdX0hf5OOamkAd53BiIHfbfSzfUmzKFQqQ==
@@ -4241,10 +4241,10 @@ serverless-dynamodb@^0.2.58:
     "@aws-sdk/lib-dynamodb" "^3.474.0"
     aws-dynamodb-local "^0.0.14"
 
-serverless-offline@^14.8.1:
-  version "14.8.1"
-  resolved "https://registry.yarnpkg.com/serverless-offline/-/serverless-offline-14.8.1.tgz#3bf2ee8c10f4591dc183dc9d844accebf67abf10"
-  integrity sha512-pIYYenXXcnr4AOnLCDq8I+Nhal+dW316bLDcWMm7uY/OH40bdd+Ivbn/DQR+EY8jjh7rG2i36jBiqHefa3wb0Q==
+serverless-offline@^14.8.2:
+  version "14.8.2"
+  resolved "https://registry.yarnpkg.com/serverless-offline/-/serverless-offline-14.8.2.tgz#e584f9f542a191fb5761b7f04db780dfece4c369"
+  integrity sha512-/PSL3hB4emc61zm0JnNf76dBjuCFxGMhIxHcLRxkoP6zFHEuInSb1lyGTiXRHjrCJvHMUndlu+u6raT4FHKMCA==
   dependencies:
     "@aws-sdk/client-lambda" "^3.1069.0"
     "@hapi/boom" "^10.0.1"
@@ -4536,10 +4536,15 @@ tinybench@6.1.4:
   resolved "https://registry.yarnpkg.com/tinybench/-/tinybench-6.1.4.tgz#f855bb3ad1f2fe85cf624490d58bb4f4f5d30da8"
   integrity sha512-9APumHG7r4yOk4X4WlkmE71aZcv1gvin1czO3OQ1U9iJcFA5Ja/ygyb0vPOVHTthFozUYs8CLoLUlM8grb2lTQ==
 
-tinyexec@1.3.0, tinyexec@^1.3.0:
+tinyexec@1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/tinyexec/-/tinyexec-1.3.0.tgz#aacc1dbb1d4e93e6ad8dd64944e09f9ad147a474"
   integrity sha512-QKAl9m8gWWGHV8jZcPeym6j+XULi6tOf1mT83WYJ4Lk2ytW/uwAWkrP0uFsdoYMdueVJ0qs26wZ+23xeB4ibNQ==
+
+tinyexec@^1.3.1:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/tinyexec/-/tinyexec-1.3.1.tgz#16a2e3c6e23fafce72640e678e651db36145b9c6"
+  integrity sha512-GCvB3aoys96IuDFBMcTB46JOR6mdMtAToqwiW8JlWhsoh1mhHi/xn9ss/Dg7N555GiJyEt2qzoG/NHCwM6h1EA==
 
 tinyglobby@^0.2.17:
   version "0.2.17"
@@ -4674,15 +4679,15 @@ velocityjs@^2.1.6:
   dependencies:
     debug "^4.3.4"
 
-vite@^8.0.16:
-  version "8.2.2"
-  resolved "https://registry.yarnpkg.com/vite/-/vite-8.2.2.tgz#399aefad3656145145be110d137a07ea5bb55014"
-  integrity sha512-cFKLV/PRgAUlIRm5WjMjJ86jrftzpqcgH+Us+DS8mI3CDNiH30Whrz8uHL3+MOLPAgqbMBAqWdAHAphOAM+z/Q==
+vite@^8.3.0:
+  version "8.3.0"
+  resolved "https://registry.yarnpkg.com/vite/-/vite-8.3.0.tgz#f9565cfd4879d58d28fa64d3c7aff3b372d2ccc8"
+  integrity sha512-lhZBVvEHefgE+HQZC9O7EBJgCU/nVzFNl7vkS4RE0APtWLP02/8QVIkQtzBxPquh7lq5/78NHipTj7ODQ6XuyQ==
   dependencies:
     lightningcss "^1.33.0"
-    picomatch "^4.0.5"
-    postcss "^8.5.26"
-    rolldown "~1.2.4"
+    picomatch "^4.0.7"
+    postcss "^8.5.28"
+    rolldown "~1.2.6"
     tinyglobby "^0.2.17"
   optionalDependencies:
     fsevents "~2.3.3"
