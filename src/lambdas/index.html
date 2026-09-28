@@ -79,7 +79,7 @@ const ROWS = (lunches || []).map(l => ({
   placeUrl: l.placeUrl || '',
   lunch: l.name || '',
   desc: l.description || '',
-  price: typeof l.price === 'number' ? l.price : parseFloat(l.price) || 0,
+  price: typeof l.price === 'number' ? l.price : null,
 }));
 
 const ChevronDown = ({ size = 16 }) => (
@@ -498,7 +498,7 @@ function LunchScreen() {
       rows = [...rows].sort((a, b) => {
         let av = a[sort.key], bv = b[sort.key];
         if (sort.key === 'day') { av = dayOrder[av]; bv = dayOrder[bv]; }
-        if (sort.key === 'walk') { av = av ?? Infinity; bv = bv ?? Infinity; }
+        if (sort.key === 'walk' || sort.key === 'price') { av = av ?? Infinity; bv = bv ?? Infinity; }
         if (typeof av === 'string') return av.localeCompare(bv, 'sv') * mul;
         return (av - bv) * mul;
       });

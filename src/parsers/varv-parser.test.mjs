@@ -210,7 +210,7 @@ describe("VarvParser", () => {
     expect(dayDishes[1].weekday).toBe("tisdag");
   });
 
-  it("emits no lunches when no lunch price is published", async () => {
+  it("emits lunches with a null price when no lunch price is published", async () => {
     const dom = new JSDOM(`
       <html><body>
         <h2>Lunch menu week 32, 11:30 — 14:00</h2>
@@ -223,7 +223,12 @@ describe("VarvParser", () => {
     `);
     parser.fetchDocument = () => Promise.resolve(dom.window.document);
 
-    await expect(parser.parseMenu()).resolves.toEqual([]);
+    const lunches = await parser.parseMenu();
+
+    expect(lunches).toHaveLength(2);
+    expect(lunches[0].price).toBeNull();
+    expect(lunches[0].week).toBe(32);
+    expect(lunches[0].weekday).toBe("måndag");
   });
 
   it("emits priced lunches when a lunch price is published", async () => {

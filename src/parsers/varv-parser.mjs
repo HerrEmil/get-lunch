@@ -8,8 +8,8 @@
  * The lunch price is only read from a heading that explicitly names it
  * ("Lunch for 145" / "Lunch 145 kr"). The page's Breakfast and Coffee sections
  * carry prices of their own, and those must never be mistaken for the lunch
- * price. When no lunch price is published at all, no lunches are emitted
- * rather than emitting rows with a fabricated 0 kr.
+ * price. When no lunch price is published at all, lunches are still emitted
+ * with a null price rather than a fabricated 0 kr.
  */
 
 import { BaseParser } from "./base-parser.mjs";
@@ -58,10 +58,9 @@ export class VarvParser extends BaseParser {
 
       if (price === null) {
         await this.logger.warn(
-          "Varv publishes no lunch price - skipping menu",
+          "Varv publishes no lunch price - emitting menu without price",
           { week },
         );
-        return [];
       }
 
       const lunches = [];

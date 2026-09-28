@@ -38,13 +38,14 @@ export function normalizeSwedishWeekday(weekday) {
 }
 
 /**
- * Validates if a value is a valid price (number >= 0)
+ * Validates if a value is a valid price (number >= 0), or absent
+ * (null/undefined) when a restaurant publishes no price for a dish.
  * @param {any} price - The price to validate
- * @returns {boolean} - True if valid price
+ * @returns {boolean} - True if valid price or absent
  */
 export function isValidPrice(price) {
   if (price === null || price === undefined) {
-    return false;
+    return true;
   }
 
   const numPrice = Number(price);
@@ -103,9 +104,9 @@ export function validateLunch(lunch) {
     errors.push('Name must be a non-empty string');
   }
 
-  // Validate price (required number >= 0)
+  // Validate price (number >= 0, or absent when no price is published)
   if (!isValidPrice(lunch.price)) {
-    errors.push('Price must be a valid number >= 0');
+    errors.push('Price must be a valid number >= 0, or absent');
   }
 
   // Validate week (required number 1-53)
@@ -165,7 +166,10 @@ export function validateLunches(lunches) {
         description: (lunch.description || '').trim(),
         place: lunch.place.trim(),
         weekday: normalizeSwedishWeekday(lunch.weekday),
-        price: Number(lunch.price),
+        price:
+          lunch.price === null || lunch.price === undefined
+            ? null
+            : Number(lunch.price),
         week: Number(lunch.week)
       });
     } else {
