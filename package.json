@@ -31,7 +31,7 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1141.0",
     "@aws-sdk/lib-dynamodb": "^3.1141.0",
-    "jsdom": "^30.1.0",
+    "jsdom": "^30.1.1",
     "pdfjs-dist": "^6.3.289"
   },
   "devDependencies": {
