@@ -69,13 +69,14 @@ export class SpillParser extends BaseParser {
     for (const heading of headings) {
       const text = this.extractText(heading).toLowerCase();
       if (text.includes("gängtappen") || text.includes("gangtappen")) {
-        // Walk up until we find a parent whose text includes a weekday or date
+        // Walk up until we find a parent whose text includes both a date and a price
         let el = heading.parentElement;
         while (el && el !== container) {
           const elText = this.extractText(el).toLowerCase();
           if (
             elText.length > 100 &&
-            (elText.includes("kr") || /\d{1,2}\/\d{1,2}/.test(elText))
+            /(?<!\d)\d{2,3}(?:kr|\s+kr\b)/i.test(elText) &&
+            /\d{1,2}\/\d{1,2}/.test(elText)
           ) {
             gangtappenContainer = el;
             break;
@@ -237,7 +238,7 @@ export class SpillParser extends BaseParser {
   extractPrice(container) {
     const text = this.extractText(container);
     // Match patterns like "135kr", "135 kr"
-    const priceMatch = text.match(/(\d{2,3})\s*kr/i);
+    const priceMatch = text.match(/(?<!\d)(\d{2,3})(?:kr|\s+kr\b)/i);
     if (priceMatch) {
       return parseInt(priceMatch[1]);
     }

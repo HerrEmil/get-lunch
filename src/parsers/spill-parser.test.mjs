@@ -97,6 +97,14 @@ describe("SpillParser", () => {
     expect(parser.extractPrice(container)).toBe(145);
   });
 
+  it("does not read the year and a dish starting with 'Kr' as a price", () => {
+    const dom = new JSDOM(
+      `<div><h3>Dagens lunch</h3><p>måndag, 12/10, 2026</p><div>Kryddiga färsbiffar med pumpapuré</div><p>135 kr</p></div>`,
+    );
+    const container = dom.window.document.querySelector("div");
+    expect(parser.extractPrice(container)).toBe(135);
+  });
+
   it("splits main and vegetarian dishes", () => {
     const text =
       "Grillad kycklingfilé med ris och sås Vegetarisk: Halloumiburgare med sås";
