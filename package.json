@@ -39,7 +39,7 @@
     "esbuild": "^0.28.2",
     "eslint": "^10.13.0",
     "globals": "^17.13.0",
-    "html-validate": "^11.16.2",
+    "html-validate": "^11.17.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "osls": "^4.4.0",
@@ -47,8 +47,8 @@
     "prettier": "^3.9.10",
     "serverless-domain-manager": "^10.3.1",
     "serverless-dynamodb": "^0.2.58",
-    "serverless-offline": "^14.8.3",
-    "vite": "^8.3.4",
+    "serverless-offline": "^14.8.4",
+    "vite": "^8.3.5",
     "vitest": "^5.0.5"
   },
   "engines": {
