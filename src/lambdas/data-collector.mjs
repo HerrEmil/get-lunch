@@ -104,6 +104,13 @@ const RESTAURANT_CONFIGS = [
     active: true,
   },
   {
+    id: "lokal12",
+    name: "Lokal 12",
+    parser: "lokal12",
+    url: "https://lokal12.se/",
+    active: true,
+  },
+  {
     id: "como",
     name: "COMO",
     parser: "como",

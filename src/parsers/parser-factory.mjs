@@ -17,6 +17,7 @@ import { UbatshallenParser } from "./ubatshallen-parser.mjs";
 import { MiaMariasParser } from "./miamarias-parser.mjs";
 import { IcaParser } from "./ica-parser.mjs";
 import { Lokal17Parser } from "./lokal17-parser.mjs";
+import { Lokal12Parser } from "./lokal12-parser.mjs";
 import { ComoParser } from "./como-parser.mjs";
 import { PapiParser } from "./papi-parser.mjs";
 import { HolyGreensParser } from "./holygreens-parser.mjs";
@@ -82,6 +83,7 @@ export class ParserFactory {
     this.registerParserClass("miamarias", MiaMariasParser);
     this.registerParserClass("ica", IcaParser);
     this.registerParserClass("lokal17", Lokal17Parser);
+    this.registerParserClass("lokal12", Lokal12Parser);
     this.registerParserClass("como", ComoParser);
     this.registerParserClass("papi", PapiParser);
     this.registerParserClass("holygreens", HolyGreensParser);

@@ -35,6 +35,7 @@ const RESTAURANT_CONFIGS = [
   { id: "miamarias", name: "MiaMarias", url: "https://miamarias.nu/lunch/", walkMinutes: 14, active: true },
   { id: "ica", name: "ICA Maxi", url: "https://www.ica.se/butiker/maxi/malmo/maxi-ica-stormarknad-vastra-hamnen-1003569/tjanster/dagens-lunch/", walkMinutes: 2, active: true },
   { id: "lokal17", name: "Lokal 17", url: "https://lokal17.se/", walkMinutes: 17, active: true },
+  { id: "lokal12", name: "Lokal 12", url: "https://lokal12.se/", walkMinutes: 4, active: true },
   { id: "como", name: "COMO", url: "https://comomalmo.se/", walkMinutes: 21, active: true },
   { id: "papi", name: "PAPI", url: "https://www.papisaluhallen.se/", walkMinutes: 14, active: true },
   { id: "holygreens", name: "Holy Greens", url: "https://holygreens.se/meny/", walkMinutes: 13, active: true },
