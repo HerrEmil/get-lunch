@@ -32,9 +32,10 @@ describe("collector package patterns", () => {
   });
 
   it("includes jsdom's critical transitive deps", () => {
+    // jsdom 31 dropped @bramus/specificity (and the rest of its cssstyle/
+    // css-tree CSS-parsing stack) from `dependencies` entirely.
     for (const pkg of [
       "xmlchars",
-      "@bramus/specificity",
       "parse5",
       "tough-cookie",
       "@exodus/bytes",
