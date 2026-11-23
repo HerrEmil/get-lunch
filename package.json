@@ -41,15 +41,15 @@
     "globals": "^17.14.0",
     "html-validate": "^11.21.1",
     "husky": "^9.1.7",
-    "lint-staged": "^17.6.0",
-    "osls": "^4.7.0",
+    "lint-staged": "^17.6.1",
+    "osls": "^4.8.1",
     "patch-package": "^8.0.1",
     "prettier": "^3.10.1",
     "serverless-domain-manager": "^11.0.1",
     "serverless-dynamodb": "^0.2.58",
-    "serverless-offline": "^14.8.4",
+    "serverless-offline": "^14.8.5",
     "vite": "^8.3.8",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.1"
   },
   "engines": {
     "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
