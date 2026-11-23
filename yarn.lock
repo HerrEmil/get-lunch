@@ -120,10 +120,10 @@
     "@smithy/types" "^4.19.0"
     tslib "^2.6.2"
 
-"@aws-sdk/client-dynamodb@^3.1169.0", "@aws-sdk/client-dynamodb@^3.474.0":
-  version "3.1169.0"
-  resolved "https://registry.yarnpkg.com/@aws-sdk/client-dynamodb/-/client-dynamodb-3.1169.0.tgz#03d2847a6dc3f19650139de770e0d9d90066a0ef"
-  integrity sha512-FqvqV/l5gJCluCLxE37sNxd9UFunnZFwc/yQCizLYN368rlbFbcJ3SiHqYvJEmZZFFV3sWs9kyn3D3HiGxjumA==
+"@aws-sdk/client-dynamodb@^3.1174.0", "@aws-sdk/client-dynamodb@^3.474.0":
+  version "3.1174.0"
+  resolved "https://registry.yarnpkg.com/@aws-sdk/client-dynamodb/-/client-dynamodb-3.1174.0.tgz#03437bb59b4dfdb1f1b83dd02a4b5b6ce693fb7a"
+  integrity sha512-9yKBRx6G+tzVA+ucU/COIfCHLl/6bmpG27yQRS1UauYQhK0PIFd8FsXjKtBHwG8XWnlMHpGOj2gfHuIH00Nj3A==
   dependencies:
     "@aws-sdk/core" "^3.981.0"
     "@aws-sdk/credential-provider-node" "^3.972.97"
@@ -441,10 +441,10 @@
     mnemonist "0.38.3"
     tslib "^2.6.2"
 
-"@aws-sdk/lib-dynamodb@^3.1169.0", "@aws-sdk/lib-dynamodb@^3.474.0":
-  version "3.1169.0"
-  resolved "https://registry.yarnpkg.com/@aws-sdk/lib-dynamodb/-/lib-dynamodb-3.1169.0.tgz#e92a3acab054eb4324aaa61917f8be670278899b"
-  integrity sha512-U9Y/kdqXjIM5QfCX6O1Wc+qLxDx2+dWquk0lMBp4M+v+XzwEToMtYnssHunMCUyrRGQMVIA7UkaN7CyeaqxZJw==
+"@aws-sdk/lib-dynamodb@^3.1174.0", "@aws-sdk/lib-dynamodb@^3.474.0":
+  version "3.1174.0"
+  resolved "https://registry.yarnpkg.com/@aws-sdk/lib-dynamodb/-/lib-dynamodb-3.1174.0.tgz#c949806ac2c27a44c490a9e54543afe2830609b2"
+  integrity sha512-dssP7tZm6YTgZgTm/kHhg1IshPhhBzJ18dkoyziAYVcLANnr9TowrfCt7KFQpAatV/O/y1JeMC7pMqB65Rfc+A==
   dependencies:
     "@aws-sdk/core" "^3.981.0"
     "@aws-sdk/util-dynamodb" "^3.996.9"
@@ -3949,12 +3949,7 @@ tree-kill@^1.2.2:
   resolved "https://registry.yarnpkg.com/tree-kill/-/tree-kill-1.2.2.tgz#4ca09a9092c88b73a7cdc5e8a01b507b0790a0cc"
   integrity sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==
 
-tslib@^2.0.1, tslib@^2.6.2:
-  version "2.8.1"
-  resolved "https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz"
-  integrity sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==
-
-tslib@^2.4.0:
+tslib@^2.0.1, tslib@^2.4.0, tslib@^2.6.2:
   version "2.9.1"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.9.1.tgz#8986213ba2f17f38ba39a7c43d0e565a9134ff5f"
   integrity sha512-a4Ux9VKuIMHsOS7ENbEq6hK2ZGYIT27Rtl0E4eD9KqwxhKiQeMZE/9xb3IdYwWaSOyIBQLExhQgXDTYoiCxnWA==
