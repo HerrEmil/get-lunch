@@ -75,6 +75,51 @@ describe("FonderieParser", () => {
     });
   });
 
+  it("extracts single-paragraph dishes (name – price<br>description), week 48 layout", () => {
+    // Trimmed from the live lafonderie.se/lunch markup, 2026-11-24 (v.48)
+    const dom = new JSDOM(`
+      <html><body>
+        <h1>LE LUNCH v.48</h1>
+        <h4><strong>VECKANS LUNCH</strong></h4>
+        <p class="p2"><strong>Paleron de bœuf braisé – 195</strong><br>Nattbakat högrev med skogschampinjoner, jordärtskocka, bakad silverlök, sviskon &amp; jus</p>
+        <p class="p2"></p>
+        <p class="p1"><strong>Filet de sandre poêlé – 225</strong><br>Stekt gösfilé med smörad hönsvelouté, kålrabbi, grönkål, picklad majrova &amp; pepparrot</p>
+        <p class="p2"></p>
+        <p class="p1"><strong>Endives braisées au vin – 195</strong><br>Vinbräserad endive med valnötter, päron, Gruyèrecrème &amp; picklade gulbetor</p>
+        <p class="p2"></p>
+        <p class="p1">Alla rätter serveras med smörslungad potatis</p>
+        <h4></h4>
+        <h4>La Fonderie Classique</h4>
+        <p><strong>Steak Frites – 385</strong></p>
+        <p>Onglet (serveras Medium Rare), pommes frites &amp; sauce béarnaise</p>
+      </body></html>
+    `);
+    const document = dom.window.document;
+    const dishes = parser.extractWeeklyDishes(document);
+
+    expect(dishes).toEqual([
+      {
+        name: "Paleron de bœuf braisé",
+        description:
+          "Nattbakat högrev med skogschampinjoner, jordärtskocka, bakad silverlök, sviskon & jus",
+        price: 195,
+      },
+      {
+        name: "Filet de sandre poêlé",
+        description:
+          "Stekt gösfilé med smörad hönsvelouté, kålrabbi, grönkål, picklad majrova & pepparrot",
+        price: 225,
+      },
+      {
+        name: "Endives braisées au vin",
+        description:
+          "Vinbräserad endive med valnötter, päron, Gruyèrecrème & picklade gulbetor",
+        price: 195,
+      },
+    ]);
+    expect(parser.extractWeekNumber(document)).toBe(48);
+  });
+
   it("skips general note lines without price", () => {
     const dom = new JSDOM(`
       <html><body>
